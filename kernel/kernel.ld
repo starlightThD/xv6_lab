@@ -6,13 +6,8 @@ SECTIONS
   . = 0x80000000;/*入口点的内存地址*/
 
   .text : {
-    kernel/entry.o(_entry)
     *(.text .text.*)
     . = ALIGN(0x1000);/*地址对齐到4KB*/
-    _trampoline = .;/*状态切换的部分*/
-    *(trampsec)
-    . = ALIGN(0x1000);
-    ASSERT(. - _trampoline == 0x1000, "error: trampoline larger than one page");/*简单处理起见 */
     PROVIDE(etext = .); /*非必须，但一般都会加，便于分配结束地址*/
   }
 
@@ -32,9 +27,12 @@ SECTIONS
 
   .bss : {
     . = ALIGN(16);
+    _bss_start = .;        /* 在BSS段开始处定义_bss_start符号 */
     *(.sbss .sbss.*) /* do not need to distinguish this from .bss */
     . = ALIGN(16);
     *(.bss .bss.*)
+    . = ALIGN(16);
+    _bss_end = .;          /* 在BSS段结束处定义_bss_end符号 */
   }
 
   PROVIDE(end = .);
