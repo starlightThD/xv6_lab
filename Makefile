@@ -39,7 +39,8 @@ QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp 1 -nographic
 MINIMAL_OBJS = \
   $K/entry.o \
   $K/start.o \
-  $K/uart.o
+  $K/uart.o \
+  $K/printf.o
 
 $K/kernel: $(MINIMAL_OBJS) $K/kernel.ld
 	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(MINIMAL_OBJS)
@@ -55,6 +56,8 @@ $K/start.o: $K/start.c
 $K/uart.o: $K/uart.c
 	$(CC) $(CFLAGS) -c $K/uart.c -o $K/uart.o
 
+$K/printf.o: $K/printf.c
+	$(CC) $(CFLAGS) -c $K/printf.c -o $K/printf.o
 # 验证内存布局
 check: $K/kernel
 	@echo "=== 检查段信息 ==="
