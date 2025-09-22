@@ -267,3 +267,10 @@ void clear_line(){
 	consputc('2');
 	consputc('K');
 }
+
+void panic(const char *msg) {
+	color_red(); // 可选：红色显示
+	printf("panic: %s\n", msg);
+	reset_color();
+	while (1) { /* 死循环，防止继续执行 */ }
+}

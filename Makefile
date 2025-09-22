@@ -40,7 +40,10 @@ MINIMAL_OBJS = \
   $K/entry.o \
   $K/start.o \
   $K/uart.o \
-  $K/printf.o
+  $K/printf.o \
+  $K/mem.o \
+  $K/vm.o \
+  $K/pm.o
 
 $K/kernel: $(MINIMAL_OBJS) $K/kernel.ld
 	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(MINIMAL_OBJS)
@@ -58,6 +61,15 @@ $K/uart.o: $K/uart.c
 
 $K/printf.o: $K/printf.c
 	$(CC) $(CFLAGS) -c $K/printf.c -o $K/printf.o
+
+$K/mem.o: $K/mem.c
+	$(CC) $(CFLAGS) -c $K/mem.c -o $K/mem.o
+
+$K/vm.o: $K/vm.c
+	$(CC) $(CFLAGS) -c $K/vm.c -o $K/vm.o
+
+$K/pm.o: $K/pm.c
+	$(CC) $(CFLAGS) -c $K/pm.c -o $K/pm.o
 # 验证内存布局
 check: $K/kernel
 	@echo "=== 检查段信息 ==="

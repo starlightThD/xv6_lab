@@ -26,4 +26,6 @@ void color_purple(void);
 void color_cyan(void);
 void color_reverse(void);
 void clear_line(void);
+
+void panic(const char *msg);
 #endif
