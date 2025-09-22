@@ -9,7 +9,7 @@ _entry: # 定义入口点标签
 		sb t1, 0(t0)
 
 		la sp, stack0
-        li a0,4096*4 # 表示4096个字节单位
+        li a0,4096*1 # 表示4096个字节单位，也就是4KB，与一页大小相当
         add sp,sp,a0 # 初始化栈指针
 
 
@@ -33,4 +33,4 @@ spin:
 .section .data
 .align 12
 stack0:
-        .space 4096*4 # 分配16KB栈空间
+        .space 4096*1 # 分配4KB栈空间

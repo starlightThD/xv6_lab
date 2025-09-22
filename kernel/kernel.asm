@@ -23,8 +23,8 @@ _entry: # 定义入口点标签
 		la sp, stack0
     80000012:	00003117          	auipc	sp,0x3
     80000016:	fee10113          	addi	sp,sp,-18 # 80003000 <stack0>
-        li a0,4096*4 # 表示4096个字节单位
-    8000001a:	6511                	lui	a0,0x4
+        li a0,4096*1 # 表示4096个字节单位，也就是4KB，与一页大小相当
+    8000001a:	6505                	lui	a0,0x1
         add sp,sp,a0 # 初始化栈指针
     8000001c:	912a                	add	sp,sp,a0
 
@@ -39,11 +39,11 @@ _entry: # 定义入口点标签
     80000028:	00628023          	sb	t1,0(t0)
 
         la a0,_bss_start
-    8000002c:	00007517          	auipc	a0,0x7
-    80000030:	fd450513          	addi	a0,a0,-44 # 80007000 <global_test2>
+    8000002c:	00004517          	auipc	a0,0x4
+    80000030:	fd450513          	addi	a0,a0,-44 # 80004000 <global_test2>
         la a1,_bss_end
-    80000034:	00007597          	auipc	a1,0x7
-    80000038:	00c58593          	addi	a1,a1,12 # 80007040 <_bss_end>
+    80000034:	00004597          	auipc	a1,0x4
+    80000038:	00c58593          	addi	a1,a1,12 # 80004040 <_bss_end>
 
 000000008000003c <clear_bss>:
 clear_bss:
@@ -143,10 +143,10 @@ void start(){
     800000ea:	00000097          	auipc	ra,0x0
     800000ee:	0b6080e7          	jalr	182(ra) # 800001a0 <uart_puts>
     if (global_test1 == 0 && global_test2 == 0) {
-    800000f2:	00007797          	auipc	a5,0x7
-    800000f6:	f127a783          	lw	a5,-238(a5) # 80007004 <global_test1>
-    800000fa:	00007717          	auipc	a4,0x7
-    800000fe:	f0672703          	lw	a4,-250(a4) # 80007000 <global_test2>
+    800000f2:	00004797          	auipc	a5,0x4
+    800000f6:	f127a783          	lw	a5,-238(a5) # 80004004 <global_test1>
+    800000fa:	00004717          	auipc	a4,0x4
+    800000fe:	f0672703          	lw	a4,-250(a4) # 80004000 <global_test2>
     80000102:	8fd9                	or	a5,a5,a4
     80000104:	cbb1                	beqz	a5,80000158 <start+0xd6>
         uart_puts("  [OK] BSS variables correctly zeroed\n");
