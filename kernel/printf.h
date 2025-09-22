@@ -28,4 +28,8 @@ void color_reverse(void);
 void clear_line(void);
 
 void panic(const char *msg);
+// 测试函数
+void test_printf_precision(void);
+void test_curse_move();
+void test_basic_colors(void);
 #endif

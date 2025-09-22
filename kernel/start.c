@@ -48,7 +48,10 @@ void start(){
     test_physical_memory();
 	test_pagetable();
     uart_puts("\nSystem ready. Entering main loop...\n");
-    
+    test_printf_precision();
+	test_curse_move();
+	test_basic_colors();
+	clear_screen();
     // 主循环
     while(1) {
         // 死循环，防止返回
