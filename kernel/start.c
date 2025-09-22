@@ -97,7 +97,7 @@ void test_printf_precision(void) {
 	
 	// 测试混合格式
 	printf("混合格式测试:\n");
-	printf("  Hex: 0x%x, Dec: %d, Unsigned: %u, Str: '%s'\n", 255, -255, 255U, "Test");
+	printf("  Hex: 0x%x, Dec: %d, Unsigned: %u\n", 255, -255, 255U);
 	
 	// 测试百分号输出
 	printf("百分号输出测试:\n");
@@ -119,8 +119,8 @@ void test_printf_precision(void) {
 	
 	// 测试不同进制的数字
 	printf("不同进制测试:\n");
-	printf("  Binary of 5 (not supported, expect garbage): %b\n", 5); // %b未实现，预期输出垃圾
-	printf("  Octal of 8 (not supported, expect garbage): %o\n", 8);   // %o未实现，预期输出垃圾
+	printf("  Binary of 5: %b\n", 5);
+	printf("  Octal of 8 : %o\n", 8); 
 	printf("=== Printf测试结束 ===\n");
 }
 void test_curse_move(){
@@ -156,7 +156,7 @@ void test_basic_colors(void) {
     color_blue();   printf("蓝色文字 ");
     color_purple(); printf("紫色文字 ");
     color_cyan();   printf("青色文字 ");
-    color_white();  printf("白色文字");
+    color_reverse();  printf("反色文字");
     reset_color();
     printf("\n\n");
     
@@ -166,13 +166,14 @@ void test_basic_colors(void) {
     set_bg_color(42); printf(" 绿色背景 "); reset_color();
     set_bg_color(43); printf(" 黄色背景 "); reset_color();
     set_bg_color(44); printf(" 蓝色背景 "); reset_color();
+	set_bg_color(47); printf(" 反色背景 "); reset_color();
     printf("\n\n");
     
     // 测试组合效果
     printf("组合效果测试:\n");
     set_color(31, 44); printf(" 红字蓝底 "); reset_color();
     set_color(33, 45); printf(" 黄字紫底 "); reset_color();
-    set_color(32, 47); printf(" 绿字白底 "); reset_color();
+    set_color(32, 47); printf(" 绿字反底 "); reset_color();
     printf("\n\n");
 	reset_color();
 	printf("重置为默认颜色，本行文字会被清除\n"); 

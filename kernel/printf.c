@@ -112,6 +112,25 @@ void printf(const char *fmt, ...) {
                 s = "(null)";
             consputs(s);
             break;
+		case 'p':
+            unsigned long ptr = (unsigned long)va_arg(ap, void*);
+            consputs("0x");
+            // 输出16位宽，不足补0
+            char buf[17];
+            int i;
+            for (i = 0; i < 16; i++) {
+                int shift = (15 - i) * 4;
+                buf[i] = "0123456789abcdef"[(ptr >> shift) & 0xf];
+            }
+            buf[16] = '\0';
+            consputs(buf);
+            break;
+		case 'b':
+            printint(va_arg(ap, int), 2, 0);
+            break;
+        case 'o':
+            printint(va_arg(ap, int), 8, 0);
+            break;
         case '%':
             buffer_char('%');
             break;
@@ -235,12 +254,12 @@ void color_purple(void) {
 void color_cyan(void) {
 	set_fg_color(36); // 青色
 }
-void color_white(void){
-	set_fg_color(37); // 白色
+void color_reverse(void){
+	set_fg_color(37); // 反色
 }
 void set_color(int fg, int bg) {
-	set_fg_color(fg);
 	set_bg_color(bg);
+	set_fg_color(fg);
 }
 void clear_line(){
 	consputc('\033');

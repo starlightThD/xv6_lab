@@ -24,6 +24,6 @@ void color_yellow(void);
 void color_blue(void);
 void color_purple(void);
 void color_cyan(void);
-void color_white(void);
+void color_reverse(void);
 void clear_line(void);
 #endif
