@@ -36,6 +36,8 @@ void start(){
     intr_on();
 	test_timer_interrupt();
 	printf("[KERNEL] Timer interrupt test finished!\n");
+	test_exception();
+	printf("[KERNEL] Exception test finished!\n");
 	uart_init();
 	printf("外部中断：键盘输入已经注册，请尝试输入字符并观察UART输出\n");
     // 主循环
