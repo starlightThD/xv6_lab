@@ -6,6 +6,7 @@
 #include "riscv.h"
 #include "printf.h"
 #include "sbi.h"
+#include "uart.h"
 
 // 全局测试变量，用于中断测试
 volatile int *interrupt_test_flag = 0;
@@ -34,30 +35,49 @@ void interrupt_dispatch(int irq) {
 		interrupt_vector[irq]();
 	}
 }
+// 处理外部中断
+void handle_external_interrupt(void) {
+    // 从PLIC获取中断号
+    int irq = plic_claim();
+    
+    if (irq == 0) {
+        // 虚假中断
+        printf("Spurious external interrupt\n");
+        return;
+    }
+    interrupt_dispatch(irq);
+    plic_complete(irq);
+}
 
 void trap_init(void) {
 	intr_off();
 	printf("trap_init...\n");
 	w_stvec((uint64)kernelvec);
+	for(int i = 0; i < MAX_IRQ; i++){
+		interrupt_vector[i] = 0;
+	}
+	plic_init();
     uint64 sie = r_sie();
-    w_sie(sie | (1L << 5)); // 设置SIE.STIE位启用时钟中断
+    w_sie(sie | (1L << 5) | (1L<<9)); // 设置SIE.STIE位启用时钟中断和外部中断
 	sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
 	printf("trap_init complete.\n");
 }
-// 修改中断处理函数，支持测试标志
+// 中断处理函数
 void kerneltrap(void) {
     // 保存当前中断状态
     uint64 sstatus = r_sstatus();
     uint64 scause = r_scause();
     uint64 sepc = r_sepc();
     
-    // 检查是否为时钟中断
     if((scause & 0x8000000000000000) && ((scause & 0xff) == 5)) {
         // 调用时钟中断处理函数
         timeintr();
         // 设置下一次时钟中断 - 使用较短间隔用于测试
         sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
-    } else {
+    }else if((scause & 0x8000000000000000) && ((scause & 0xff) == 9)) {
+        // 处理外部中断
+        handle_external_interrupt();
+    }else {
         printf("kerneltrap: unexpected scause=%lx sepc=%lx\n", scause, sepc);
         while(1); // 出现问题时挂起系统
     }
@@ -66,6 +86,7 @@ void kerneltrap(void) {
     w_sepc(sepc);
     w_sstatus(sstatus);
 }
+
 // 获取当前时间的辅助函数
 uint64 get_time(void) {
     return sbi_get_time();
