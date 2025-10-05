@@ -90,19 +90,38 @@ void printf(const char *fmt, ...) {
             buffer_char(c);
             continue;
         }
-		flush_printf_buffer(); // 遇到格式化标志时，先刷新缓冲区
+        flush_printf_buffer(); // 遇到格式化标志时，先刷新缓冲区
         c = fmt[++i] & 0xff;
         if(c == 0)
             break;
+            
+        // 检查是否有长整型标记'l'
+        int is_long = 0;
+        if(c == 'l') {
+            is_long = 1;
+            c = fmt[++i] & 0xff;
+            if(c == 0)
+                break;
+        }
+        
         switch(c){
         case 'd':
-            printint(va_arg(ap, int), 10, 1);
+            if(is_long)
+                printint(va_arg(ap, long long), 10, 1);
+            else
+                printint(va_arg(ap, int), 10, 1);
             break;
         case 'x':
-            printint(va_arg(ap, int), 16, 0);
+            if(is_long)
+                printint(va_arg(ap, long long), 16, 0);
+            else
+                printint(va_arg(ap, int), 16, 0);
             break;
         case 'u':
-            printint(va_arg(ap, unsigned int), 10, 0);
+            if(is_long)
+                printint(va_arg(ap, unsigned long long), 10, 0);
+            else
+                printint(va_arg(ap, unsigned int), 10, 0);
             break;
         case 'c':
             consputc(va_arg(ap, int));
@@ -112,7 +131,7 @@ void printf(const char *fmt, ...) {
                 s = "(null)";
             consputs(s);
             break;
-		case 'p':
+        case 'p':
             unsigned long ptr = (unsigned long)va_arg(ap, void*);
             consputs("0x");
             // 输出16位宽，不足补0
@@ -125,22 +144,29 @@ void printf(const char *fmt, ...) {
             buf[16] = '\0';
             consputs(buf);
             break;
-		case 'b':
-            printint(va_arg(ap, int), 2, 0);
+        case 'b':
+            if(is_long)
+                printint(va_arg(ap, long long), 2, 0);
+            else
+                printint(va_arg(ap, int), 2, 0);
             break;
         case 'o':
-            printint(va_arg(ap, int), 8, 0);
+            if(is_long)
+                printint(va_arg(ap, long long), 8, 0);
+            else
+                printint(va_arg(ap, int), 8, 0);
             break;
         case '%':
             buffer_char('%');
             break;
         default:
-			buffer_char('%');
-			buffer_char(c);
+            buffer_char('%');
+            if(is_long) buffer_char('l');
+            buffer_char(c);
             break;
         }
     }
-	flush_printf_buffer(); // 最后刷新缓冲区
+    flush_printf_buffer(); // 最后刷新缓冲区
     va_end(ap);
 }
 // 清屏功能

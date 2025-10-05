@@ -72,15 +72,26 @@ static pte_t* walk_create(pagetable_t pt, uint64 va) {
     return &pt[px(0, va)];
 }
 
-// 建立映射
+// 建立映射，允许重映射到相同物理地址
 int map_page(pagetable_t pt, uint64 va, uint64 pa, int perm) {
     if ((va % PGSIZE) != 0)
         panic("map_page: va not aligned");
     pte_t *pte = walk_create(pt, va);
     if (!pte)
         return -1;
-    if (*pte & PTE_V)
-        panic("map_page: remap");
+    
+    // 检查是否已经映射
+	if (*pte & PTE_V) {
+		if (PTE2PA(*pte) == pa) {
+			// 只允许提升权限，不允许降低权限
+			int new_perm = ((*pte & PTE_FLAGS) | perm) & PTE_FLAGS;
+			*pte = PA2PTE(pa) | new_perm | PTE_V;
+			return 0;
+		} else {
+			panic("map_page: remap to different physical address");
+		}
+	}
+    
     *pte = PA2PTE(pa) | perm | PTE_V;
     return 0;
 }
@@ -106,18 +117,64 @@ static pagetable_t kvmmake(void) {
     if (!kpgtbl)
         panic("kvmmake: alloc failed");
 
-    // 映射内核物理内存（例如 KERNBASE ~ PHYSTOP）
-    for (uint64 pa = KERNBASE; pa < PHYSTOP; pa += PGSIZE) {
-        if (map_page(kpgtbl, pa, pa, PTE_R | PTE_W | PTE_X) != 0)
-            panic("kvmmake: map_page failed");
+    // 1. 映射内核代码和数据区域（只读+执行 / 读写）
+    extern char etext[];  // 在kernel.ld中定义，内核代码段结束位置
+    extern char end[];    // 在kernel.ld中定义，内核数据段结束位置
+    
+    // 内核代码段 - 只读可执行
+    for (uint64 pa = KERNBASE; pa < (uint64)etext; pa += PGSIZE) {
+        if (map_page(kpgtbl, pa, pa, PTE_R | PTE_X) != 0)
+            panic("kvmmake: code map failed");
     }
-	    // 映射UART设备内存（只读写，不可执行）
+    
+    // 内核数据段 - 可读写
+    for (uint64 pa = (uint64)etext; pa < (uint64)end; pa += PGSIZE) {
+        if (map_page(kpgtbl, pa, pa, PTE_R | PTE_W) != 0)
+            panic("kvmmake: data map failed");
+    }
+    
+	// 2. 映射内核堆区域 - 可读写
+	uint64 aligned_end = ((uint64)end + PGSIZE - 1) & ~(PGSIZE - 1); // 向上对齐到页边界
+	for (uint64 pa = aligned_end; pa < PHYSTOP; pa += PGSIZE) {
+		if (map_page(kpgtbl, pa, pa, PTE_R | PTE_W) != 0)
+			panic("kvmmake: heap map failed");
+	}
+    
+    // 3. 映射设备区域 - 只读写，不可执行
+    // UART 串口设备
     if (map_page(kpgtbl, UART0, UART0, PTE_R | PTE_W) != 0)
-        panic("kvmmake: uart map_page failed");
+        panic("kvmmake: uart map failed");
+    
+    // PLIC 中断控制器
+    for (uint64 pa = PLIC; pa < PLIC + 0x400000; pa += PGSIZE) {
+        if (map_page(kpgtbl, pa, pa, PTE_R | PTE_W) != 0)
+            panic("kvmmake: plic map failed");
+    }
+    
+    // CLINT 本地中断控制器 - 完善映射
+    // 确保整个 CLINT 区域被映射，特别是 mtimecmp 和 mtime 寄存器
+    for (uint64 pa = CLINT; pa < CLINT + 0x10000; pa += PGSIZE) {
+        if (map_page(kpgtbl, pa, pa, PTE_R | PTE_W) != 0)
+            panic("kvmmake: clint map failed");
+	}
+    
+    // VIRTIO 设备
+    if (map_page(kpgtbl, VIRTIO0, VIRTIO0, PTE_R | PTE_W) != 0)
+        panic("kvmmake: virtio map failed");
+    
+    // 4. 扩大SBI调用区域映射
+	for (uint64 pa = 0; pa < 0x100000; pa += PGSIZE) {
+		if (map_page(kpgtbl, pa, pa, PTE_R | PTE_W) != 0)
+			panic("kvmmake: low memory map failed");
+	}
 
+	// 特别映射包含0xfd02080的页
+	uint64 sbi_special = 0xfd02000;  // 页对齐
+	if (map_page(kpgtbl, sbi_special, sbi_special, PTE_R | PTE_W) != 0)
+		panic("kvmmake: sbi special area map failed");
+    
     return kpgtbl;
 }
-
 // 初始化内核页表
 void kvminit(void) {
     kernel_pagetable = kvmmake();

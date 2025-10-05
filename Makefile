@@ -23,17 +23,17 @@ GDB := $(shell if which $(TOOLPREFIX)gdb >/dev/null 2>&1; \
 	then echo 'riscv64-linux-gnu-gdb'; \
 	else echo "*** Error: No suitable RISC-V GDB found." 1>&2; exit 1; fi)
 
-CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb
+CFLAGS = -Wall -Werror -O0 -fno-omit-frame-pointer -g3
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
 CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
-LDFLAGS = -z max-page-size=4096
+LDFLAGS = -z max-page-size=4096 -g
 
 # QEMU 配置
 QEMU = qemu-system-riscv64
-QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp 1 -nographic
+QEMUOPTS = -machine virt -bios /usr/riscv64-linux-gnu/opensbi/fw_jump.elf -kernel $K/kernel -m 128M -smp 1 -nographic
 
 # 最小化对象文件
 MINIMAL_OBJS = \
@@ -43,7 +43,12 @@ MINIMAL_OBJS = \
   $K/printf.o \
   $K/mem.o \
   $K/vm.o \
-  $K/pm.o
+  $K/pm.o \
+  $K/sbi.o \
+  $K/timer.o \
+  $K/trap.o \
+  $K/plic.o \
+  $K/kernelvec.o
 
 $K/kernel: $(MINIMAL_OBJS) $K/kernel.ld
 	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(MINIMAL_OBJS)
@@ -70,6 +75,21 @@ $K/vm.o: $K/vm.c
 
 $K/pm.o: $K/pm.c
 	$(CC) $(CFLAGS) -c $K/pm.c -o $K/pm.o
+
+$K/sbi.o: $K/sbi.c
+	$(CC) $(CFLAGS) -c $K/sbi.c -o $K/sbi.o
+
+$K/timer.o: $K/timer.c
+	$(CC) $(CFLAGS) -c $K/timer.c -o $K/timer.o
+
+$K/trap.o: $K/trap.c
+	$(CC) $(CFLAGS) -c $K/trap.c -o $K/trap.o
+
+$K/plic.o: $K/plic.c
+	$(CC) $(CFLAGS) -c $K/plic.c -o $K/plic.o
+
+$K/kernelvec.o: $K/kernelvec.S
+	$(CC) $(CFLAGS) -c $K/kernelvec.S -o $K/kernelvec.o
 # 验证内存布局
 check: $K/kernel
 	@echo "=== 检查段信息 ==="
