@@ -37,7 +37,6 @@ pagetable_t create_pagetable(void) {
     memset(pt, 0, PGSIZE);
     return pt;
 }
-// 辅助函数：仅查找
 static pte_t* walk_lookup(pagetable_t pt, uint64 va) {
     if (va >= MAXVA)
         panic("walk_lookup: va out of range");
@@ -52,7 +51,6 @@ static pte_t* walk_lookup(pagetable_t pt, uint64 va) {
     return &pt[px(0, va)];
 }
 
-// 辅助函数：查找或分配
 static pte_t* walk_create(pagetable_t pt, uint64 va) {
     if (va >= MAXVA)
         panic("walk_create: va out of range");
