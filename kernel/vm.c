@@ -5,16 +5,7 @@
 #include "mem.h"
 #include "assert.h"
 
-#define PTE_FLAGS 0x3FF
-#define PGSIZE 4096
 
-#define VPN_SHIFT(level) (12 + 9 * (level))
-#define VPN_MASK(va, level) (((va) >> VPN_SHIFT(level)) & 0x1FF)
-#define PA2PTE(pa) ((((uint64)(pa)) >> 12) << 10)
-#define PTE2PA(pte) (((pte) >> 10) << 12)
-
-#define SATP_MODE_SV39 (8L << 60)
-#define MAKE_SATP(pgtbl) (SATP_MODE_SV39 | (((uint64)(pgtbl)) >> 12))
 
 
 // 内核页表全局变量
@@ -79,7 +70,7 @@ int map_page(pagetable_t pt, uint64 va, uint64 pa, int perm) {
 	if (*pte & PTE_V) {
 		if (PTE2PA(*pte) == pa) {
 			// 只允许提升权限，不允许降低权限
-			int new_perm = ((*pte & PTE_FLAGS) | perm) & PTE_FLAGS;
+			int new_perm = (PTE_FLAGS(*pte) | perm) & 0x3FF;
 			*pte = PA2PTE(pa) | new_perm | PTE_V;
 			return 0;
 		} else {
@@ -310,4 +301,26 @@ int check_is_mapped(uint64 va) {
         printf("Address 0x%lx is NOT mapped\n", va);
         return 0;
     }
+}
+int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz) {
+    for (uint64 i = 0; i < sz; i += PGSIZE) {
+        pte_t *pte = walk_lookup(old, i);
+        if (pte == 0 || (*pte & PTE_V) == 0)
+            continue; // 跳过未分配的页
+
+        uint64 pa = PTE2PA(*pte);
+        int flags = PTE_FLAGS(*pte);
+
+        void *mem = alloc_page();
+        if (mem == 0)
+            return -1; // 分配失败
+
+        memmove(mem, (void*)pa, PGSIZE);
+
+        if (map_page(new, i, (uint64)mem, flags) != 0) {
+            free_page(mem);
+            return -1;
+        }
+    }
+    return 0;
 }

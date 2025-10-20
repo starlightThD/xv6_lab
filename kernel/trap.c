@@ -11,6 +11,20 @@
 #include "mem.h"
 #include "pm.h"
 
+
+static inline void save_exception_info(struct trapframe *tf, uint64 sepc, uint64 sstatus, uint64 scause, uint64 stval) {
+    tf->epc = sepc;
+    // 其他字段需要保存在全局变量或函数参数中
+}
+
+static inline uint64 get_sepc(struct trapframe *tf) {
+    return tf->epc;
+}
+
+static inline void set_sepc(struct trapframe *tf, uint64 sepc) {
+    tf->epc = sepc;
+}
+
 // 全局测试变量，用于中断测试
 volatile int *interrupt_test_flag = 0;
 extern void kernelvec();
@@ -66,7 +80,6 @@ void trap_init(void) {
 	printf("Registered exception handlers: store_page_fault=%p\n", handle_store_page_fault);
 	printf("trap_init complete.\n");
 }
-// 中断和异常处理函数
 void kerneltrap(void) {
     // 保存当前中断状态
     uint64 sstatus = r_sstatus();
@@ -93,121 +106,127 @@ void kerneltrap(void) {
         
         // 构造trapframe结构
         struct trapframe tf;
-        tf.sepc = sepc;
-        tf.sstatus = sstatus;
-        tf.scause = scause;
-        tf.stval = stval;
+        save_exception_info(&tf, sepc, sstatus, scause, stval);
+        
+        // 创建一个trap_info用于传递额外信息
+        struct trap_info info;
+        info.sepc = sepc;
+        info.sstatus = sstatus;
+        info.scause = scause;
+        info.stval = stval;
         
         // 调用异常处理函数
-        handle_exception(&tf);
-		sepc = tf.sepc; // 更新sepc
+        handle_exception(&tf, &info);
+        
+        // 更新sepc
+        sepc = get_sepc(&tf);
     }
     
     // 恢复中断现场
     w_sepc(sepc);
     w_sstatus(sstatus);
 }
-// 处理异常
-void handle_exception(struct trapframe *tf) {
-    uint64 cause = tf->scause;
+// 修改函数声明
+void handle_exception(struct trapframe *tf, struct trap_info *info) {
+    uint64 cause = info->scause;  // 使用info中的字段
     
     switch (cause) {
         case 0:  // 指令地址未对齐
-            printf("Instruction address misaligned: 0x%lx\n", tf->stval);
-			tf->sepc += 4; 
+            printf("Instruction address misaligned: 0x%lx\n", info->stval);
+			set_sepc(tf, info->sepc + 4);  // 使用辅助函数
             break;
             
         case 1:  // 指令访问故障
-            printf("Instruction access fault: 0x%lx\n", tf->stval);
-			tf->sepc += 4; 
+            printf("Instruction access fault: 0x%lx\n", info->stval);
+			set_sepc(tf, info->sepc + 4);  // 使用辅助函数
             break;
             
         case 2:  // 非法指令
-            printf("Illegal instruction at 0x%lx: 0x%lx\n", tf->sepc, tf->stval);
-			tf->sepc += 4; 
+            printf("Illegal instruction at 0x%lx: 0x%lx\n", info->sepc, info->stval);
+			set_sepc(tf, info->sepc + 4); 
             break;
             
         case 3:  // 断点
-            printf("Breakpoint at 0x%lx\n", tf->sepc);
-            tf->sepc += 4;
+            printf("Breakpoint at 0x%lx\n", info->sepc);
+            set_sepc(tf, info->sepc + 4);
             break;
             
         case 4:  // 加载地址未对齐
-            printf("Load address misaligned: 0x%lx\n", tf->stval);
-			tf->sepc += 4; 
+            printf("Load address misaligned: 0x%lx\n", info->stval);
+			set_sepc(tf, info->sepc + 4); 
             break;
             
 		case 5:  // 加载访问故障
-			printf("Load access fault: 0x%lx\n", tf->stval);
+			printf("Load access fault: 0x%lx\n", info->stval);
 			// 尝试先增加页权限
-			if (check_is_mapped(tf->stval) && handle_page_fault(tf->stval, 2)) {
+			if (check_is_mapped(info->stval) && handle_page_fault(info->stval, 2)) {
 				return; // 成功处理
 			}
 			// 如果无法处理或不是权限问题，则跳过错误指令
-			tf->sepc += 4;
+			set_sepc(tf, info->sepc + 4);
 			break;
             
         case 6:  // 存储地址未对齐
-            printf("Store address misaligned: 0x%lx\n", tf->stval);
-			tf->sepc += 4; 
+            printf("Store address misaligned: 0x%lx\n", info->stval);
+			set_sepc(tf, info->sepc + 4); 
             break;
             
 		case 7:  // 存储访问故障
-			printf("Store access fault: 0x%lx\n", tf->stval);
+			printf("Store access fault: 0x%lx\n", info->stval);
 			// 尝试先增加页权限
-			if (check_is_mapped(tf->stval) && handle_page_fault(tf->stval, 3)) {
+			if (check_is_mapped(info->stval) && handle_page_fault(info->stval, 3)) {
 				return; // 成功处理
 			}
 			// 如果无法处理或不是权限问题，则跳过错误指令
-			tf->sepc += 4;
+			set_sepc(tf, info->sepc + 4);
 			break;
             
         case 8:  // 用户模式环境调用
-            handle_syscall(tf);
+            handle_syscall(tf,info);
             break;
             
         case 9:  // 监督模式环境调用
-            printf("Supervisor environment call at 0x%lx\n", tf->sepc);
-			tf->sepc += 4; 
+            printf("Supervisor environment call at 0x%lx\n", info->sepc);
+			set_sepc(tf, info->sepc + 4); 
             break;
             
         case 12:  // 指令页故障
-            handle_instruction_page_fault(tf);
+            handle_instruction_page_fault(tf,info);
             break;
             
         case 13:  // 加载页故障
-            handle_load_page_fault(tf);
+            handle_load_page_fault(tf,info);
             break;
             
         case 15:  // 存储页故障
-            handle_store_page_fault(tf);
+            handle_store_page_fault(tf,info);
             break;
             
         default:
             printf("Unknown exception: cause=%ld, sepc=0x%lx, stval=0x%lx\n", 
-                   cause, tf->sepc, tf->stval);
+                   cause, info->sepc, info->stval);
             panic("Unknown exception");
             break;
     }
 }
 // 处理系统调用
-void handle_syscall(struct trapframe *tf) {
-    printf("System call from sepc=0x%lx, syscall number=%ld\n", tf->sepc, tf->a7);
+void handle_syscall(struct trapframe *tf, struct trap_info *info) {
+    printf("System call from sepc=0x%lx, syscall number=%ld\n", info->sepc, tf->a7);
     
     // 系统调用返回值存放在a0寄存器
     // tf->a0 = sys_call(tf->a7, tf->a0, tf->a1, tf->a2, tf->a3, tf->a4, tf->a5);
     
     // 系统调用完成后，sepc应该指向下一条指令
-    tf->sepc += 4;
+    set_sepc(tf, info->sepc + 4);
 }
 
 
 // 处理指令页故障
-void handle_instruction_page_fault(struct trapframe *tf) {
-    printf("Instruction page fault at va=0x%lx, sepc=0x%lx\n", tf->stval, tf->sepc);
+void handle_instruction_page_fault(struct trapframe *tf, struct trap_info *info) {
+    printf("Instruction page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
     
     // 尝试处理页面故障
-    if (handle_page_fault(tf->stval, 1)) {  // 1表示指令页
+    if (handle_page_fault(info->stval, 1)) {  // 1表示指令页
         return; // 成功处理页面故障，可以继续执行
     }
     
@@ -216,11 +235,11 @@ void handle_instruction_page_fault(struct trapframe *tf) {
 }
 
 // 处理加载页故障
-void handle_load_page_fault(struct trapframe *tf) {
-    printf("Load page fault at va=0x%lx, sepc=0x%lx\n", tf->stval, tf->sepc);
+void handle_load_page_fault(struct trapframe *tf, struct trap_info *info) {
+    printf("Load page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
     
     // 尝试处理页面故障
-    if (handle_page_fault(tf->stval, 2)) {  // 2表示读数据页
+    if (handle_page_fault(info->stval, 2)) {  // 2表示读数据页
         return; // 成功处理页面故障，可以继续执行
     }
     
@@ -229,11 +248,11 @@ void handle_load_page_fault(struct trapframe *tf) {
 }
 
 // 处理存储页故障
-void handle_store_page_fault(struct trapframe *tf) {
-    printf("Store page fault at va=0x%lx, sepc=0x%lx\n", tf->stval, tf->sepc);
+void handle_store_page_fault(struct trapframe *tf, struct trap_info *info) {
+    printf("Store page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
     
     // 尝试处理页面故障
-    if (handle_page_fault(tf->stval, 3)) {  // 3表示写数据页
+    if (handle_page_fault(info->stval, 3)) {  // 3表示写数据页
         return; // 成功处理页面故障，可以继续执行
     }
     

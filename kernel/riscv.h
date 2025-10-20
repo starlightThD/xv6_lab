@@ -1,3 +1,5 @@
+#ifndef _RISCV_H
+#define _RISCV_H
 #include "types.h"
 #include "printf.h"
 
@@ -90,3 +92,4 @@ static inline uint32 read32(uint64 addr) {
         return 0; // 返回安全值
     }
 }
+#endif // _RISCV_H

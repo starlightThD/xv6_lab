@@ -2,7 +2,7 @@
 
 #define KERNBASE 0x80000000L
 #define PHYSTOP (KERNBASE + 128*1024*1024)
-
+#define PGSIZE 4096
 #define PLIC        0x0c000000L
 #define PLIC_SENABLE(hart)   (PLIC + 0x2080 + (hart) * 0x100)
 #define PLIC_SPRIORITY(hart) (PLIC + 0x201000 + (hart) * 0x2000)
