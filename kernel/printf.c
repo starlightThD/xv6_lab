@@ -1,10 +1,6 @@
-#include "printf.h"
-#include "stdarg.h"
-#include "uart.h"
-#define ESC "\033"
-#define CLEAR_SCREEN ESC "[2J"
-#define CURSOR_HOME ESC "[H"
-#define PRINTF_BUFFER_SIZE 128
+#include "defs.h"
+
+
 extern void uart_putc(char c);
 
 static char printf_buffer[PRINTF_BUFFER_SIZE];

@@ -1,8 +1,4 @@
-#include "sbi.h"
-#include "printf.h"
-
-// SBI ecall 编号
-#define SBI_SET_TIME 0x0
+#include "defs.h"
 
 void sbi_set_time(uint64 time) {
     register uint64 a0 asm("a0") = time;

@@ -1,15 +1,4 @@
-#include "trap.h"
-#include "types.h"
-#include "plic.h"
-#include "memlayout.h"
-#include "timer.h"
-#include "riscv.h"
-#include "printf.h"
-#include "sbi.h"
-#include "uart.h"
-#include "vm.h"
-#include "mem.h"
-#include "pm.h"
+#include "defs.h"
 
 
 static inline void save_exception_info(struct trapframe *tf, uint64 sepc, uint64 sstatus, uint64 scause, uint64 stval) {

@@ -1,8 +1,4 @@
-#include "types.h"
-#include "memlayout.h"
-#include "riscv.h"
-#include "plic.h"
-
+#include "defs.h"
 void plic_init(void) {
     // 清零所有中断源的优先级
     for (int i = 1; i <= 32; i++) {

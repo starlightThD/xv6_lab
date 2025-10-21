@@ -1,13 +1,4 @@
-#include "vm.h"
-#include "memlayout.h"
-#include "pm.h"
-#include "printf.h"
-#include "mem.h"
-#include "assert.h"
-
-
-
-
+#include "defs.h"
 // 内核页表全局变量
 pagetable_t kernel_pagetable = 0;
 
@@ -179,6 +170,7 @@ void kvminithart(void) {
     sfence_vma();
     w_satp(MAKE_SATP(kernel_pagetable));
     sfence_vma();
+	printf("[KVM] 内核分页已启用，satp=0x%lx\n", MAKE_SATP(kernel_pagetable));
 }
 // 获取当前页表
 pagetable_t get_current_pagetable(void) {

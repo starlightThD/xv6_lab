@@ -21,3 +21,5 @@
 
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
+
+#define PA2VA(pa) ((void *)((uint64)(pa) + KERNBASE))

@@ -1,5 +1,4 @@
-#include "mem.h"
-#include "types.h"
+#include "defs.h"
 // 自行实现memset
 void *memset(void *dst, int c, unsigned long n) {
     unsigned char *p = dst;

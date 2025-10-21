@@ -1,36 +1,5 @@
-// 串口驱动
-
-#include "types.h"
-#include "memlayout.h"
-#include "trap.h"
-#include "printf.h"
-#include "uart.h"
-
-#define Reg(reg) ((volatile unsigned char *)(UART0 + (reg)))
-
-// 寄存器定义
-#define RHR 0      // 接收保持寄存器 (读取)
-#define THR 0      // 发送保持寄存器 (写入)
-#define IER 1      // 中断使能寄存器
-#define FCR 2      // FIFO控制寄存器
-#define LSR 5      // 线路状态寄存器
-
-// 状态位定义
-#define LSR_TX_IDLE (1<<5)     // 标记发送保持寄存器可以接受下一个字符
-#define LSR_RX_READY (1<<0)    // 标记接收缓冲区有数据
-
-// 中断使能位
-#define IER_RX_ENABLE (1<<0)   // 接收中断使能
-#define IER_TX_ENABLE (1<<1)   // 发送中断使能
-
-// FIFO控制位
-#define FCR_FIFO_ENABLE (1<<0) // FIFO使能
-#define FCR_FIFO_CLEAR (3<<1)  // 清除FIFO
-
-#define ReadReg(reg) (*(Reg(reg)))
-#define WriteReg(reg, v) (*(Reg(reg)) = (v))
-
-
+#include "defs.h"
+struct uart_input_buf_t uart_input_buf;
 // UART初始化函数
 void uart_init(void) {
 
@@ -73,6 +42,56 @@ int uart_getc(void) {
 void uart_intr(void) {
     while (ReadReg(LSR) & LSR_RX_READY) {
         char c = ReadReg(RHR);
+        
+        // 回显接收的字符
         uart_putc(c);
+        
+        // 特殊字符处理
+        if (c == '\r') {
+            uart_putc('\n'); // 将回车转换为换行符并回显
+            c = '\n';
+        }
+        
+        // 缓冲区满检查
+        int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
+        if (next != uart_input_buf.r) {
+            // 缓冲区未满，存储字符
+            uart_input_buf.buf[uart_input_buf.w] = c;
+            uart_input_buf.w = next;
+        }
     }
+}
+// 阻塞式读取一个字符
+char uart_getc_blocking(void) {
+    // 等待直到有字符可读
+    while (uart_input_buf.r == uart_input_buf.w) {
+        // 在实际系统中，这里可能需要让进程睡眠
+        // 但目前我们使用简单的轮询
+        asm volatile("nop");
+    }
+    
+    // 读取字符
+    char c = uart_input_buf.buf[uart_input_buf.r];
+    uart_input_buf.r = (uart_input_buf.r + 1) % INPUT_BUF_SIZE;
+    return c;
+}
+// 读取一行输入，最多读取max-1个字符，并在末尾添加\0
+int readline(char *buf, int max) {
+    int i = 0;
+    char c;
+    
+    while (i < max - 1) {
+        c = uart_getc_blocking();
+        
+        if (c == '\n') {
+            buf[i] = '\0';
+            return i;
+        } else {
+            buf[i++] = c;
+        }
+    }
+    
+    // 缓冲区满，添加\0并返回
+    buf[max-1] = '\0';
+    return max-1;
 }

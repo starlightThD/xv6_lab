@@ -1,9 +1,4 @@
-#include "pm.h"
-#include "memlayout.h"
-#include "types.h"
-#include "printf.h"
-#include "mem.h"
-#include "assert.h"
+#include "defs.h"
 
 struct run {
   struct run *next;

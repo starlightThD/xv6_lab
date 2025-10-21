@@ -1,8 +1,4 @@
-#include "timer.h"
-#include "sbi.h"
-#include "printf.h"
-#include "trap.h"
-#include "riscv.h"  // 确保包含了这个头文件
+#include "defs.h"
 
 // 声明外部测试标志
 extern volatile int *interrupt_test_flag;
