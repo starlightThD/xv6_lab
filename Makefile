@@ -106,6 +106,8 @@ $K/proc.o: $K/proc.c
 
 $k/string.o: $K/string.c
 	$(CC) $(CFLAGS) -c $K/string.c -o $K/string.o
+
+
 # 验证内存布局
 check: $K/kernel
 	@echo "=== 检查段信息 ==="
@@ -146,17 +148,6 @@ debug: $K/kernel
 		-ex "layout split" \
 		-ex "continue"
 
-# 简单调试模式（手动操作）
-debug-simple: $K/kernel
-	@echo "=== 启动简单调试会话 ==="
-	@echo "使用调试器: $(GDB)"
-	@echo "请手动执行以下命令:"
-	@echo "  target remote localhost:1234"
-	@echo "  set architecture riscv:rv64"
-	@echo "  hb *0x80000000"
-	@echo "  c"
-	$(GDB) $K/kernel
-
 # 创建GDB配置文件
 gdb-init: $K/kernel
 	@echo "创建 .gdbinit 文件..."
@@ -172,44 +163,6 @@ gdb-init: $K/kernel
 	@echo "已创建 .gdbinit 文件"
 	@echo "现在可以运行: $(GDB) kernel/kernel"
 
-# 调试帮助信息
-gdb-help:
-	@echo "=== GDB 调试帮助 ==="
-	@echo "检测到的调试器: $(GDB)"
-	@echo ""
-	@echo "使用方法:"
-	@echo "  1. 启动调试模式: make qemu-gdb"
-	@echo "  2. 在新终端连接GDB: make debug"
-	@echo "  3. 或者手动调试: make debug-simple"
-	@echo "  4. 创建GDB配置: make gdb-init"
-	@echo ""
-	@echo "常用GDB命令:"
-	@echo "  target remote localhost:1234  - 连接到QEMU"
-	@echo "  set architecture riscv:rv64	- 设置架构"
-	@echo "  hb *0x80000000				 - 在入口点设置硬件断点"
-	@echo "  b start						- 在start函数设置断点"
-	@echo "  c							  - 继续执行"
-	@echo "  si							 - 单步执行指令"
-	@echo "  ni							 - 下一条指令"
-	@echo "  info registers				 - 查看寄存器"
-	@echo "  x/10i \$$pc					- 查看当前指令"
-	@echo "  x/10x \$$sp					- 查看栈内容"
-	@echo "  quit						   - 退出GDB"
-
-# 检查调试环境
-debug-check:
-	@echo "=== 调试环境检查 ==="
-	@echo "TOOLPREFIX: $(TOOLPREFIX)"
-	@echo "检测到的GDB: $(GDB)"
-	@echo ""
-	@echo "工具链状态:"
-	@which $(CC) && echo "  编译器: ✓" || echo "  编译器: ✗"
-	@which $(GDB) && echo "  调试器: ✓" || echo "  调试器: ✗"
-	@which $(QEMU) && echo "  QEMU: ✓" || echo "  QEMU: ✗"
-	@echo ""
-	@echo "GDB架构支持测试:"
-	@$(GDB) -batch -ex "set architecture riscv:rv64" -ex "quit" 2>/dev/null && echo "  RISC-V支持: ✓" || echo "  RISC-V支持: ✗"
-
 # 清理调试文件
 clean-debug:
 	rm -f .gdbinit
@@ -218,4 +171,4 @@ clean-debug:
 clean: clean-debug
 	rm -f $K/*.o $K/kernel $K/*.asm $K/*.sym
 
-.PHONY: check clean qemu qemu-gdb debug debug-simple gdb-help gdb-init debug-check clean-debug
+.PHONY: check clean qemu qemu-gdb debug gdb-init clean-debug
