@@ -296,6 +296,15 @@ void panic(const char *msg) {
 	reset_color();
 	while (1) { /* 死循环，防止继续执行 */ }
 }
+void warning(const char *fmt, ...) {
+    va_list ap;
+    color_purple(); // 设置紫色
+    printf("[WARNING] ");
+    va_start(ap, fmt);
+    printf(fmt, ap);
+    va_end(ap);
+    reset_color(); // 恢复默认颜色
+}
 void test_printf_precision(void) {
 	clear_screen();
     printf("=== 详细的Printf测试 ===\n");

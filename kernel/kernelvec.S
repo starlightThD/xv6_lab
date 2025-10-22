@@ -7,7 +7,6 @@ kernelvec:
 
         # save ALL registers (caller-saved and callee-saved)
         sd ra, 0(sp)
-        # 注意：不保存sp，因为我们已经修改了它
         sd gp, 16(sp)
         sd tp, 24(sp)
         sd t0, 32(sp)

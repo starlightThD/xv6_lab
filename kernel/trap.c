@@ -1,6 +1,4 @@
 #include "defs.h"
-
-
 static inline void save_exception_info(struct trapframe *tf, uint64 sepc, uint64 sstatus, uint64 scause, uint64 stval) {
     tf->epc = sepc;
     // 其他字段需要保存在全局变量或函数参数中

@@ -21,7 +21,7 @@ struct proc* myproc(void) {
 
 struct cpu* mycpu(void) {
     if (current_cpu == 0) {
-        printf("WARNING: current_cpu is NULL, initializing...\n");
+        warning("current_cpu is NULL, initializing...\n");
         static struct cpu cpu_instance;
 		memset(&cpu_instance, 0, sizeof(struct cpu));
 		current_cpu = &cpu_instance;
@@ -208,7 +208,7 @@ int create_proc(void (*entry)(void)) {
     if (parent != 0) {
         p->parent = parent;
     } else {
-		printf("Warning: Set parent to NULL\n");
+		warning("Set parent to NULL\n");
         p->parent = NULL;
     }
     
@@ -282,7 +282,7 @@ void yield(void) {
     
     // 防御性检查当前状态
     if (p->state != RUNNING) {
-        printf("Warining: yield when status is not RUNNING (%d)\n", p->state);
+        warning("yield when status is not RUNNING (%d)\n", p->state);
         return;
     }
     

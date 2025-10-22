@@ -1,7 +1,6 @@
 #include "defs.h"
 // 内核页表全局变量
 pagetable_t kernel_pagetable = 0;
-
 static inline uint64 px(int level, uint64 va) {
     return VPN_MASK(va, level);
 }
