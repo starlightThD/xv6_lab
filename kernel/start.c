@@ -108,10 +108,7 @@ void kernel_main(void){
 	}
 	int status;
 	int pid = wait_proc(&status);
-	if(pid == console_pid){
-		printf("KERNEL_MAIN: console process exited with status %d\n", status);
-		printf("KERNEL_MAIN: kernel will shutdown\n");
-	}else{
+	if(pid != console_pid){
 		printf("KERNEL_MAIN: unexpected process %d exited with status %d\n", pid, status);
 	}
 	return;

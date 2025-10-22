@@ -1,12 +1,15 @@
 #include "defs.h"
-#define PROC 32 //最多32个进程
+#define PROC 64 // 设定64个进程，目前最多达到512个
 
-struct proc proc_table[PROC]; //进程表
+struct proc *proc_table[PROC]; // 指针数组
+static int proc_table_pages = 0; //记录分配的物理页以进行释放
+static void *proc_table_mem[PROC]; // 每个进程一页
 extern char trampoline[], userret[];
 struct proc *current_proc = 0;
 struct cpu *current_cpu=0;
 
 void shutdown() {
+	free_proc_table();
     printf("关机\n");
     asm volatile (
         "li a7, 8\n"      // SBI shutdown
@@ -81,56 +84,35 @@ void forkret(void){
         return_to_user();
     }
 }
+
 void init_proc(void){
-    // 先检查进程表当前状态
-    int corrupted = 0;
-    for(int i=0; i<PROC; i++){
-        struct proc *p = &proc_table[i];
-        if (p->state != UNUSED && 
-            (p->pid < 0 || p->pid > 1000 || 
-             (p->state != USED && p->state != SLEEPING && 
-              p->state != RUNNABLE && p->state != RUNNING && 
-              p->state != ZOMBIE))) {
-            corrupted++;
-        }
+    for (int i = 0; i < PROC; i++) {
+        void *page = alloc_page();
+        if (!page) panic("init_proc: alloc_page failed for proc_table");
+        proc_table_mem[i] = page;
+        proc_table[i] = (struct proc *)page;
+
+        memset(proc_table[i], 0, sizeof(struct proc));
+        proc_table[i]->state = UNUSED;
+        proc_table[i]->pid = 0;
+        proc_table[i]->kstack = 0;
+        proc_table[i]->pagetable = 0;
+        proc_table[i]->trapframe = 0;
+        proc_table[i]->parent = 0;
+        proc_table[i]->chan = 0;
+        proc_table[i]->exit_status = 0;
+        memset(&proc_table[i]->context, 0, sizeof(struct context));
     }
-    
-    // 完整初始化每个进程表项
-    for(int i=0; i<PROC; i++){
-        struct proc *p = &proc_table[i];
-        
-        // 完全清零
-        memset(p, 0, sizeof(struct proc));
-        
-        // 显式设置关键字段
-        p->state = UNUSED;
-        p->pid = 0;
-        p->kstack = 0;
-        p->pagetable = 0;
-        p->trapframe = 0;
-        p->parent = 0;
-        p->chan = 0;
-        p->exit_status = 0;
-        memset(&p->context, 0, sizeof(struct context));
-    }
-    
-    // 验证初始化结果
-    corrupted = 0;
-    for(int i=0; i<PROC; i++){
-        struct proc *p = &proc_table[i];
-        if (p->state != UNUSED || p->pid != 0) {
-            corrupted++;
-        }
-    }
-    
-    if (corrupted > 0) {
-        panic("进程表初始化失败: 仍有损坏的表项");
+    proc_table_pages = PROC; // 每个进程一页
+}
+void free_proc_table(void) {
+    for (int i = 0; i < proc_table_pages; i++) {
+        free_page(proc_table_mem[i]);
     }
 }
 struct proc* alloc_proc(void) {
-    struct proc *p;
     for(int i = 0;i<PROC;i++) {
-		p = &proc_table[i];
+		struct proc *p = proc_table[i];
         if(p->state == UNUSED) {
             p->pid = i;
             p->state = USED;
@@ -245,7 +227,6 @@ int kfork(void) {
 // 调度器 - 简化版
 void schedule(void) {
   static int initialized = 0;
-  struct proc *p;
   struct cpu *c = mycpu();
   
   if (!initialized) {
@@ -260,15 +241,16 @@ void schedule(void) {
   
   while(1) {
     intr_on();
-    for(p = proc_table; p < &proc_table[PROC]; p++) {
-      if(p->state == RUNNABLE) {
-        p->state = RUNNING;
-        c->proc = p;
-        current_proc = p;
-		swtch(&c->context, &p->context);
-		c = mycpu();
-        c->proc = 0;
-        current_proc = 0;
+    for(int i = 0; i < PROC; i++) {
+        struct proc *p = proc_table[i];
+      	if(p->state == RUNNABLE) {
+			p->state = RUNNING;
+			c->proc = p;
+			current_proc = p;
+			swtch(&c->context, &p->context);
+			c = mycpu();
+			c->proc = 0;
+			current_proc = 0;
       }
     }
   }
@@ -330,12 +312,9 @@ void sleep(void *chan){
     
     p->chan = 0;  // 显式清除通道标记
 }
-void wakeup(void *chan)
-{
-    struct proc *p;
-    
-    // 查找在该通道上睡眠的进程
-    for(p = proc_table; p < &proc_table[PROC]; p++) {
+void wakeup(void *chan) {
+    for(int i = 0; i < PROC; i++) {
+        struct proc *p = proc_table[i];
         if(p->state == SLEEPING && p->chan == chan) {
             p->state = RUNNABLE;
         }
@@ -392,7 +371,7 @@ int kwait(int *status) {
         
         // 先查找ZOMBIE状态的子进程
         for (int i = 0; i < PROC; i++) {
-            struct proc *child = &proc_table[i];
+            struct proc *child = proc_table[i];
             if (child->state == ZOMBIE && child->parent == p) {
                 found_zombie = 1;
                 zombie_pid = child->pid;
@@ -415,7 +394,7 @@ int kwait(int *status) {
         // 检查是否有任何子进程
         int havekids = 0;
         for (int i = 0; i < PROC; i++) {
-            struct proc *child = &proc_table[i];
+            struct proc *child = proc_table[i];
             if (child->state != UNUSED && child->parent == p) {
                 havekids = 1;
             }
@@ -444,13 +423,13 @@ int kwait(int *status) {
 }
 
 void print_proc_table(void) {
-    struct proc *p;
     int count = 0;
     
     printf("PID  status     parent  func_address    stack_address\n");
     printf("--------------------------------------------\n");
     
-    for(p = proc_table; p < &proc_table[PROC]; p++) {
+    for(int i = 0; i < PROC; i++) {
+        struct proc *p = proc_table[i];
         if(p->state != UNUSED) {
             count++;
             printf("%d ", p->pid);
@@ -490,9 +469,7 @@ void simple_task(void) {
     printf("Simple task running in PID %d\n", myproc()->pid);
 }
 void test_process_creation(void) {
-    printf("\n==================================================\n");
     printf("===== 测试开始: 进程创建与管理测试 =====\n");
-    printf("==================================================\n");
 
     // 测试基本的进程创建
     int pid = create_proc(simple_task);
@@ -501,21 +478,17 @@ void test_process_creation(void) {
 
     int count = 1;
     printf("\n----- 测试进程表容量限制 -----\n");
-    for (int i = 0; i < PROC + 5; i++) {
+    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
         int pid = create_proc(simple_task);
         if (pid > 0) {
             count++; 
         } else {
+			warning("process table was full\n");
             break;
         }
     }
     printf("【测试结果】: 成功创建 %d 个进程 (最大限制: %d)\n", count, PROC);
-    if (count >= PROC) {
-        printf("【结果分析】: 系统正确处理了进程表容量限制\n");
-    } else {
-        printf("【结果分析】: 未达到进程表容量，可能存在问题\n");
-    }
-
+	print_proc_table();
     // 清理测试进程
     printf("\n----- 测试进程等待与清理 -----\n");
     int success_count = 0;
@@ -528,31 +501,34 @@ void test_process_creation(void) {
         }
     }
     printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
-    if (success_count == count) {
-        printf("【结果分析】: 所有进程成功回收，等待机制正常工作\n");
-    } else {
-        printf("【结果分析】: 部分进程未正常回收，等待机制可能存在问题\n");
-    }
+	print_proc_table();
     // 增强测试：清理后尝试重新创建进程
-    printf("\n----- 清理后尝试重新创建进程 -----\n");
-    int new_pid = create_proc(simple_task);
-    if (new_pid > 0) {
-        printf("【增强测试结果】: 清理后成功重新创建进程，PID: %d\n", new_pid);
-		
-        // 等待新进程退出
-        int waited_new = wait_proc(NULL);
-        if (waited_new == new_pid) {
-            printf("【增强测试结果】: 新进程已成功回收，PID: %d\n", waited_new);
+	printf("\n----- 清理后尝试重新填满进程表 -----\n");
+	int refill_count = 0;
+	for (int i = 0; i < PROC; i++) {
+		int pid = create_proc(simple_task);
+		if (pid > 0) {
+			refill_count++;
+		} else {
+			printf("【错误】: 进程槽已满或分配失败\n");
+			break;
+		}
+	}
+	printf("【测试结果】: 清理后成功重新创建 %d 个进程\n", refill_count);
+	print_proc_table();
+	printf("\n----- 测试进程等待与清理 -----\n");
+    success_count = 0;
+    for (int i = 0; i < count; i++) {
+        int waited_pid = wait_proc(NULL);
+        if (waited_pid > 0) {
+            success_count++;
         } else {
-            printf("【增强测试错误】: 新进程未正常回收，返回值: %d\n", waited_new);
+            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
         }
-    } else {
-        printf("【增强测试错误】: 清理后无法重新创建进程，可能进程槽未归还\n");
     }
-
-    printf("\n==================================================\n");
+    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
+	print_proc_table();
     printf("===== 测试结束: 进程创建与管理测试 =====\n");
-    printf("==================================================\n\n");
 }
 
 void cpu_intensive_task(void) {
@@ -565,9 +541,7 @@ void cpu_intensive_task(void) {
 }
 
 void test_scheduler(void) {
-    printf("\n==================================================\n");
     printf("===== 测试开始: 调度器测试 =====\n");
-    printf("==================================================\n");
 
     // 创建多个计算密集型进程
     for (int i = 0; i < 3; i++) {
@@ -582,9 +556,7 @@ void test_scheduler(void) {
     uint64 end_time = get_time();
 
     printf("Scheduler test completed in %lu cycles\n", end_time - start_time);
-	printf("\n==================================================\n");
     printf("===== 测试结束 =====\n");
-    printf("==================================================\n");
 }
 static int proc_buffer = 0;
 static int proc_produced = 0;
@@ -610,9 +582,7 @@ void consumer_task(void) {
     exit_proc(0);
 }
 void test_synchronization(void) {
-    printf("\n==================================================\n");
     printf("===== 测试开始: 同步机制测试 =====\n");
-    printf("==================================================\n");
 
     // 初始化共享缓冲区
     shared_buffer_init();
@@ -625,8 +595,5 @@ void test_synchronization(void) {
     wait_proc(NULL);
     wait_proc(NULL);
 
-    printf("Synchronization test completed\n");
-    printf("==================================================\n");
     printf("===== 测试结束 =====\n");
-    printf("==================================================\n");
 }

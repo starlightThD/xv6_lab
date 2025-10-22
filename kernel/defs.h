@@ -285,6 +285,7 @@ extern void swtch(struct context *old, struct context *new);
 struct proc* myproc(void);
 struct cpu* mycpu(void);
 void init_proc(void);
+void free_proc_table(void);
 int create_proc(void (*entry)(void));
 struct proc* alloc_proc(void);
 void free_proc(struct proc *p);
