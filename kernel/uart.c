@@ -1,4 +1,5 @@
 #include "defs.h"
+#define LINE_BUF_SIZE 128
 struct uart_input_buf_t uart_input_buf;
 // UART初始化函数
 void uart_init(void) {
@@ -38,26 +39,40 @@ int uart_getc(void) {
     return ReadReg(RHR); 
 }
 
-// UART中断处理函数
 void uart_intr(void) {
+    static char linebuf[LINE_BUF_SIZE];
+    static int line_len = 0;
+
     while (ReadReg(LSR) & LSR_RX_READY) {
         char c = ReadReg(RHR);
-        
-        // 回显接收的字符
-        uart_putc(c);
-        
-        // 特殊字符处理
-        if (c == '\r') {
-            uart_putc('\n'); // 将回车转换为换行符并回显
-            c = '\n';
-        }
-        
-        // 缓冲区满检查
-        int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
-        if (next != uart_input_buf.r) {
-            // 缓冲区未满，存储字符
-            uart_input_buf.buf[uart_input_buf.w] = c;
-            uart_input_buf.w = next;
+
+        if (c == '\r' || c == '\n') {
+            uart_putc('\n');
+            // 将编辑好的整行写入全局缓冲区
+            for (int i = 0; i < line_len; i++) {
+                int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
+                if (next != uart_input_buf.r) {
+                    uart_input_buf.buf[uart_input_buf.w] = linebuf[i];
+                    uart_input_buf.w = next;
+                }
+            }
+            // 写入换行符
+            int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
+            if (next != uart_input_buf.r) {
+                uart_input_buf.buf[uart_input_buf.w] = '\n';
+                uart_input_buf.w = next;
+            }
+            line_len = 0;
+        } else if (c == 0x7f || c == 0x08) { // 退格
+            if (line_len > 0) {
+                uart_putc('\b');
+                uart_putc(' ');
+                uart_putc('\b');
+                line_len--;
+            }
+        } else if (line_len < LINE_BUF_SIZE - 1) {
+            uart_putc(c);
+            linebuf[line_len++] = c;
         }
     }
 }

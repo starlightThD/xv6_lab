@@ -286,7 +286,7 @@ struct proc* myproc(void);
 struct cpu* mycpu(void);
 void init_proc(void);
 void free_proc_table(void);
-int create_proc(void (*entry)(void));
+int create_proc(void (*entry)(void),int is_user);
 struct proc* alloc_proc(void);
 void free_proc(struct proc *p);
 void exit_proc(int status);
@@ -304,6 +304,7 @@ void print_proc_table(void);
 void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
+void test_sys_usr(void);
 
 // ========================
 // static inline 函数

@@ -178,22 +178,20 @@ void free_proc(struct proc *p){
     memset(&p->context, 0, sizeof(p->context));
 }
 
-int create_proc(void (*entry)(void)) {
+int create_proc(void (*entry)(void), int is_user) {
     struct proc *p = alloc_proc();
     if (!p) return -1;
-    
+
     p->trapframe->epc = (uint64)entry;
     p->state = RUNNABLE;
-    
-    // 安全地设置父进程
+    p->is_user = is_user;
+
     struct proc *parent = myproc();
     if (parent != 0) {
         p->parent = parent;
     } else {
-		warning("Set parent to NULL\n");
         p->parent = NULL;
     }
-    
     return p->pid;
 }
 void exit_proc(int status) {
@@ -424,45 +422,33 @@ int kwait(int *status) {
 
 void print_proc_table(void) {
     int count = 0;
-    
-    printf("PID  status     parent  func_address    stack_address\n");
-    printf("--------------------------------------------\n");
-    
+    printf("PID  TYPE STATUS     PPID   FUNC_ADDR      STACK_ADDR    \n");
+    printf("----------------------------------------------------------\n");
     for(int i = 0; i < PROC; i++) {
         struct proc *p = proc_table[i];
         if(p->state != UNUSED) {
             count++;
-            printf("%d ", p->pid);
-            
+            const char *type = (p->is_user ? "USR" : "SYS");
+            const char *status;
             switch(p->state) {
-                case UNUSED:   printf("UNUSED    "); break;
-                case USED:     printf("USED      "); break;
-                case SLEEPING: printf("SLEEP     "); break;
-                case RUNNABLE: printf("RUNNABLE  "); break;
-                case RUNNING:  printf("RUNNING   "); break;
-                case ZOMBIE:   printf("ZOMBIE    "); break;
-                default:       printf("UNKNOWN(%d) ", p->state); break;
+                case UNUSED:   status = "UNUSED"; break;
+                case USED:     status = "USED"; break;
+                case SLEEPING: status = "SLEEP"; break;
+                case RUNNABLE: status = "RUNNABLE"; break;
+                case RUNNING:  status = "RUNNING"; break;
+                case ZOMBIE:   status = "ZOMBIE"; break;
+                default:       status = "UNKNOWN"; break;
             }
-            
-            if(p->parent)
-                printf("%d ", p->parent->pid);
-            else
-                printf("none    ");
-                
-            if(p->trapframe)
-                printf("%p ", (void*)p->trapframe->epc);
-            else
-                printf("none    ");
-                
-            printf("%p\n", (void*)p->kstack);
+            int ppid = p->parent ? p->parent->pid : -1;
+            unsigned long func_addr = p->trapframe ? p->trapframe->epc : 0;
+            unsigned long stack_addr = p->kstack;
+            printf("%2d  %3s %8s %4d 0x%012lx 0x%012lx\n",
+                p->pid, type, status, ppid, func_addr, stack_addr);
         }
     }
-    
-    printf("--------------------------------------------\n");
+    printf("----------------------------------------------------------\n");
     printf("%d active processes\n", count);
-
 }
-
 // 简单测试任务，用于测试进程创建
 void simple_task(void) {
     // 简单任务，只打印并退出
@@ -472,14 +458,14 @@ void test_process_creation(void) {
     printf("===== 测试开始: 进程创建与管理测试 =====\n");
 
     // 测试基本的进程创建
-    int pid = create_proc(simple_task);
+    int pid = create_proc(simple_task,1);
     assert(pid > 0);
     printf("【测试结果】: 基本进程创建成功，PID: %d，正常退出\n", pid);
 
     int count = 1;
     printf("\n----- 测试进程表容量限制 -----\n");
     for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
-        int pid = create_proc(simple_task);
+        int pid = create_proc(simple_task,1);
         if (pid > 0) {
             count++; 
         } else {
@@ -506,11 +492,11 @@ void test_process_creation(void) {
 	printf("\n----- 清理后尝试重新填满进程表 -----\n");
 	int refill_count = 0;
 	for (int i = 0; i < PROC; i++) {
-		int pid = create_proc(simple_task);
+		int pid = create_proc(simple_task,1);
 		if (pid > 0) {
 			refill_count++;
 		} else {
-			printf("【错误】: 进程槽已满或分配失败\n");
+			warning("process table was full\n");
 			break;
 		}
 	}
@@ -545,7 +531,7 @@ void test_scheduler(void) {
 
     // 创建多个计算密集型进程
     for (int i = 0; i < 3; i++) {
-        create_proc(cpu_intensive_task);
+        create_proc(cpu_intensive_task,1);
     }
 
     // 观察调度行为
@@ -588,12 +574,40 @@ void test_synchronization(void) {
     shared_buffer_init();
 
     // 创建生产者和消费者进程
-    create_proc(producer_task);
-    create_proc(consumer_task);
+    create_proc(producer_task,1);
+    create_proc(consumer_task,1);
 
     // 等待两个进程完成
     wait_proc(NULL);
     wait_proc(NULL);
 
+    printf("===== 测试结束 =====\n");
+}
+
+void sys_access_task(void) {
+    volatile int *ptr = (int*)0x80000000; // 典型内核空间地址
+    printf("SYS: try write kernel addr 0x80000000\n");
+    *ptr = 1234;
+    printf("SYS: write success, value=%d\n", *ptr);
+    exit_proc(0);
+}
+
+void usr_access_task(void) {
+    volatile int *ptr = (int*)0x80000000; // 典型内核空间地址
+    printf("USR: try write kernel addr 0x80000000\n");
+    *ptr = 1234; // 这里理想情况下应触发异常
+    printf("USR: write success, value=%d\n", *ptr);
+    exit_proc(0);
+}
+
+void test_sys_usr(void) {
+    printf("===== 测试: 用户/系统进程访问内核空间 =====\n");
+    int sys_pid = create_proc(sys_access_task, 0); // 系统进程
+	printf("创建系统进程：%d成功",sys_pid);
+	wait_proc(NULL); // 等待系统进程
+	panic("wait");
+    int usr_pid = create_proc(usr_access_task, 1); // 用户进程
+	printf("创建用户进程：%d成功",usr_pid);
+    wait_proc(NULL); // 等待用户进程
     printf("===== 测试结束 =====\n");
 }

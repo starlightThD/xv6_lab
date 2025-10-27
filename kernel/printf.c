@@ -21,20 +21,6 @@ static void buffer_char(char c) {
 	}
 }
 
-// 小数字快速转换表（0-99）
-static const char small_numbers[][4] = {
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-    "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-    "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
-    "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
-    "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
-    "50", "51", "52", "53", "54", "55", "56", "57", "58", "59",
-    "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
-    "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
-    "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
-    "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"
-};
-
 static void consputc(int c){
 	// 实现到多个输出的处理，目前只有串口输出
 	uart_putc(c);
@@ -44,36 +30,32 @@ static void consputs(const char *s){
 	// 直接调用uart_puts输出字符串
 	uart_puts(str);
 }
-static void printint(long long xx,int base,int sign){
-	// 模仿xv6的printint
-	static char digits[] = "0123456789abcdef";
-	char buf[20]; // 增大缓冲区以处理64位整数
-	int i;
-	unsigned long long x;
-	if (sign && (sign = xx < 0)) // 符号处理
-		x = -(unsigned long long)xx; // 强制转换以避免溢出
-	else
-		x = xx;
+static void printint(long long xx, int base, int sign, int width, int padzero){
+    static char digits[] = "0123456789abcdef";
+    char buf[32];
+    int i = 0;
+    unsigned long long x;
 
-	if (base == 10 && x < 100) {
-		// 使用查表法处理小数字
-		consputs(small_numbers[x]);
-		return;
-	}
-	i = 0;
-	do{
-		buf[i] = digits[x % base];
-		i++;
-	}while((x/=base) !=0);
-	if (sign){
-		buf[i] = '-';
-		i++;
-	}
-	i--;
-	while( i>=0){
-		consputc(buf[i]);
-		i--;
-	}
+    if (sign && (sign = xx < 0))
+        x = -(unsigned long long)xx;
+    else
+        x = xx;
+
+    do {
+        buf[i++] = digits[x % base];
+    } while ((x /= base) != 0);
+
+    if (sign)
+        buf[i++] = '-';
+
+    // 计算需要补的填充字符数
+    int pad = width - i;
+    while (pad-- > 0) {
+        consputc(padzero ? '0' : ' ');
+    }
+
+    while (--i >= 0)
+        consputc(buf[i]);
 }
 void printf(const char *fmt, ...) {
     va_list ap;
@@ -87,10 +69,17 @@ void printf(const char *fmt, ...) {
             continue;
         }
         flush_printf_buffer(); // 遇到格式化标志时，先刷新缓冲区
+		// 解析填充标志和宽度
+        int padzero = 0, width = 0;
         c = fmt[++i] & 0xff;
-        if(c == 0)
-            break;
-            
+        if (c == '0') {
+            padzero = 1;
+            c = fmt[++i] & 0xff;
+        }
+        while (c >= '0' && c <= '9') {
+            width = width * 10 + (c - '0');
+            c = fmt[++i] & 0xff;
+        }
         // 检查是否有长整型标记'l'
         int is_long = 0;
         if(c == 'l') {
@@ -103,21 +92,21 @@ void printf(const char *fmt, ...) {
         switch(c){
         case 'd':
             if(is_long)
-                printint(va_arg(ap, long long), 10, 1);
+                printint(va_arg(ap, long long), 10, 1, width, padzero);
             else
-                printint(va_arg(ap, int), 10, 1);
+                printint(va_arg(ap, int), 10, 1, width, padzero);
             break;
         case 'x':
             if(is_long)
-                printint(va_arg(ap, long long), 16, 0);
+                printint(va_arg(ap, long long), 16, 0, width, padzero);
             else
-                printint(va_arg(ap, int), 16, 0);
+                printint(va_arg(ap, int), 16, 0, width, padzero);
             break;
         case 'u':
             if(is_long)
-                printint(va_arg(ap, unsigned long long), 10, 0);
+                printint(va_arg(ap, unsigned long long), 10, 0, width, padzero);
             else
-                printint(va_arg(ap, unsigned int), 10, 0);
+                printint(va_arg(ap, unsigned int), 10, 0, width, padzero);
             break;
         case 'c':
             consputc(va_arg(ap, int));
@@ -142,21 +131,26 @@ void printf(const char *fmt, ...) {
             break;
         case 'b':
             if(is_long)
-                printint(va_arg(ap, long long), 2, 0);
+                printint(va_arg(ap, long long), 2, 0, width, padzero);
             else
-                printint(va_arg(ap, int), 2, 0);
+                printint(va_arg(ap, int), 2, 0, width, padzero);
             break;
         case 'o':
             if(is_long)
-                printint(va_arg(ap, long long), 8, 0);
+                printint(va_arg(ap, long long), 8, 0, width, padzero);
             else
-                printint(va_arg(ap, int), 8, 0);
+                printint(va_arg(ap, int), 8, 0, width, padzero);
             break;
         case '%':
             buffer_char('%');
             break;
         default:
             buffer_char('%');
+            if(padzero) buffer_char('0');
+            if(width) {
+                // 只支持一位宽度，简单处理
+                buffer_char('0' + width);
+            }
             if(is_long) buffer_char('l');
             buffer_char(c);
             break;
@@ -176,7 +170,7 @@ void cursor_up(int lines) {
     if (lines <= 0) return;
     consputc('\033');
     consputc('[');
-    printint(lines, 10, 0);
+    printint(lines, 10, 0, 0,0);
     consputc('A');
 }
 
@@ -185,7 +179,7 @@ void cursor_down(int lines) {
     if (lines <= 0) return;
     consputc('\033');
     consputc('[');
-    printint(lines, 10, 0);
+    printint(lines, 10, 0, 0,0);
     consputc('B');
 }
 
@@ -194,7 +188,7 @@ void cursor_right(int cols) {
     if (cols <= 0) return;
     consputc('\033');
     consputc('[');
-    printint(cols, 10, 0);
+    printint(cols, 10, 0,0,0);
     consputc('C');
 }
 
@@ -203,7 +197,7 @@ void cursor_left(int cols) {
     if (cols <= 0) return;
     consputc('\033');
     consputc('[');
-    printint(cols, 10, 0);
+    printint(cols, 10, 0,0,0);
     consputc('D');
 }
 // 保存光标位置
@@ -225,16 +219,16 @@ void cursor_to_column(int col) {
     if (col <= 0) col = 1;
     consputc('\033');
     consputc('[');
-    printint(col, 10, 0);
+    printint(col, 10, 0,0,0);
     consputc('G');
 }
 // 光标定位到指定行列
 void goto_rc(int row, int col) {
     consputc('\033');
     consputc('[');
-    printint(row, 10, 0);
+    printint(row, 10, 0,0,0);
     consputc(';');
-    printint(col, 10, 0);
+    printint(col, 10, 0,0,0);
     consputc('H');
 }
 // 颜色控制
@@ -246,7 +240,7 @@ void set_fg_color(int color) {
 	if (color < 30 || color > 37) return; // 支持30-37
 	consputc('\033');
 	consputc('[');
-	printint(color, 10, 0);
+	printint(color, 10, 0,0,0);
 	consputc('m');
 }
 // 设置背景色
@@ -254,7 +248,7 @@ void set_bg_color(int color) {
 	if (color < 40 || color > 47) return; // 支持40-47
 	consputc('\033');
 	consputc('[');
-	printint(color, 10, 0);
+	printint(color, 10, 0,0,0);
 	consputc('m');
 }
 // 简易文字颜色
