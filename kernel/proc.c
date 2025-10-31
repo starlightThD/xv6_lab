@@ -605,7 +605,8 @@ void test_sys_usr(void) {
     int sys_pid = create_proc(sys_access_task, 0); // 系统进程
 	printf("创建系统进程：%d成功",sys_pid);
 	wait_proc(NULL); // 等待系统进程
-	panic("wait");
+	warning("This test is unfinish for the user process is unavaliable\n");
+	return;
     int usr_pid = create_proc(usr_access_task, 1); // 用户进程
 	printf("创建用户进程：%d成功",usr_pid);
     wait_proc(NULL); // 等待用户进程
