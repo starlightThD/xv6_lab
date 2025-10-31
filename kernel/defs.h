@@ -73,42 +73,49 @@ typedef __builtin_va_list va_list;
 // ========================
 
 struct trapframe {
-  uint64 kernel_satp;
-  uint64 kernel_sp;
-  uint64 kernel_trap;
-  uint64 epc;
-  uint64 kernel_hartid;
-  uint64 ra;
-  uint64 sp;
-  uint64 gp;
-  uint64 tp;
-  uint64 t0;
-  uint64 t1;
-  uint64 t2;
-  uint64 s0;
-  uint64 s1;
-  uint64 a0;
-  uint64 a1;
-  uint64 a2;
-  uint64 a3;
-  uint64 a4;
-  uint64 a5;
-  uint64 a6;
-  uint64 a7;
-  uint64 s2;
-  uint64 s3;
-  uint64 s4;
-  uint64 s5;
-  uint64 s6;
-  uint64 s7;
-  uint64 s8;
-  uint64 s9;
-  uint64 s10;
-  uint64 s11;
-  uint64 t3;
-  uint64 t4;
-  uint64 t5;
-  uint64 t6;
+  uint64 kernel_satp;     // 0    内核页表的 satp
+  uint64 kernel_sp;       // 8    内核栈顶
+  uint64 kernel_trap;     // 16   内核 trap handler 地址
+  uint64 sstatus;         // 24   S 态 sstatus
+  uint64 epc;             // 32   用户态返回地址
+  uint64 kernel_hartid;   // 40   当前 hart id
+
+  // 通用寄存器
+  uint64 ra;              // 48
+  uint64 sp;              // 56
+  uint64 gp;              // 64
+  uint64 tp;              // 72
+  uint64 t0;              // 80
+  uint64 t1;              // 88
+  uint64 t2;              // 96
+  uint64 s0;              // 104
+  uint64 s1;              // 112
+  uint64 a0;              // 120
+  uint64 a1;              // 128
+  uint64 a2;              // 136
+  uint64 a3;              // 144
+  uint64 a4;              // 152
+  uint64 a5;              // 160
+  uint64 a6;              // 168
+  uint64 a7;              // 176
+  uint64 s2;              // 184
+  uint64 s3;              // 192
+  uint64 s4;              // 200
+  uint64 s5;              // 208
+  uint64 s6;              // 216
+  uint64 s7;              // 224
+  uint64 s8;              // 232
+  uint64 s9;              // 240
+  uint64 s10;             // 248
+  uint64 s11;             // 256
+  uint64 t3;              // 264
+  uint64 t4;              // 272
+  uint64 t5;              // 280
+  uint64 t6;              // 288
+
+  // 下面是 trampoline 相关
+  uint64 usertrap;        // 296  usertrap C 函数地址
+  uint64 kernel_vec;      // 304  内核 trap 向量地址
 };
 
 struct uart_input_buf_t {

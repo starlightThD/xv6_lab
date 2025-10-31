@@ -107,72 +107,72 @@ void hello_world() {
     802000b0:	8082                	ret
 
 00000000802000b2 <start>:
-void start(){
+// start函数：内核的C语言入口
     802000b2:	1101                	addi	sp,sp,-32
     802000b4:	ec06                	sd	ra,24(sp)
     802000b6:	e822                	sd	s0,16(sp)
     802000b8:	1000                	addi	s0,sp,32
-	pmm_init();
+	// 内存页分配器
     802000ba:	00003097          	auipc	ra,0x3
     802000be:	9a8080e7          	jalr	-1624(ra) # 80202a62 <pmm_init>
-	kvminit();
+	// 虚拟内存
     802000c2:	00002097          	auipc	ra,0x2
     802000c6:	2aa080e7          	jalr	682(ra) # 8020236c <kvminit>
-    kvminithart();
+	kvminit();
     802000ca:	00002097          	auipc	ra,0x2
     802000ce:	2f4080e7          	jalr	756(ra) # 802023be <kvminithart>
-	trap_init();
+	// 中断和异常处理
     802000d2:	00003097          	auipc	ra,0x3
     802000d6:	f9a080e7          	jalr	-102(ra) # 8020306c <trap_init>
-	uart_init();
+	trap_init();
     802000da:	00000097          	auipc	ra,0x0
     802000de:	4c0080e7          	jalr	1216(ra) # 8020059a <uart_init>
-	intr_on();
+	uart_init();
     802000e2:	00000097          	auipc	ra,0x0
     802000e6:	f84080e7          	jalr	-124(ra) # 80200066 <intr_on>
-    printf("===============================================\n");
+    // 输出操作系统启动横幅
     802000ea:	00006517          	auipc	a0,0x6
     802000ee:	fce50513          	addi	a0,a0,-50 # 802060b8 <etext+0xb8>
     802000f2:	00001097          	auipc	ra,0x1
     802000f6:	a3c080e7          	jalr	-1476(ra) # 80200b2e <printf>
-    printf("        RISC-V Operating System v1.0         \n");
+    printf("===============================================\n");
     802000fa:	00006517          	auipc	a0,0x6
     802000fe:	ff650513          	addi	a0,a0,-10 # 802060f0 <etext+0xf0>
     80200102:	00001097          	auipc	ra,0x1
     80200106:	a2c080e7          	jalr	-1492(ra) # 80200b2e <printf>
-    printf("===============================================\n\n");
+    printf("        RISC-V Operating System v1.0         \n");
     8020010a:	00006517          	auipc	a0,0x6
     8020010e:	01650513          	addi	a0,a0,22 # 80206120 <etext+0x120>
     80200112:	00001097          	auipc	ra,0x1
     80200116:	a1c080e7          	jalr	-1508(ra) # 80200b2e <printf>
-	init_proc(); // 初始化进程管理子系统
+
     8020011a:	00004097          	auipc	ra,0x4
     8020011e:	ffc080e7          	jalr	-4(ra) # 80204116 <init_proc>
-	int main_pid = create_proc(kernel_main);
+	init_proc(); // 初始化进程管理子系统
     80200122:	00000517          	auipc	a0,0x0
     80200126:	3d250513          	addi	a0,a0,978 # 802004f4 <kernel_main>
     8020012a:	00004097          	auipc	ra,0x4
     8020012e:	3e2080e7          	jalr	994(ra) # 8020450c <create_proc>
     80200132:	87aa                	mv	a5,a0
     80200134:	fef42623          	sw	a5,-20(s0)
-	if (main_pid < 0){
+	int main_pid = create_proc(kernel_main,0);
     80200138:	fec42783          	lw	a5,-20(s0)
     8020013c:	2781                	sext.w	a5,a5
     8020013e:	0007da63          	bgez	a5,80200152 <start+0xa0>
-		panic("START: create main process failed!\n");
+	if (main_pid < 0){
     80200142:	00006517          	auipc	a0,0x6
     80200146:	01650513          	addi	a0,a0,22 # 80206158 <etext+0x158>
     8020014a:	00001097          	auipc	ra,0x1
     8020014e:	2ec080e7          	jalr	748(ra) # 80201436 <panic>
-	schedule();
+	
     80200152:	00004097          	auipc	ra,0x4
     80200156:	54a080e7          	jalr	1354(ra) # 8020469c <schedule>
-    panic("START: main() exit unexpectedly!!!\n");
+    // 防止返回保险
     8020015a:	00006517          	auipc	a0,0x6
     8020015e:	02650513          	addi	a0,a0,38 # 80206180 <etext+0x180>
     80200162:	00001097          	auipc	ra,0x1
     80200166:	2d4080e7          	jalr	724(ra) # 80201436 <panic>
-}
+    panic("START: main() exit unexpectedly!!!\n");
     8020016a:	0001                	nop
     8020016c:	60e2                	ld	ra,24(sp)
     8020016e:	6442                	ld	s0,16(sp)
@@ -180,22 +180,22 @@ void start(){
     80200172:	8082                	ret
 
 0000000080200174 <console>:
-void console(void) {
+
     80200174:	7129                	addi	sp,sp,-320
     80200176:	fe06                	sd	ra,312(sp)
     80200178:	fa22                	sd	s0,304(sp)
     8020017a:	0280                	addi	s0,sp,320
-    int exit_requested = 0;
+    char input_buffer[256];
     8020017c:	fe042623          	sw	zero,-20(s0)
-    printf("可用命令:\n");
+
     80200180:	00006517          	auipc	a0,0x6
     80200184:	02850513          	addi	a0,a0,40 # 802061a8 <etext+0x1a8>
     80200188:	00001097          	auipc	ra,0x1
     8020018c:	9a6080e7          	jalr	-1626(ra) # 80200b2e <printf>
-    for (int i = 0; i < COMMAND_COUNT; i++) {
+    printf("可用命令:\n");
     80200190:	fe042423          	sw	zero,-24(s0)
     80200194:	a0b9                	j	802001e2 <console+0x6e>
-        printf("  %s - %s\n", command_table[i].name, command_table[i].desc);
+    for (int i = 0; i < COMMAND_COUNT; i++) {
     80200196:	0000a697          	auipc	a3,0xa
     8020019a:	e6a68693          	addi	a3,a3,-406 # 8020a000 <command_table>
     8020019e:	fe842703          	lw	a4,-24(s0)
@@ -219,7 +219,7 @@ void console(void) {
     802001cc:	ff050513          	addi	a0,a0,-16 # 802061b8 <etext+0x1b8>
     802001d0:	00001097          	auipc	ra,0x1
     802001d4:	95e080e7          	jalr	-1698(ra) # 80200b2e <printf>
-    for (int i = 0; i < COMMAND_COUNT; i++) {
+    printf("可用命令:\n");
     802001d8:	fe842783          	lw	a5,-24(s0)
     802001dc:	2785                	addiw	a5,a5,1
     802001de:	fef42423          	sw	a5,-24(s0)
@@ -227,35 +227,35 @@ void console(void) {
     802001e6:	873e                	mv	a4,a5
     802001e8:	478d                	li	a5,3
     802001ea:	fae7f6e3          	bgeu	a5,a4,80200196 <console+0x22>
-    printf("  help          - 显示此帮助\n");
+    }
     802001ee:	00006517          	auipc	a0,0x6
     802001f2:	fda50513          	addi	a0,a0,-38 # 802061c8 <etext+0x1c8>
     802001f6:	00001097          	auipc	ra,0x1
     802001fa:	938080e7          	jalr	-1736(ra) # 80200b2e <printf>
-    printf("  exit          - 退出控制台\n");
+    printf("  help          - 显示此帮助\n");
     802001fe:	00006517          	auipc	a0,0x6
     80200202:	ff250513          	addi	a0,a0,-14 # 802061f0 <etext+0x1f0>
     80200206:	00001097          	auipc	ra,0x1
     8020020a:	928080e7          	jalr	-1752(ra) # 80200b2e <printf>
-    printf("  ps            - 显示进程状态\n");
+    printf("  exit          - 退出控制台\n");
     8020020e:	00006517          	auipc	a0,0x6
     80200212:	00a50513          	addi	a0,a0,10 # 80206218 <etext+0x218>
     80200216:	00001097          	auipc	ra,0x1
     8020021a:	918080e7          	jalr	-1768(ra) # 80200b2e <printf>
-    while (!exit_requested) {
+
     8020021e:	ac4d                	j	802004d0 <console+0x35c>
-        printf("Console >>> ");
+    while (!exit_requested) {
     80200220:	00006517          	auipc	a0,0x6
     80200224:	02050513          	addi	a0,a0,32 # 80206240 <etext+0x240>
     80200228:	00001097          	auipc	ra,0x1
     8020022c:	906080e7          	jalr	-1786(ra) # 80200b2e <printf>
-        readline(input_buffer, sizeof(input_buffer));
+        printf("Console >>> ");
     80200230:	ed040793          	addi	a5,s0,-304
     80200234:	10000593          	li	a1,256
     80200238:	853e                	mv	a0,a5
     8020023a:	00000097          	auipc	ra,0x0
     8020023e:	5ee080e7          	jalr	1518(ra) # 80200828 <readline>
-        if (strcmp(input_buffer, "exit") == 0) {
+
     80200242:	ed040793          	addi	a5,s0,-304
     80200246:	00006597          	auipc	a1,0x6
     8020024a:	00a58593          	addi	a1,a1,10 # 80206250 <etext+0x250>
@@ -264,11 +264,11 @@ void console(void) {
     80200254:	134080e7          	jalr	308(ra) # 80205384 <strcmp>
     80200258:	87aa                	mv	a5,a0
     8020025a:	e789                	bnez	a5,80200264 <console+0xf0>
-            exit_requested = 1;
+        if (strcmp(input_buffer, "exit") == 0) {
     8020025c:	4785                	li	a5,1
     8020025e:	fef42623          	sw	a5,-20(s0)
     80200262:	a4bd                	j	802004d0 <console+0x35c>
-        } else if (strcmp(input_buffer, "help") == 0) {
+            exit_requested = 1;
     80200264:	ed040793          	addi	a5,s0,-304
     80200268:	00006597          	auipc	a1,0x6
     8020026c:	ff058593          	addi	a1,a1,-16 # 80206258 <etext+0x258>
@@ -277,15 +277,15 @@ void console(void) {
     80200276:	112080e7          	jalr	274(ra) # 80205384 <strcmp>
     8020027a:	87aa                	mv	a5,a0
     8020027c:	e3cd                	bnez	a5,8020031e <console+0x1aa>
-            printf("可用命令:\n");
+        } else if (strcmp(input_buffer, "help") == 0) {
     8020027e:	00006517          	auipc	a0,0x6
     80200282:	f2a50513          	addi	a0,a0,-214 # 802061a8 <etext+0x1a8>
     80200286:	00001097          	auipc	ra,0x1
     8020028a:	8a8080e7          	jalr	-1880(ra) # 80200b2e <printf>
-            for (int i = 0; i < COMMAND_COUNT; i++) {
+            printf("可用命令:\n");
     8020028e:	fe042223          	sw	zero,-28(s0)
     80200292:	a0b9                	j	802002e0 <console+0x16c>
-                printf("  %s - %s\n", command_table[i].name, command_table[i].desc);
+            for (int i = 0; i < COMMAND_COUNT; i++) {
     80200294:	0000a697          	auipc	a3,0xa
     80200298:	d6c68693          	addi	a3,a3,-660 # 8020a000 <command_table>
     8020029c:	fe442703          	lw	a4,-28(s0)
@@ -309,7 +309,7 @@ void console(void) {
     802002ca:	ef250513          	addi	a0,a0,-270 # 802061b8 <etext+0x1b8>
     802002ce:	00001097          	auipc	ra,0x1
     802002d2:	860080e7          	jalr	-1952(ra) # 80200b2e <printf>
-            for (int i = 0; i < COMMAND_COUNT; i++) {
+            printf("可用命令:\n");
     802002d6:	fe442783          	lw	a5,-28(s0)
     802002da:	2785                	addiw	a5,a5,1
     802002dc:	fef42223          	sw	a5,-28(s0)
@@ -317,23 +317,23 @@ void console(void) {
     802002e4:	873e                	mv	a4,a5
     802002e6:	478d                	li	a5,3
     802002e8:	fae7f6e3          	bgeu	a5,a4,80200294 <console+0x120>
-            printf("  help          - 显示此帮助\n");
+            }
     802002ec:	00006517          	auipc	a0,0x6
     802002f0:	edc50513          	addi	a0,a0,-292 # 802061c8 <etext+0x1c8>
     802002f4:	00001097          	auipc	ra,0x1
     802002f8:	83a080e7          	jalr	-1990(ra) # 80200b2e <printf>
-            printf("  exit          - 退出控制台\n");
+            printf("  help          - 显示此帮助\n");
     802002fc:	00006517          	auipc	a0,0x6
     80200300:	ef450513          	addi	a0,a0,-268 # 802061f0 <etext+0x1f0>
     80200304:	00001097          	auipc	ra,0x1
     80200308:	82a080e7          	jalr	-2006(ra) # 80200b2e <printf>
-            printf("  ps            - 显示进程状态\n");
+            printf("  exit          - 退出控制台\n");
     8020030c:	00006517          	auipc	a0,0x6
     80200310:	f0c50513          	addi	a0,a0,-244 # 80206218 <etext+0x218>
     80200314:	00001097          	auipc	ra,0x1
     80200318:	81a080e7          	jalr	-2022(ra) # 80200b2e <printf>
     8020031c:	aa55                	j	802004d0 <console+0x35c>
-        } else if (strcmp(input_buffer, "ps") == 0) {
+            printf("  ps            - 显示进程状态\n");
     8020031e:	ed040793          	addi	a5,s0,-304
     80200322:	00006597          	auipc	a1,0x6
     80200326:	f3e58593          	addi	a1,a1,-194 # 80206260 <etext+0x260>
@@ -342,16 +342,16 @@ void console(void) {
     80200330:	058080e7          	jalr	88(ra) # 80205384 <strcmp>
     80200334:	87aa                	mv	a5,a0
     80200336:	e791                	bnez	a5,80200342 <console+0x1ce>
-            print_proc_table();
+        } else if (strcmp(input_buffer, "ps") == 0) {
     80200338:	00005097          	auipc	ra,0x5
     8020033c:	8b0080e7          	jalr	-1872(ra) # 80204be8 <print_proc_table>
     80200340:	aa41                	j	802004d0 <console+0x35c>
-            int found = 0;
+        } else {
     80200342:	fe042023          	sw	zero,-32(s0)
-            for (int i = 0; i < COMMAND_COUNT; i++) {
+            int found = 0;
     80200346:	fc042e23          	sw	zero,-36(s0)
     8020034a:	aa99                	j	802004a0 <console+0x32c>
-                if (strcmp(input_buffer, command_table[i].name) == 0) {
+            for (int i = 0; i < COMMAND_COUNT; i++) {
     8020034c:	0000a697          	auipc	a3,0xa
     80200350:	cb468693          	addi	a3,a3,-844 # 8020a000 <command_table>
     80200354:	fdc42703          	lw	a4,-36(s0)
@@ -368,7 +368,7 @@ void console(void) {
     80200370:	018080e7          	jalr	24(ra) # 80205384 <strcmp>
     80200374:	87aa                	mv	a5,a0
     80200376:	12079063          	bnez	a5,80200496 <console+0x322>
-                    int pid = create_proc(command_table[i].func);
+                if (strcmp(input_buffer, command_table[i].name) == 0) {
     8020037a:	0000a697          	auipc	a3,0xa
     8020037e:	c8668693          	addi	a3,a3,-890 # 8020a000 <command_table>
     80200382:	fdc42703          	lw	a4,-36(s0)
@@ -383,11 +383,11 @@ void console(void) {
     80200398:	178080e7          	jalr	376(ra) # 8020450c <create_proc>
     8020039c:	87aa                	mv	a5,a0
     8020039e:	fcf42c23          	sw	a5,-40(s0)
-                    if (pid < 0) {
+                    int pid = create_proc(command_table[i].func,0);
     802003a2:	fd842783          	lw	a5,-40(s0)
     802003a6:	2781                	sext.w	a5,a5
     802003a8:	0207d863          	bgez	a5,802003d8 <console+0x264>
-                        printf("创建%s进程失败\n", command_table[i].name);
+                    if (pid < 0) {
     802003ac:	0000a697          	auipc	a3,0xa
     802003b0:	c5468693          	addi	a3,a3,-940 # 8020a000 <command_table>
     802003b4:	fdc42703          	lw	a4,-36(s0)
@@ -403,7 +403,7 @@ void console(void) {
     802003ce:	00000097          	auipc	ra,0x0
     802003d2:	760080e7          	jalr	1888(ra) # 80200b2e <printf>
     802003d6:	a865                	j	8020048e <console+0x31a>
-                        printf("创建%s进程成功，PID: %d\n", command_table[i].name, pid);
+                    } else {
     802003d8:	0000a697          	auipc	a3,0xa
     802003dc:	c2868693          	addi	a3,a3,-984 # 8020a000 <command_table>
     802003e0:	fdc42703          	lw	a4,-36(s0)
@@ -420,21 +420,21 @@ void console(void) {
     802003fc:	e8850513          	addi	a0,a0,-376 # 80206280 <etext+0x280>
     80200400:	00000097          	auipc	ra,0x0
     80200404:	72e080e7          	jalr	1838(ra) # 80200b2e <printf>
-                        int waited_pid = wait_proc(&status);
+                        int status;
     80200408:	ecc40793          	addi	a5,s0,-308
     8020040c:	853e                	mv	a0,a5
     8020040e:	00004097          	auipc	ra,0x4
     80200412:	1b2080e7          	jalr	434(ra) # 802045c0 <wait_proc>
     80200416:	87aa                	mv	a5,a0
     80200418:	fcf42a23          	sw	a5,-44(s0)
-                        if (waited_pid == pid) {
+                        int waited_pid = wait_proc(&status);
     8020041c:	fd442783          	lw	a5,-44(s0)
     80200420:	873e                	mv	a4,a5
     80200422:	fd842783          	lw	a5,-40(s0)
     80200426:	2701                	sext.w	a4,a4
     80200428:	2781                	sext.w	a5,a5
     8020042a:	02f71d63          	bne	a4,a5,80200464 <console+0x2f0>
-                            printf("%s进程(PID: %d)已退出，状态码: %d\n", command_table[i].name, pid, status);
+                        if (waited_pid == pid) {
     8020042e:	0000a697          	auipc	a3,0xa
     80200432:	bd268693          	addi	a3,a3,-1070 # 8020a000 <command_table>
     80200436:	fdc42703          	lw	a4,-36(s0)
@@ -453,7 +453,7 @@ void console(void) {
     8020045a:	00000097          	auipc	ra,0x0
     8020045e:	6d4080e7          	jalr	1748(ra) # 80200b2e <printf>
     80200462:	a035                	j	8020048e <console+0x31a>
-                            printf("等待%s进程时发生错误\n", command_table[i].name);
+                        } else {
     80200464:	0000a697          	auipc	a3,0xa
     80200468:	b9c68693          	addi	a3,a3,-1124 # 8020a000 <command_table>
     8020046c:	fdc42703          	lw	a4,-36(s0)
@@ -468,12 +468,12 @@ void console(void) {
     80200482:	e5250513          	addi	a0,a0,-430 # 802062d0 <etext+0x2d0>
     80200486:	00000097          	auipc	ra,0x0
     8020048a:	6a8080e7          	jalr	1704(ra) # 80200b2e <printf>
-                    found = 1;
+                    }
     8020048e:	4785                	li	a5,1
     80200490:	fef42023          	sw	a5,-32(s0)
-                    break;
+                    found = 1;
     80200494:	a821                	j	802004ac <console+0x338>
-            for (int i = 0; i < COMMAND_COUNT; i++) {
+            int found = 0;
     80200496:	fdc42783          	lw	a5,-36(s0)
     8020049a:	2785                	addiw	a5,a5,1
     8020049c:	fcf42e23          	sw	a5,-36(s0)
@@ -481,84 +481,84 @@ void console(void) {
     802004a4:	873e                	mv	a4,a5
     802004a6:	478d                	li	a5,3
     802004a8:	eae7f2e3          	bgeu	a5,a4,8020034c <console+0x1d8>
-            if (!found && input_buffer[0] != '\0') {
+            }
     802004ac:	fe042783          	lw	a5,-32(s0)
     802004b0:	2781                	sext.w	a5,a5
     802004b2:	ef99                	bnez	a5,802004d0 <console+0x35c>
     802004b4:	ed044783          	lbu	a5,-304(s0)
     802004b8:	cf81                	beqz	a5,802004d0 <console+0x35c>
-                printf("无效命令: %s\n", input_buffer);
+            if (!found && input_buffer[0] != '\0') {
     802004ba:	ed040793          	addi	a5,s0,-304
     802004be:	85be                	mv	a1,a5
     802004c0:	00006517          	auipc	a0,0x6
     802004c4:	e3050513          	addi	a0,a0,-464 # 802062f0 <etext+0x2f0>
     802004c8:	00000097          	auipc	ra,0x0
     802004cc:	666080e7          	jalr	1638(ra) # 80200b2e <printf>
-    while (!exit_requested) {
+
     802004d0:	fec42783          	lw	a5,-20(s0)
     802004d4:	2781                	sext.w	a5,a5
     802004d6:	d40785e3          	beqz	a5,80200220 <console+0xac>
-    printf("控制台进程退出\n");
+    }
     802004da:	00006517          	auipc	a0,0x6
     802004de:	e2e50513          	addi	a0,a0,-466 # 80206308 <etext+0x308>
     802004e2:	00000097          	auipc	ra,0x0
     802004e6:	64c080e7          	jalr	1612(ra) # 80200b2e <printf>
-    return;
+    printf("控制台进程退出\n");
     802004ea:	0001                	nop
-}
+    return;
     802004ec:	70f2                	ld	ra,312(sp)
     802004ee:	7452                	ld	s0,304(sp)
     802004f0:	6131                	addi	sp,sp,320
     802004f2:	8082                	ret
 
 00000000802004f4 <kernel_main>:
-void kernel_main(void){
+}
     802004f4:	1101                	addi	sp,sp,-32
     802004f6:	ec06                	sd	ra,24(sp)
     802004f8:	e822                	sd	s0,16(sp)
     802004fa:	1000                	addi	s0,sp,32
-	clear_screen();
+	// 内核主函数
     802004fc:	00001097          	auipc	ra,0x1
     80200500:	a2a080e7          	jalr	-1494(ra) # 80200f26 <clear_screen>
-	int console_pid = create_proc(console);
+	clear_screen();
     80200504:	00000517          	auipc	a0,0x0
     80200508:	c7050513          	addi	a0,a0,-912 # 80200174 <console>
     8020050c:	00004097          	auipc	ra,0x4
     80200510:	000080e7          	jalr	ra # 8020450c <create_proc>
     80200514:	87aa                	mv	a5,a0
     80200516:	fef42623          	sw	a5,-20(s0)
-	if (console_pid < 0){
+	int console_pid = create_proc(console,0);
     8020051a:	fec42783          	lw	a5,-20(s0)
     8020051e:	2781                	sext.w	a5,a5
     80200520:	0007db63          	bgez	a5,80200536 <kernel_main+0x42>
-		panic("KERNEL_MAIN: create console process failed!\n");
+	if (console_pid < 0){
     80200524:	00006517          	auipc	a0,0x6
     80200528:	dfc50513          	addi	a0,a0,-516 # 80206320 <etext+0x320>
     8020052c:	00001097          	auipc	ra,0x1
     80200530:	f0a080e7          	jalr	-246(ra) # 80201436 <panic>
     80200534:	a821                	j	8020054c <kernel_main+0x58>
-		printf("KERNEL_MAIN: console process created with PID %d\n", console_pid);
+	}else{
     80200536:	fec42783          	lw	a5,-20(s0)
     8020053a:	85be                	mv	a1,a5
     8020053c:	00006517          	auipc	a0,0x6
     80200540:	e1450513          	addi	a0,a0,-492 # 80206350 <etext+0x350>
     80200544:	00000097          	auipc	ra,0x0
     80200548:	5ea080e7          	jalr	1514(ra) # 80200b2e <printf>
-	int pid = wait_proc(&status);
+	int status;
     8020054c:	fe440793          	addi	a5,s0,-28
     80200550:	853e                	mv	a0,a5
     80200552:	00004097          	auipc	ra,0x4
     80200556:	06e080e7          	jalr	110(ra) # 802045c0 <wait_proc>
     8020055a:	87aa                	mv	a5,a0
     8020055c:	fef42423          	sw	a5,-24(s0)
-	if(pid != console_pid){
+	int pid = wait_proc(&status);
     80200560:	fe842783          	lw	a5,-24(s0)
     80200564:	873e                	mv	a4,a5
     80200566:	fec42783          	lw	a5,-20(s0)
     8020056a:	2701                	sext.w	a4,a4
     8020056c:	2781                	sext.w	a5,a5
     8020056e:	02f70163          	beq	a4,a5,80200590 <kernel_main+0x9c>
-		printf("KERNEL_MAIN: unexpected process %d exited with status %d\n", pid, status);
+	if(pid != console_pid){
     80200572:	fe442703          	lw	a4,-28(s0)
     80200576:	fe842783          	lw	a5,-24(s0)
     8020057a:	863a                	mv	a2,a4
@@ -567,9 +567,10 @@ void kernel_main(void){
     80200582:	e0a50513          	addi	a0,a0,-502 # 80206388 <etext+0x388>
     80200586:	00000097          	auipc	ra,0x0
     8020058a:	5a8080e7          	jalr	1448(ra) # 80200b2e <printf>
-	return;
+	}
     8020058e:	0001                	nop
     80200590:	0001                	nop
+	return;
     80200592:	60e2                	ld	ra,24(sp)
     80200594:	6442                	ld	s0,16(sp)
     80200596:	6105                	addi	sp,sp,32
@@ -577,44 +578,44 @@ void kernel_main(void){
 
 000000008020059a <uart_init>:
 #include "defs.h"
+#define LINE_BUF_SIZE 128
 struct uart_input_buf_t uart_input_buf;
 // UART初始化函数
-void uart_init(void) {
     8020059a:	1141                	addi	sp,sp,-16
     8020059c:	e406                	sd	ra,8(sp)
     8020059e:	e022                	sd	s0,0(sp)
     802005a0:	0800                	addi	s0,sp,16
+void uart_init(void) {
 
-    WriteReg(IER, 0x00);
     802005a2:	100007b7          	lui	a5,0x10000
     802005a6:	0785                	addi	a5,a5,1 # 10000001 <userret+0xfffff65>
     802005a8:	00078023          	sb	zero,0(a5)
-    WriteReg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
+    WriteReg(IER, 0x00);
     802005ac:	100007b7          	lui	a5,0x10000
     802005b0:	0789                	addi	a5,a5,2 # 10000002 <userret+0xfffff66>
     802005b2:	471d                	li	a4,7
     802005b4:	00e78023          	sb	a4,0(a5)
-    WriteReg(IER, IER_RX_ENABLE);
+    WriteReg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
     802005b8:	100007b7          	lui	a5,0x10000
     802005bc:	0785                	addi	a5,a5,1 # 10000001 <userret+0xfffff65>
     802005be:	4705                	li	a4,1
     802005c0:	00e78023          	sb	a4,0(a5)
-    register_interrupt(UART0_IRQ, uart_intr);//注册键盘输入的中断处理函数
+    WriteReg(IER, IER_RX_ENABLE);
     802005c4:	00000597          	auipc	a1,0x0
     802005c8:	12858593          	addi	a1,a1,296 # 802006ec <uart_intr>
     802005cc:	4529                	li	a0,10
     802005ce:	00003097          	auipc	ra,0x3
     802005d2:	91a080e7          	jalr	-1766(ra) # 80202ee8 <register_interrupt>
-    enable_interrupts(UART0_IRQ);
+    register_interrupt(UART0_IRQ, uart_intr);//注册键盘输入的中断处理函数
     802005d6:	4529                	li	a0,10
     802005d8:	00003097          	auipc	ra,0x3
     802005dc:	99a080e7          	jalr	-1638(ra) # 80202f72 <enable_interrupts>
-    printf("UART initialized with input support\n");
+    enable_interrupts(UART0_IRQ);
     802005e0:	00006517          	auipc	a0,0x6
     802005e4:	de850513          	addi	a0,a0,-536 # 802063c8 <etext+0x3c8>
     802005e8:	00000097          	auipc	ra,0x0
     802005ec:	546080e7          	jalr	1350(ra) # 80200b2e <printf>
-}
+    printf("UART initialized with input support\n");
     802005f0:	0001                	nop
     802005f2:	60a2                	ld	ra,8(sp)
     802005f4:	6402                	ld	s0,0(sp)
@@ -622,16 +623,16 @@ void uart_init(void) {
     802005f8:	8082                	ret
 
 00000000802005fa <uart_putc>:
+}
 
 // 发送单个字符
-void uart_putc(char c) {
     802005fa:	1101                	addi	sp,sp,-32
     802005fc:	ec22                	sd	s0,24(sp)
     802005fe:	1000                	addi	s0,sp,32
     80200600:	87aa                	mv	a5,a0
     80200602:	fef407a3          	sb	a5,-17(s0)
+void uart_putc(char c) {
     // 等待发送缓冲区空闲
-    while((ReadReg(LSR) & LSR_TX_IDLE) == 0);
     80200606:	0001                	nop
     80200608:	100007b7          	lui	a5,0x10000
     8020060c:	0795                	addi	a5,a5,5 # 10000005 <userret+0xfffff69>
@@ -641,30 +642,30 @@ void uart_putc(char c) {
     80200618:	0207f793          	andi	a5,a5,32
     8020061c:	2781                	sext.w	a5,a5
     8020061e:	d7ed                	beqz	a5,80200608 <uart_putc+0xe>
-    WriteReg(THR, c);
+    while((ReadReg(LSR) & LSR_TX_IDLE) == 0);
     80200620:	100007b7          	lui	a5,0x10000
     80200624:	fef44703          	lbu	a4,-17(s0)
     80200628:	00e78023          	sb	a4,0(a5) # 10000000 <userret+0xfffff64>
-}
+    WriteReg(THR, c);
     8020062c:	0001                	nop
     8020062e:	6462                	ld	s0,24(sp)
     80200630:	6105                	addi	sp,sp,32
     80200632:	8082                	ret
 
 0000000080200634 <uart_puts>:
+}
 
-void uart_puts(char *s) {
     80200634:	7179                	addi	sp,sp,-48
     80200636:	f422                	sd	s0,40(sp)
     80200638:	1800                	addi	s0,sp,48
     8020063a:	fca43c23          	sd	a0,-40(s0)
-    if (!s) return;
+void uart_puts(char *s) {
     8020063e:	fd843783          	ld	a5,-40(s0)
     80200642:	c7b5                	beqz	a5,802006ae <uart_puts+0x7a>
+    if (!s) return;
     
-    while (*s) {
     80200644:	a8b9                	j	802006a2 <uart_puts+0x6e>
-        while ((ReadReg(LSR) & LSR_TX_IDLE) == 0);
+    while (*s) {
     80200646:	0001                	nop
     80200648:	100007b7          	lui	a5,0x10000
     8020064c:	0795                	addi	a5,a5,5 # 10000005 <userret+0xfffff69>
@@ -674,24 +675,24 @@ void uart_puts(char *s) {
     80200658:	0207f793          	andi	a5,a5,32
     8020065c:	2781                	sext.w	a5,a5
     8020065e:	d7ed                	beqz	a5,80200648 <uart_puts+0x14>
-        int sent_count = 0;
+        while ((ReadReg(LSR) & LSR_TX_IDLE) == 0);
     80200660:	fe042623          	sw	zero,-20(s0)
-        while (*s && sent_count < 4) { 
+        int sent_count = 0;
     80200664:	a01d                	j	8020068a <uart_puts+0x56>
-            WriteReg(THR, *s);
+        while (*s && sent_count < 4) { 
     80200666:	100007b7          	lui	a5,0x10000
     8020066a:	fd843703          	ld	a4,-40(s0)
     8020066e:	00074703          	lbu	a4,0(a4)
     80200672:	00e78023          	sb	a4,0(a5) # 10000000 <userret+0xfffff64>
-            s++;
+            WriteReg(THR, *s);
     80200676:	fd843783          	ld	a5,-40(s0)
     8020067a:	0785                	addi	a5,a5,1
     8020067c:	fcf43c23          	sd	a5,-40(s0)
-            sent_count++;
+            s++;
     80200680:	fec42783          	lw	a5,-20(s0)
     80200684:	2785                	addiw	a5,a5,1
     80200686:	fef42623          	sw	a5,-20(s0)
-        while (*s && sent_count < 4) { 
+        int sent_count = 0;
     8020068a:	fd843783          	ld	a5,-40(s0)
     8020068e:	0007c783          	lbu	a5,0(a5)
     80200692:	cb81                	beqz	a5,802006a2 <uart_puts+0x6e>
@@ -699,27 +700,27 @@ void uart_puts(char *s) {
     80200698:	0007871b          	sext.w	a4,a5
     8020069c:	478d                	li	a5,3
     8020069e:	fce7d4e3          	bge	a5,a4,80200666 <uart_puts+0x32>
-    while (*s) {
+    
     802006a2:	fd843783          	ld	a5,-40(s0)
     802006a6:	0007c783          	lbu	a5,0(a5)
     802006aa:	ffd1                	bnez	a5,80200646 <uart_puts+0x12>
     802006ac:	a011                	j	802006b0 <uart_puts+0x7c>
-    if (!s) return;
+void uart_puts(char *s) {
     802006ae:	0001                	nop
+            sent_count++;
         }
     }
-}
     802006b0:	7422                	ld	s0,40(sp)
     802006b2:	6145                	addi	sp,sp,48
     802006b4:	8082                	ret
 
 00000000802006b6 <uart_getc>:
+}
 
-int uart_getc(void) {
     802006b6:	1141                	addi	sp,sp,-16
     802006b8:	e422                	sd	s0,8(sp)
     802006ba:	0800                	addi	s0,sp,16
-    if ((ReadReg(LSR) & LSR_RX_READY) == 0)
+int uart_getc(void) {
     802006bc:	100007b7          	lui	a5,0x10000
     802006c0:	0795                	addi	a5,a5,5 # 10000005 <userret+0xfffff69>
     802006c2:	0007c783          	lbu	a5,0(a5)
@@ -728,59 +729,59 @@ int uart_getc(void) {
     802006cc:	8b85                	andi	a5,a5,1
     802006ce:	2781                	sext.w	a5,a5
     802006d0:	e399                	bnez	a5,802006d6 <uart_getc+0x20>
-        return -1; 
+    if ((ReadReg(LSR) & LSR_RX_READY) == 0)
     802006d2:	57fd                	li	a5,-1
     802006d4:	a801                	j	802006e4 <uart_getc+0x2e>
-    return ReadReg(RHR); 
+        return -1; 
     802006d6:	100007b7          	lui	a5,0x10000
     802006da:	0007c783          	lbu	a5,0(a5) # 10000000 <userret+0xfffff64>
     802006de:	0ff7f793          	zext.b	a5,a5
     802006e2:	2781                	sext.w	a5,a5
-}
+    return ReadReg(RHR); 
     802006e4:	853e                	mv	a0,a5
     802006e6:	6422                	ld	s0,8(sp)
     802006e8:	0141                	addi	sp,sp,16
     802006ea:	8082                	ret
 
 00000000802006ec <uart_intr>:
+}
 
-// UART中断处理函数
 void uart_intr(void) {
     802006ec:	1101                	addi	sp,sp,-32
     802006ee:	ec06                	sd	ra,24(sp)
     802006f0:	e822                	sd	s0,16(sp)
     802006f2:	1000                	addi	s0,sp,32
-    while (ReadReg(LSR) & LSR_RX_READY) {
+    static char linebuf[LINE_BUF_SIZE];
     802006f4:	a869                	j	8020078e <uart_intr+0xa2>
-        char c = ReadReg(RHR);
+    static int line_len = 0;
     802006f6:	100007b7          	lui	a5,0x10000
     802006fa:	0007c783          	lbu	a5,0(a5) # 10000000 <userret+0xfffff64>
     802006fe:	fef407a3          	sb	a5,-17(s0)
-        
-        // 回显接收的字符
-        uart_putc(c);
+
+    while (ReadReg(LSR) & LSR_RX_READY) {
+        char c = ReadReg(RHR);
     80200702:	fef44783          	lbu	a5,-17(s0)
     80200706:	853e                	mv	a0,a5
     80200708:	00000097          	auipc	ra,0x0
     8020070c:	ef2080e7          	jalr	-270(ra) # 802005fa <uart_putc>
-        
-        // 特殊字符处理
-        if (c == '\r') {
+
+        if (c == '\r' || c == '\n') {
+            uart_putc('\n');
     80200710:	fef44783          	lbu	a5,-17(s0)
     80200714:	0ff7f713          	zext.b	a4,a5
     80200718:	47b5                	li	a5,13
     8020071a:	00f71a63          	bne	a4,a5,8020072e <uart_intr+0x42>
-            uart_putc('\n'); // 将回车转换为换行符并回显
+            // 将编辑好的整行写入全局缓冲区
     8020071e:	4529                	li	a0,10
     80200720:	00000097          	auipc	ra,0x0
     80200724:	eda080e7          	jalr	-294(ra) # 802005fa <uart_putc>
-            c = '\n';
+            for (int i = 0; i < line_len; i++) {
     80200728:	47a9                	li	a5,10
     8020072a:	fef407a3          	sb	a5,-17(s0)
-        }
-        
-        // 缓冲区满检查
-        int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
+                int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
+                if (next != uart_input_buf.r) {
+                    uart_input_buf.buf[uart_input_buf.w] = linebuf[i];
+                    uart_input_buf.w = next;
     8020072e:	0000a797          	auipc	a5,0xa
     80200732:	97278793          	addi	a5,a5,-1678 # 8020a0a0 <uart_input_buf>
     80200736:	0847a783          	lw	a5,132(a5)
@@ -789,14 +790,14 @@ void uart_intr(void) {
     8020073e:	2781                	sext.w	a5,a5
     80200740:	07f7f793          	andi	a5,a5,127
     80200744:	fef42423          	sw	a5,-24(s0)
-        if (next != uart_input_buf.r) {
+                }
     80200748:	0000a797          	auipc	a5,0xa
     8020074c:	95878793          	addi	a5,a5,-1704 # 8020a0a0 <uart_input_buf>
     80200750:	0807a703          	lw	a4,128(a5)
     80200754:	fe842783          	lw	a5,-24(s0)
     80200758:	02f70b63          	beq	a4,a5,8020078e <uart_intr+0xa2>
-            // 缓冲区未满，存储字符
-            uart_input_buf.buf[uart_input_buf.w] = c;
+            }
+            // 写入换行符
     8020075c:	0000a797          	auipc	a5,0xa
     80200760:	94478793          	addi	a5,a5,-1724 # 8020a0a0 <uart_input_buf>
     80200764:	0847a783          	lw	a5,132(a5)
@@ -807,12 +808,12 @@ void uart_intr(void) {
     80200774:	97ba                	add	a5,a5,a4
     80200776:	fef44703          	lbu	a4,-17(s0)
     8020077a:	00e78023          	sb	a4,0(a5)
-            uart_input_buf.w = next;
+            int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
     8020077e:	fe842703          	lw	a4,-24(s0)
     80200782:	0000a797          	auipc	a5,0xa
     80200786:	91e78793          	addi	a5,a5,-1762 # 8020a0a0 <uart_input_buf>
     8020078a:	08e7a223          	sw	a4,132(a5)
-    while (ReadReg(LSR) & LSR_RX_READY) {
+    static char linebuf[LINE_BUF_SIZE];
     8020078e:	100007b7          	lui	a5,0x10000
     80200792:	0795                	addi	a5,a5,5 # 10000005 <userret+0xfffff69>
     80200794:	0007c783          	lbu	a5,0(a5)
@@ -821,9 +822,9 @@ void uart_intr(void) {
     8020079e:	8b85                	andi	a5,a5,1
     802007a0:	2781                	sext.w	a5,a5
     802007a2:	fbb1                	bnez	a5,802006f6 <uart_intr+0xa>
-        }
-    }
-}
+            if (next != uart_input_buf.r) {
+                uart_input_buf.buf[uart_input_buf.w] = '\n';
+                uart_input_buf.w = next;
     802007a4:	0001                	nop
     802007a6:	0001                	nop
     802007a8:	60e2                	ld	ra,24(sp)
@@ -832,19 +833,19 @@ void uart_intr(void) {
     802007ae:	8082                	ret
 
 00000000802007b0 <uart_getc_blocking>:
-// 阻塞式读取一个字符
-char uart_getc_blocking(void) {
+            }
+            line_len = 0;
     802007b0:	1101                	addi	sp,sp,-32
     802007b2:	ec22                	sd	s0,24(sp)
     802007b4:	1000                	addi	s0,sp,32
-    // 等待直到有字符可读
-    while (uart_input_buf.r == uart_input_buf.w) {
+        } else if (c == 0x7f || c == 0x08) { // 退格
+            if (line_len > 0) {
     802007b6:	a011                	j	802007ba <uart_getc_blocking+0xa>
-        // 在实际系统中，这里可能需要让进程睡眠
-        // 但目前我们使用简单的轮询
-        asm volatile("nop");
+                uart_putc('\b');
+                uart_putc(' ');
+                uart_putc('\b');
     802007b8:	0001                	nop
-    while (uart_input_buf.r == uart_input_buf.w) {
+            if (line_len > 0) {
     802007ba:	0000a797          	auipc	a5,0xa
     802007be:	8e678793          	addi	a5,a5,-1818 # 8020a0a0 <uart_input_buf>
     802007c2:	0807a703          	lw	a4,128(a5)
@@ -852,10 +853,10 @@ char uart_getc_blocking(void) {
     802007ca:	8da78793          	addi	a5,a5,-1830 # 8020a0a0 <uart_input_buf>
     802007ce:	0847a783          	lw	a5,132(a5)
     802007d2:	fef703e3          	beq	a4,a5,802007b8 <uart_getc_blocking+0x8>
-    }
-    
-    // 读取字符
-    char c = uart_input_buf.buf[uart_input_buf.r];
+                line_len--;
+            }
+        } else if (line_len < LINE_BUF_SIZE - 1) {
+            uart_putc(c);
     802007d6:	0000a797          	auipc	a5,0xa
     802007da:	8ca78793          	addi	a5,a5,-1846 # 8020a0a0 <uart_input_buf>
     802007de:	0807a783          	lw	a5,128(a5)
@@ -866,7 +867,7 @@ char uart_getc_blocking(void) {
     802007ee:	97ba                	add	a5,a5,a4
     802007f0:	0007c783          	lbu	a5,0(a5)
     802007f4:	fef407a3          	sb	a5,-17(s0)
-    uart_input_buf.r = (uart_input_buf.r + 1) % INPUT_BUF_SIZE;
+            linebuf[line_len++] = c;
     802007f8:	0000a797          	auipc	a5,0xa
     802007fc:	8a878793          	addi	a5,a5,-1880 # 8020a0a0 <uart_input_buf>
     80200800:	0807a783          	lw	a5,128(a5)
@@ -877,17 +878,17 @@ char uart_getc_blocking(void) {
     80200810:	0000a797          	auipc	a5,0xa
     80200814:	89078793          	addi	a5,a5,-1904 # 8020a0a0 <uart_input_buf>
     80200818:	08e7a023          	sw	a4,128(a5)
-    return c;
+        }
     8020081c:	fef44783          	lbu	a5,-17(s0)
-}
+    }
     80200820:	853e                	mv	a0,a5
     80200822:	6462                	ld	s0,24(sp)
     80200824:	6105                	addi	sp,sp,32
     80200826:	8082                	ret
 
 0000000080200828 <readline>:
-// 读取一行输入，最多读取max-1个字符，并在末尾添加\0
-int readline(char *buf, int max) {
+}
+// 阻塞式读取一个字符
     80200828:	7179                	addi	sp,sp,-48
     8020082a:	f406                	sd	ra,40(sp)
     8020082c:	f022                	sd	s0,32(sp)
@@ -895,33 +896,33 @@ int readline(char *buf, int max) {
     80200830:	fca43c23          	sd	a0,-40(s0)
     80200834:	87ae                	mv	a5,a1
     80200836:	fcf42a23          	sw	a5,-44(s0)
-    int i = 0;
+char uart_getc_blocking(void) {
     8020083a:	fe042623          	sw	zero,-20(s0)
-    char c;
-    
-    while (i < max - 1) {
+    // 等待直到有字符可读
+    while (uart_input_buf.r == uart_input_buf.w) {
+        // 在实际系统中，这里可能需要让进程睡眠
     8020083e:	a0b9                	j	8020088c <readline+0x64>
-        c = uart_getc_blocking();
+        // 但目前我们使用简单的轮询
     80200840:	00000097          	auipc	ra,0x0
     80200844:	f70080e7          	jalr	-144(ra) # 802007b0 <uart_getc_blocking>
     80200848:	87aa                	mv	a5,a0
     8020084a:	fef405a3          	sb	a5,-21(s0)
-        
-        if (c == '\n') {
+        asm volatile("nop");
+    }
     8020084e:	feb44783          	lbu	a5,-21(s0)
     80200852:	0ff7f713          	zext.b	a4,a5
     80200856:	47a9                	li	a5,10
     80200858:	00f71c63          	bne	a4,a5,80200870 <readline+0x48>
-            buf[i] = '\0';
+    
     8020085c:	fec42783          	lw	a5,-20(s0)
     80200860:	fd843703          	ld	a4,-40(s0)
     80200864:	97ba                	add	a5,a5,a4
     80200866:	00078023          	sb	zero,0(a5)
-            return i;
+    // 读取字符
     8020086a:	fec42783          	lw	a5,-20(s0)
     8020086e:	a0a9                	j	802008b8 <readline+0x90>
-        } else {
-            buf[i++] = c;
+    char c = uart_input_buf.buf[uart_input_buf.r];
+    uart_input_buf.r = (uart_input_buf.r + 1) % INPUT_BUF_SIZE;
     80200870:	fec42783          	lw	a5,-20(s0)
     80200874:	0017871b          	addiw	a4,a5,1
     80200878:	fee42623          	sw	a4,-20(s0)
@@ -930,27 +931,28 @@ int readline(char *buf, int max) {
     80200882:	97ba                	add	a5,a5,a4
     80200884:	feb44703          	lbu	a4,-21(s0)
     80200888:	00e78023          	sb	a4,0(a5)
-    while (i < max - 1) {
+        // 在实际系统中，这里可能需要让进程睡眠
     8020088c:	fd442783          	lw	a5,-44(s0)
     80200890:	37fd                	addiw	a5,a5,-1
     80200892:	0007871b          	sext.w	a4,a5
     80200896:	fec42783          	lw	a5,-20(s0)
     8020089a:	2781                	sext.w	a5,a5
     8020089c:	fae7c2e3          	blt	a5,a4,80200840 <readline+0x18>
-        }
-    }
-    
-    // 缓冲区满，添加\0并返回
-    buf[max-1] = '\0';
+    return c;
+}
+// 读取一行输入，最多读取max-1个字符，并在末尾添加\0
+int readline(char *buf, int max) {
+    int i = 0;
     802008a0:	fd442783          	lw	a5,-44(s0)
     802008a4:	17fd                	addi	a5,a5,-1
     802008a6:	fd843703          	ld	a4,-40(s0)
     802008aa:	97ba                	add	a5,a5,a4
     802008ac:	00078023          	sb	zero,0(a5)
-    return max-1;
+    char c;
     802008b0:	fd442783          	lw	a5,-44(s0)
     802008b4:	37fd                	addiw	a5,a5,-1
     802008b6:	2781                	sext.w	a5,a5
+    
     802008b8:	853e                	mv	a0,a5
     802008ba:	70a2                	ld	ra,40(sp)
     802008bc:	7402                	ld	s0,32(sp)
@@ -1058,26 +1060,26 @@ static void buffer_char(char c) {
     802009a6:	8082                	ret
 
 00000000802009a8 <consputc>:
-    "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
-    "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
-    "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"
-};
+static void printint(long long xx, int base, int sign, int width, int padzero){
+    static char digits[] = "0123456789abcdef";
+    char buf[32];
+    int i = 0;
+    unsigned long long x;
 
-static void consputc(int c){
     802009a8:	1101                	addi	sp,sp,-32
     802009aa:	ec06                	sd	ra,24(sp)
     802009ac:	e822                	sd	s0,16(sp)
     802009ae:	1000                	addi	s0,sp,32
     802009b0:	87aa                	mv	a5,a0
     802009b2:	fef42623          	sw	a5,-20(s0)
-	// 实现到多个输出的处理，目前只有串口输出
-	uart_putc(c);
+    if (sign && (sign = xx < 0))
+        x = -(unsigned long long)xx;
     802009b6:	fec42783          	lw	a5,-20(s0)
     802009ba:	0ff7f793          	zext.b	a5,a5
     802009be:	853e                	mv	a0,a5
     802009c0:	00000097          	auipc	ra,0x0
     802009c4:	c3a080e7          	jalr	-966(ra) # 802005fa <uart_putc>
-}
+    else
     802009c8:	0001                	nop
     802009ca:	60e2                	ld	ra,24(sp)
     802009cc:	6442                	ld	s0,16(sp)
@@ -1085,21 +1087,21 @@ static void consputc(int c){
     802009d0:	8082                	ret
 
 00000000802009d2 <consputs>:
-static void consputs(const char *s){
+        x = xx;
     802009d2:	7179                	addi	sp,sp,-48
     802009d4:	f406                	sd	ra,40(sp)
     802009d6:	f022                	sd	s0,32(sp)
     802009d8:	1800                	addi	s0,sp,48
     802009da:	fca43c23          	sd	a0,-40(s0)
-	char *str = (char *)s;
+
     802009de:	fd843783          	ld	a5,-40(s0)
     802009e2:	fef43423          	sd	a5,-24(s0)
-	// 直接调用uart_puts输出字符串
-	uart_puts(str);
+    do {
+        buf[i++] = digits[x % base];
     802009e6:	fe843503          	ld	a0,-24(s0)
     802009ea:	00000097          	auipc	ra,0x0
     802009ee:	c4a080e7          	jalr	-950(ra) # 80200634 <uart_puts>
-}
+    } while ((x /= base) != 0);
     802009f2:	0001                	nop
     802009f4:	70a2                	ld	ra,40(sp)
     802009f6:	7402                	ld	s0,32(sp)
@@ -1107,7 +1109,7 @@ static void consputs(const char *s){
     802009fa:	8082                	ret
 
 00000000802009fc <printint>:
-static void printint(long long xx,int base,int sign){
+
     802009fc:	715d                	addi	sp,sp,-80
     802009fe:	e486                	sd	ra,72(sp)
     80200a00:	e0a2                	sd	s0,64(sp)
@@ -1118,12 +1120,12 @@ static void printint(long long xx,int base,int sign){
     80200a0c:	faf42a23          	sw	a5,-76(s0)
     80200a10:	87ba                	mv	a5,a4
     80200a12:	faf42823          	sw	a5,-80(s0)
-	// 模仿xv6的printint
-	static char digits[] = "0123456789abcdef";
-	char buf[20]; // 增大缓冲区以处理64位整数
-	int i;
-	unsigned long long x;
-	if (sign && (sign = xx < 0)) // 符号处理
+    if (sign)
+        buf[i++] = '-';
+
+    // 计算需要补的填充字符数
+    int pad = width - i;
+    while (pad-- > 0) {
     80200a16:	fb042783          	lw	a5,-80(s0)
     80200a1a:	2781                	sext.w	a5,a5
     80200a1c:	c39d                	beqz	a5,80200a42 <printint+0x46>
@@ -1134,17 +1136,17 @@ static void printint(long long xx,int base,int sign){
     80200a2c:	fb042783          	lw	a5,-80(s0)
     80200a30:	2781                	sext.w	a5,a5
     80200a32:	cb81                	beqz	a5,80200a42 <printint+0x46>
-		x = -(unsigned long long)xx; // 强制转换以避免溢出
+        consputc(padzero ? '0' : ' ');
     80200a34:	fb843783          	ld	a5,-72(s0)
     80200a38:	40f007b3          	neg	a5,a5
     80200a3c:	fef43023          	sd	a5,-32(s0)
     80200a40:	a029                	j	80200a4a <printint+0x4e>
-	else
-		x = xx;
+    }
+
     80200a42:	fb843783          	ld	a5,-72(s0)
     80200a46:	fef43023          	sd	a5,-32(s0)
-
-	if (base == 10 && x < 100) {
+    while (--i >= 0)
+        consputc(buf[i]);
     80200a4a:	fb442783          	lw	a5,-76(s0)
     80200a4e:	0007871b          	sext.w	a4,a5
     80200a52:	47a9                	li	a5,10
@@ -1152,8 +1154,8 @@ static void printint(long long xx,int base,int sign){
     80200a58:	fe043703          	ld	a4,-32(s0)
     80200a5c:	06300793          	li	a5,99
     80200a60:	02e7e163          	bltu	a5,a4,80200a82 <printint+0x86>
-		// 使用查表法处理小数字
-		consputs(small_numbers[x]);
+}
+void printf(const char *fmt, ...) {
     80200a64:	fe043783          	ld	a5,-32(s0)
     80200a68:	00279713          	slli	a4,a5,0x2
     80200a6c:	00006797          	auipc	a5,0x6
@@ -1163,12 +1165,12 @@ static void printint(long long xx,int base,int sign){
     80200a78:	00000097          	auipc	ra,0x0
     80200a7c:	f5a080e7          	jalr	-166(ra) # 802009d2 <consputs>
     80200a80:	a05d                	j	80200b26 <printint+0x12a>
-		return;
-	}
-	i = 0;
+    va_list ap;
+    int i, c;
+    char *s;
     80200a82:	fe042623          	sw	zero,-20(s0)
-	do{
-		buf[i] = digits[x % base];
+
+    va_start(ap, fmt);
     80200a86:	fb442783          	lw	a5,-76(s0)
     80200a8a:	fe043703          	ld	a4,-32(s0)
     80200a8e:	02f777b3          	remu	a5,a4,a5
@@ -1180,39 +1182,39 @@ static void printint(long long xx,int base,int sign){
     80200aa4:	17c1                	addi	a5,a5,-16
     80200aa6:	97a2                	add	a5,a5,s0
     80200aa8:	fce78c23          	sb	a4,-40(a5)
-		i++;
+    for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
     80200aac:	fec42783          	lw	a5,-20(s0)
     80200ab0:	2785                	addiw	a5,a5,1
     80200ab2:	fef42623          	sw	a5,-20(s0)
-	}while((x/=base) !=0);
+        if(c != '%'){
     80200ab6:	fb442783          	lw	a5,-76(s0)
     80200aba:	fe043703          	ld	a4,-32(s0)
     80200abe:	02f757b3          	divu	a5,a4,a5
     80200ac2:	fef43023          	sd	a5,-32(s0)
     80200ac6:	fe043783          	ld	a5,-32(s0)
     80200aca:	ffd5                	bnez	a5,80200a86 <printint+0x8a>
-	if (sign){
+            buffer_char(c);
     80200acc:	fb042783          	lw	a5,-80(s0)
     80200ad0:	2781                	sext.w	a5,a5
     80200ad2:	cf91                	beqz	a5,80200aee <printint+0xf2>
-		buf[i] = '-';
+            continue;
     80200ad4:	fec42783          	lw	a5,-20(s0)
     80200ad8:	17c1                	addi	a5,a5,-16
     80200ada:	97a2                	add	a5,a5,s0
     80200adc:	02d00713          	li	a4,45
     80200ae0:	fce78c23          	sb	a4,-40(a5)
-		i++;
+        }
     80200ae4:	fec42783          	lw	a5,-20(s0)
     80200ae8:	2785                	addiw	a5,a5,1
     80200aea:	fef42623          	sw	a5,-20(s0)
-	}
-	i--;
+        flush_printf_buffer(); // 遇到格式化标志时，先刷新缓冲区
+		// 解析填充标志和宽度
     80200aee:	fec42783          	lw	a5,-20(s0)
     80200af2:	37fd                	addiw	a5,a5,-1
     80200af4:	fef42623          	sw	a5,-20(s0)
-	while( i>=0){
+        int padzero = 0, width = 0;
     80200af8:	a015                	j	80200b1c <printint+0x120>
-		consputc(buf[i]);
+        c = fmt[++i] & 0xff;
     80200afa:	fec42783          	lw	a5,-20(s0)
     80200afe:	17c1                	addi	a5,a5,-16
     80200b00:	97a2                	add	a5,a5,s0
@@ -1221,23 +1223,23 @@ static void printint(long long xx,int base,int sign){
     80200b08:	853e                	mv	a0,a5
     80200b0a:	00000097          	auipc	ra,0x0
     80200b0e:	e9e080e7          	jalr	-354(ra) # 802009a8 <consputc>
-		i--;
+        if (c == '0') {
     80200b12:	fec42783          	lw	a5,-20(s0)
     80200b16:	37fd                	addiw	a5,a5,-1
     80200b18:	fef42623          	sw	a5,-20(s0)
-	while( i>=0){
+        int padzero = 0, width = 0;
     80200b1c:	fec42783          	lw	a5,-20(s0)
     80200b20:	2781                	sext.w	a5,a5
     80200b22:	fc07dce3          	bgez	a5,80200afa <printint+0xfe>
-	}
-}
+            padzero = 1;
+            c = fmt[++i] & 0xff;
     80200b26:	60a6                	ld	ra,72(sp)
     80200b28:	6406                	ld	s0,64(sp)
     80200b2a:	6161                	addi	sp,sp,80
     80200b2c:	8082                	ret
 
 0000000080200b2e <printf>:
-void printf(const char *fmt, ...) {
+        }
     80200b2e:	7171                	addi	sp,sp,-176
     80200b30:	f486                	sd	ra,104(sp)
     80200b32:	f0a2                	sd	s0,96(sp)
@@ -1250,37 +1252,37 @@ void printf(const char *fmt, ...) {
     80200b42:	f41c                	sd	a5,40(s0)
     80200b44:	03043823          	sd	a6,48(s0)
     80200b48:	03143c23          	sd	a7,56(s0)
-    va_list ap;
-    int i, c;
-    char *s;
-
-    va_start(ap, fmt);
+        while (c >= '0' && c <= '9') {
+            width = width * 10 + (c - '0');
+            c = fmt[++i] & 0xff;
+        }
+        // 检查是否有长整型标记'l'
     80200b4c:	04040793          	addi	a5,s0,64
     80200b50:	f8f43823          	sd	a5,-112(s0)
     80200b54:	f9043783          	ld	a5,-112(s0)
     80200b58:	fc878793          	addi	a5,a5,-56
     80200b5c:	fcf43023          	sd	a5,-64(s0)
-    for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
+        int is_long = 0;
     80200b60:	fe042623          	sw	zero,-20(s0)
     80200b64:	a671                	j	80200ef0 <printf+0x3c2>
-        if(c != '%'){
+        if(c == 'l') {
     80200b66:	fe842783          	lw	a5,-24(s0)
     80200b6a:	0007871b          	sext.w	a4,a5
     80200b6e:	02500793          	li	a5,37
     80200b72:	00f70c63          	beq	a4,a5,80200b8a <printf+0x5c>
-            buffer_char(c);
+            is_long = 1;
     80200b76:	fe842783          	lw	a5,-24(s0)
     80200b7a:	0ff7f793          	zext.b	a5,a5
     80200b7e:	853e                	mv	a0,a5
     80200b80:	00000097          	auipc	ra,0x0
     80200b84:	d96080e7          	jalr	-618(ra) # 80200916 <buffer_char>
-            continue;
+            c = fmt[++i] & 0xff;
     80200b88:	aeb9                	j	80200ee6 <printf+0x3b8>
-        }
-        flush_printf_buffer(); // 遇到格式化标志时，先刷新缓冲区
+            if(c == 0)
+                break;
     80200b8a:	00000097          	auipc	ra,0x0
     80200b8e:	d38080e7          	jalr	-712(ra) # 802008c2 <flush_printf_buffer>
-        c = fmt[++i] & 0xff;
+        }
     80200b92:	fec42783          	lw	a5,-20(s0)
     80200b96:	2785                	addiw	a5,a5,1
     80200b98:	fef42623          	sw	a5,-20(s0)
@@ -1289,24 +1291,24 @@ void printf(const char *fmt, ...) {
     80200ba4:	97ba                	add	a5,a5,a4
     80200ba6:	0007c783          	lbu	a5,0(a5)
     80200baa:	fef42423          	sw	a5,-24(s0)
-        if(c == 0)
+        
     80200bae:	fe842783          	lw	a5,-24(s0)
     80200bb2:	2781                	sext.w	a5,a5
     80200bb4:	34078d63          	beqz	a5,80200f0e <printf+0x3e0>
-            break;
-            
-        // 检查是否有长整型标记'l'
-        int is_long = 0;
+        switch(c){
+        case 'd':
+            if(is_long)
+                printint(va_arg(ap, long long), 10, 1, width, padzero);
     80200bb8:	fc042e23          	sw	zero,-36(s0)
-        if(c == 'l') {
+            else
     80200bbc:	fe842783          	lw	a5,-24(s0)
     80200bc0:	0007871b          	sext.w	a4,a5
     80200bc4:	06c00793          	li	a5,108
     80200bc8:	02f71863          	bne	a4,a5,80200bf8 <printf+0xca>
-            is_long = 1;
+                printint(va_arg(ap, int), 10, 1, width, padzero);
     80200bcc:	4785                	li	a5,1
     80200bce:	fcf42e23          	sw	a5,-36(s0)
-            c = fmt[++i] & 0xff;
+            break;
     80200bd2:	fec42783          	lw	a5,-20(s0)
     80200bd6:	2785                	addiw	a5,a5,1
     80200bd8:	fef42623          	sw	a5,-20(s0)
@@ -1315,14 +1317,14 @@ void printf(const char *fmt, ...) {
     80200be4:	97ba                	add	a5,a5,a4
     80200be6:	0007c783          	lbu	a5,0(a5)
     80200bea:	fef42423          	sw	a5,-24(s0)
-            if(c == 0)
+        case 'x':
     80200bee:	fe842783          	lw	a5,-24(s0)
     80200bf2:	2781                	sext.w	a5,a5
     80200bf4:	30078f63          	beqz	a5,80200f12 <printf+0x3e4>
-                break;
-        }
-        
-        switch(c){
+            if(is_long)
+                printint(va_arg(ap, long long), 16, 0, width, padzero);
+            else
+                printint(va_arg(ap, int), 16, 0, width, padzero);
     80200bf8:	fe842783          	lw	a5,-24(s0)
     80200bfc:	0007871b          	sext.w	a4,a5
     80200c00:	02500793          	li	a5,37
@@ -1356,12 +1358,12 @@ void printf(const char *fmt, ...) {
     80200c68:	94078793          	addi	a5,a5,-1728 # 802065a4 <small_numbers+0x1b4>
     80200c6c:	97ba                	add	a5,a5,a4
     80200c6e:	8782                	jr	a5
-        case 'd':
-            if(is_long)
+            break;
+        case 'u':
     80200c70:	fdc42783          	lw	a5,-36(s0)
     80200c74:	2781                	sext.w	a5,a5
     80200c76:	c385                	beqz	a5,80200c96 <printf+0x168>
-                printint(va_arg(ap, long long), 10, 1);
+            if(is_long)
     80200c78:	fc043783          	ld	a5,-64(s0)
     80200c7c:	00878713          	addi	a4,a5,8
     80200c80:	fce43023          	sd	a4,-64(s0)
@@ -1371,11 +1373,11 @@ void printf(const char *fmt, ...) {
     80200c8a:	853e                	mv	a0,a5
     80200c8c:	00000097          	auipc	ra,0x0
     80200c90:	d70080e7          	jalr	-656(ra) # 802009fc <printint>
+                printint(va_arg(ap, unsigned long long), 10, 0, width, padzero);
             else
-                printint(va_arg(ap, int), 10, 1);
-            break;
+                printint(va_arg(ap, unsigned int), 10, 0, width, padzero);
     80200c94:	ac89                	j	80200ee6 <printf+0x3b8>
-                printint(va_arg(ap, int), 10, 1);
+            else
     80200c96:	fc043783          	ld	a5,-64(s0)
     80200c9a:	00878713          	addi	a4,a5,8
     80200c9e:	fce43023          	sd	a4,-64(s0)
@@ -1385,14 +1387,14 @@ void printf(const char *fmt, ...) {
     80200ca8:	853e                	mv	a0,a5
     80200caa:	00000097          	auipc	ra,0x0
     80200cae:	d52080e7          	jalr	-686(ra) # 802009fc <printint>
-            break;
+                printint(va_arg(ap, unsigned int), 10, 0, width, padzero);
     80200cb2:	ac15                	j	80200ee6 <printf+0x3b8>
-        case 'x':
-            if(is_long)
+            break;
+        case 'c':
     80200cb4:	fdc42783          	lw	a5,-36(s0)
     80200cb8:	2781                	sext.w	a5,a5
     80200cba:	c385                	beqz	a5,80200cda <printf+0x1ac>
-                printint(va_arg(ap, long long), 16, 0);
+            consputc(va_arg(ap, int));
     80200cbc:	fc043783          	ld	a5,-64(s0)
     80200cc0:	00878713          	addi	a4,a5,8
     80200cc4:	fce43023          	sd	a4,-64(s0)
@@ -1402,11 +1404,11 @@ void printf(const char *fmt, ...) {
     80200cce:	853e                	mv	a0,a5
     80200cd0:	00000097          	auipc	ra,0x0
     80200cd4:	d2c080e7          	jalr	-724(ra) # 802009fc <printint>
-            else
-                printint(va_arg(ap, int), 16, 0);
             break;
+        case 's':
+            if((s = va_arg(ap, char*)) == 0)
     80200cd8:	a439                	j	80200ee6 <printf+0x3b8>
-                printint(va_arg(ap, int), 16, 0);
+        case 's':
     80200cda:	fc043783          	ld	a5,-64(s0)
     80200cde:	00878713          	addi	a4,a5,8
     80200ce2:	fce43023          	sd	a4,-64(s0)
@@ -1416,14 +1418,14 @@ void printf(const char *fmt, ...) {
     80200cec:	853e                	mv	a0,a5
     80200cee:	00000097          	auipc	ra,0x0
     80200cf2:	d0e080e7          	jalr	-754(ra) # 802009fc <printint>
-            break;
+            if((s = va_arg(ap, char*)) == 0)
     80200cf6:	aac5                	j	80200ee6 <printf+0x3b8>
-        case 'u':
-            if(is_long)
+                s = "(null)";
+            consputs(s);
     80200cf8:	fdc42783          	lw	a5,-36(s0)
     80200cfc:	2781                	sext.w	a5,a5
     80200cfe:	c385                	beqz	a5,80200d1e <printf+0x1f0>
-                printint(va_arg(ap, unsigned long long), 10, 0);
+            break;
     80200d00:	fc043783          	ld	a5,-64(s0)
     80200d04:	00878713          	addi	a4,a5,8
     80200d08:	fce43023          	sd	a4,-64(s0)
@@ -1433,11 +1435,11 @@ void printf(const char *fmt, ...) {
     80200d12:	853e                	mv	a0,a5
     80200d14:	00000097          	auipc	ra,0x0
     80200d18:	ce8080e7          	jalr	-792(ra) # 802009fc <printint>
-            else
-                printint(va_arg(ap, unsigned int), 10, 0);
-            break;
+        case 'p':
+            unsigned long ptr = (unsigned long)va_arg(ap, void*);
+            consputs("0x");
     80200d1c:	a2e9                	j	80200ee6 <printf+0x3b8>
-                printint(va_arg(ap, unsigned int), 10, 0);
+            unsigned long ptr = (unsigned long)va_arg(ap, void*);
     80200d1e:	fc043783          	ld	a5,-64(s0)
     80200d22:	00878713          	addi	a4,a5,8
     80200d26:	fce43023          	sd	a4,-64(s0)
@@ -1449,10 +1451,10 @@ void printf(const char *fmt, ...) {
     80200d34:	853e                	mv	a0,a5
     80200d36:	00000097          	auipc	ra,0x0
     80200d3a:	cc6080e7          	jalr	-826(ra) # 802009fc <printint>
-            break;
+            consputs("0x");
     80200d3e:	a265                	j	80200ee6 <printf+0x3b8>
-        case 'c':
-            consputc(va_arg(ap, int));
+            // 输出16位宽，不足补0
+            char buf[17];
     80200d40:	fc043783          	ld	a5,-64(s0)
     80200d44:	00878713          	addi	a4,a5,8
     80200d48:	fce43023          	sd	a4,-64(s0)
@@ -1460,10 +1462,10 @@ void printf(const char *fmt, ...) {
     80200d4e:	853e                	mv	a0,a5
     80200d50:	00000097          	auipc	ra,0x0
     80200d54:	c58080e7          	jalr	-936(ra) # 802009a8 <consputc>
-            break;
+            int i;
     80200d58:	a279                	j	80200ee6 <printf+0x3b8>
-        case 's':
-            if((s = va_arg(ap, char*)) == 0)
+            for (i = 0; i < 16; i++) {
+                int shift = (15 - i) * 4;
     80200d5a:	fc043783          	ld	a5,-64(s0)
     80200d5e:	00878713          	addi	a4,a5,8
     80200d62:	fce43023          	sd	a4,-64(s0)
@@ -1471,42 +1473,42 @@ void printf(const char *fmt, ...) {
     80200d68:	fef43023          	sd	a5,-32(s0)
     80200d6c:	fe043783          	ld	a5,-32(s0)
     80200d70:	e799                	bnez	a5,80200d7e <printf+0x250>
-                s = "(null)";
+                buf[i] = "0123456789abcdef"[(ptr >> shift) & 0xf];
     80200d72:	00006797          	auipc	a5,0x6
     80200d76:	80e78793          	addi	a5,a5,-2034 # 80206580 <small_numbers+0x190>
     80200d7a:	fef43023          	sd	a5,-32(s0)
-            consputs(s);
+            }
     80200d7e:	fe043503          	ld	a0,-32(s0)
     80200d82:	00000097          	auipc	ra,0x0
     80200d86:	c50080e7          	jalr	-944(ra) # 802009d2 <consputs>
-            break;
+            buf[16] = '\0';
     80200d8a:	aab1                	j	80200ee6 <printf+0x3b8>
-        case 'p':
-            unsigned long ptr = (unsigned long)va_arg(ap, void*);
+            consputs(buf);
+            break;
     80200d8c:	fc043783          	ld	a5,-64(s0)
     80200d90:	00878713          	addi	a4,a5,8
     80200d94:	fce43023          	sd	a4,-64(s0)
     80200d98:	639c                	ld	a5,0(a5)
     80200d9a:	fcf43823          	sd	a5,-48(s0)
-            consputs("0x");
+        case 'b':
     80200d9e:	00005517          	auipc	a0,0x5
     80200da2:	7ea50513          	addi	a0,a0,2026 # 80206588 <small_numbers+0x198>
     80200da6:	00000097          	auipc	ra,0x0
     80200daa:	c2c080e7          	jalr	-980(ra) # 802009d2 <consputs>
-            // 输出16位宽，不足补0
-            char buf[17];
-            int i;
-            for (i = 0; i < 16; i++) {
+            if(is_long)
+                printint(va_arg(ap, long long), 2, 0, width, padzero);
+            else
+                printint(va_arg(ap, int), 2, 0, width, padzero);
     80200dae:	fc042c23          	sw	zero,-40(s0)
     80200db2:	a0a1                	j	80200dfa <printf+0x2cc>
-                int shift = (15 - i) * 4;
+            break;
     80200db4:	47bd                	li	a5,15
     80200db6:	fd842703          	lw	a4,-40(s0)
     80200dba:	9f99                	subw	a5,a5,a4
     80200dbc:	2781                	sext.w	a5,a5
     80200dbe:	0027979b          	slliw	a5,a5,0x2
     80200dc2:	fcf42623          	sw	a5,-52(s0)
-                buf[i] = "0123456789abcdef"[(ptr >> shift) & 0xf];
+        case 'o':
     80200dc6:	fcc42783          	lw	a5,-52(s0)
     80200dca:	873e                	mv	a4,a5
     80200dcc:	fd043783          	ld	a5,-48(s0)
@@ -1520,7 +1522,7 @@ void printf(const char *fmt, ...) {
     80200de8:	17c1                	addi	a5,a5,-16
     80200dea:	97a2                	add	a5,a5,s0
     80200dec:	fae78c23          	sb	a4,-72(a5)
-            for (i = 0; i < 16; i++) {
+                printint(va_arg(ap, int), 2, 0, width, padzero);
     80200df0:	fd842783          	lw	a5,-40(s0)
     80200df4:	2785                	addiw	a5,a5,1
     80200df6:	fcf42c23          	sw	a5,-40(s0)
@@ -1528,22 +1530,22 @@ void printf(const char *fmt, ...) {
     80200dfe:	0007871b          	sext.w	a4,a5
     80200e02:	47bd                	li	a5,15
     80200e04:	fae7d8e3          	bge	a5,a4,80200db4 <printf+0x286>
-            }
-            buf[16] = '\0';
+            if(is_long)
+                printint(va_arg(ap, long long), 8, 0, width, padzero);
     80200e08:	fa040c23          	sb	zero,-72(s0)
-            consputs(buf);
+            else
     80200e0c:	fa840793          	addi	a5,s0,-88
     80200e10:	853e                	mv	a0,a5
     80200e12:	00000097          	auipc	ra,0x0
     80200e16:	bc0080e7          	jalr	-1088(ra) # 802009d2 <consputs>
-            break;
+                printint(va_arg(ap, int), 8, 0, width, padzero);
     80200e1a:	a0f1                	j	80200ee6 <printf+0x3b8>
-        case 'b':
-            if(is_long)
+            break;
+        case '%':
     80200e1c:	fdc42783          	lw	a5,-36(s0)
     80200e20:	2781                	sext.w	a5,a5
     80200e22:	c385                	beqz	a5,80200e42 <printf+0x314>
-                printint(va_arg(ap, long long), 2, 0);
+            buffer_char('%');
     80200e24:	fc043783          	ld	a5,-64(s0)
     80200e28:	00878713          	addi	a4,a5,8
     80200e2c:	fce43023          	sd	a4,-64(s0)
@@ -1553,11 +1555,11 @@ void printf(const char *fmt, ...) {
     80200e36:	853e                	mv	a0,a5
     80200e38:	00000097          	auipc	ra,0x0
     80200e3c:	bc4080e7          	jalr	-1084(ra) # 802009fc <printint>
-            else
-                printint(va_arg(ap, int), 2, 0);
             break;
+        default:
+            buffer_char('%');
     80200e40:	a05d                	j	80200ee6 <printf+0x3b8>
-                printint(va_arg(ap, int), 2, 0);
+        default:
     80200e42:	fc043783          	ld	a5,-64(s0)
     80200e46:	00878713          	addi	a4,a5,8
     80200e4a:	fce43023          	sd	a4,-64(s0)
@@ -1567,14 +1569,14 @@ void printf(const char *fmt, ...) {
     80200e54:	853e                	mv	a0,a5
     80200e56:	00000097          	auipc	ra,0x0
     80200e5a:	ba6080e7          	jalr	-1114(ra) # 802009fc <printint>
-            break;
+            buffer_char('%');
     80200e5e:	a061                	j	80200ee6 <printf+0x3b8>
-        case 'o':
-            if(is_long)
+            if(padzero) buffer_char('0');
+            if(width) {
     80200e60:	fdc42783          	lw	a5,-36(s0)
     80200e64:	2781                	sext.w	a5,a5
     80200e66:	c385                	beqz	a5,80200e86 <printf+0x358>
-                printint(va_arg(ap, long long), 8, 0);
+                // 只支持一位宽度，简单处理
     80200e68:	fc043783          	ld	a5,-64(s0)
     80200e6c:	00878713          	addi	a4,a5,8
     80200e70:	fce43023          	sd	a4,-64(s0)
@@ -1584,11 +1586,11 @@ void printf(const char *fmt, ...) {
     80200e7a:	853e                	mv	a0,a5
     80200e7c:	00000097          	auipc	ra,0x0
     80200e80:	b80080e7          	jalr	-1152(ra) # 802009fc <printint>
-            else
-                printint(va_arg(ap, int), 8, 0);
-            break;
+                buffer_char('0' + width);
+            }
+            if(is_long) buffer_char('l');
     80200e84:	a08d                	j	80200ee6 <printf+0x3b8>
-                printint(va_arg(ap, int), 8, 0);
+            }
     80200e86:	fc043783          	ld	a5,-64(s0)
     80200e8a:	00878713          	addi	a4,a5,8
     80200e8e:	fce43023          	sd	a4,-64(s0)
@@ -1598,36 +1600,36 @@ void printf(const char *fmt, ...) {
     80200e98:	853e                	mv	a0,a5
     80200e9a:	00000097          	auipc	ra,0x0
     80200e9e:	b62080e7          	jalr	-1182(ra) # 802009fc <printint>
-            break;
+            if(is_long) buffer_char('l');
     80200ea2:	a091                	j	80200ee6 <printf+0x3b8>
-        case '%':
-            buffer_char('%');
+            buffer_char(c);
+            break;
     80200ea4:	02500513          	li	a0,37
     80200ea8:	00000097          	auipc	ra,0x0
     80200eac:	a6e080e7          	jalr	-1426(ra) # 80200916 <buffer_char>
-            break;
+        }
     80200eb0:	a81d                	j	80200ee6 <printf+0x3b8>
-        default:
-            buffer_char('%');
+    }
+    flush_printf_buffer(); // 最后刷新缓冲区
     80200eb2:	02500513          	li	a0,37
     80200eb6:	00000097          	auipc	ra,0x0
     80200eba:	a60080e7          	jalr	-1440(ra) # 80200916 <buffer_char>
-            if(is_long) buffer_char('l');
+    va_end(ap);
     80200ebe:	fdc42783          	lw	a5,-36(s0)
     80200ec2:	2781                	sext.w	a5,a5
     80200ec4:	c799                	beqz	a5,80200ed2 <printf+0x3a4>
     80200ec6:	06c00513          	li	a0,108
     80200eca:	00000097          	auipc	ra,0x0
     80200ece:	a4c080e7          	jalr	-1460(ra) # 80200916 <buffer_char>
-            buffer_char(c);
+}
     80200ed2:	fe842783          	lw	a5,-24(s0)
     80200ed6:	0ff7f793          	zext.b	a5,a5
     80200eda:	853e                	mv	a0,a5
     80200edc:	00000097          	auipc	ra,0x0
     80200ee0:	a3a080e7          	jalr	-1478(ra) # 80200916 <buffer_char>
-            break;
+// 清屏功能
     80200ee4:	0001                	nop
-    for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
+        int is_long = 0;
     80200ee6:	fec42783          	lw	a5,-20(s0)
     80200eea:	2785                	addiw	a5,a5,1
     80200eec:	fef42623          	sw	a5,-20(s0)
@@ -1640,18 +1642,18 @@ void printf(const char *fmt, ...) {
     80200f06:	2781                	sext.w	a5,a5
     80200f08:	c4079fe3          	bnez	a5,80200b66 <printf+0x38>
     80200f0c:	a021                	j	80200f14 <printf+0x3e6>
-            break;
+        switch(c){
     80200f0e:	0001                	nop
     80200f10:	a011                	j	80200f14 <printf+0x3e6>
-                break;
+            if(is_long)
     80200f12:	0001                	nop
-        }
-    }
-    flush_printf_buffer(); // 最后刷新缓冲区
+void clear_screen(void) {
+    uart_puts(CLEAR_SCREEN);
+	uart_puts(CURSOR_HOME);
     80200f14:	00000097          	auipc	ra,0x0
     80200f18:	9ae080e7          	jalr	-1618(ra) # 802008c2 <flush_printf_buffer>
-    va_end(ap);
 }
+
     80200f1c:	0001                	nop
     80200f1e:	70a6                	ld	ra,104(sp)
     80200f20:	7406                	ld	s0,96(sp)
@@ -1659,23 +1661,23 @@ void printf(const char *fmt, ...) {
     80200f24:	8082                	ret
 
 0000000080200f26 <clear_screen>:
-// 清屏功能
-void clear_screen(void) {
+// 光标上移
+void cursor_up(int lines) {
     80200f26:	1141                	addi	sp,sp,-16
     80200f28:	e406                	sd	ra,8(sp)
     80200f2a:	e022                	sd	s0,0(sp)
     80200f2c:	0800                	addi	s0,sp,16
-    uart_puts(CLEAR_SCREEN);
+    if (lines <= 0) return;
     80200f2e:	00005517          	auipc	a0,0x5
     80200f32:	6d250513          	addi	a0,a0,1746 # 80206600 <small_numbers+0x210>
     80200f36:	fffff097          	auipc	ra,0xfffff
     80200f3a:	6fe080e7          	jalr	1790(ra) # 80200634 <uart_puts>
-	uart_puts(CURSOR_HOME);
+    consputc('\033');
     80200f3e:	00005517          	auipc	a0,0x5
     80200f42:	6ca50513          	addi	a0,a0,1738 # 80206608 <small_numbers+0x218>
     80200f46:	fffff097          	auipc	ra,0xfffff
     80200f4a:	6ee080e7          	jalr	1774(ra) # 80200634 <uart_puts>
-}
+    consputc('[');
     80200f4e:	0001                	nop
     80200f50:	60a2                	ld	ra,8(sp)
     80200f52:	6402                	ld	s0,0(sp)
@@ -1683,166 +1685,166 @@ void clear_screen(void) {
     80200f56:	8082                	ret
 
 0000000080200f58 <cursor_up>:
-
-// 光标上移
-void cursor_up(int lines) {
+    printint(lines, 10, 0, 0,0);
+    consputc('A');
+}
     80200f58:	1101                	addi	sp,sp,-32
     80200f5a:	ec06                	sd	ra,24(sp)
     80200f5c:	e822                	sd	s0,16(sp)
     80200f5e:	1000                	addi	s0,sp,32
     80200f60:	87aa                	mv	a5,a0
     80200f62:	fef42623          	sw	a5,-20(s0)
-    if (lines <= 0) return;
+
     80200f66:	fec42783          	lw	a5,-20(s0)
     80200f6a:	2781                	sext.w	a5,a5
     80200f6c:	02f05d63          	blez	a5,80200fa6 <cursor_up+0x4e>
-    consputc('\033');
+// 光标下移
     80200f70:	456d                	li	a0,27
     80200f72:	00000097          	auipc	ra,0x0
     80200f76:	a36080e7          	jalr	-1482(ra) # 802009a8 <consputc>
-    consputc('[');
+void cursor_down(int lines) {
     80200f7a:	05b00513          	li	a0,91
     80200f7e:	00000097          	auipc	ra,0x0
     80200f82:	a2a080e7          	jalr	-1494(ra) # 802009a8 <consputc>
-    printint(lines, 10, 0);
+    if (lines <= 0) return;
     80200f86:	fec42783          	lw	a5,-20(s0)
     80200f8a:	4601                	li	a2,0
     80200f8c:	45a9                	li	a1,10
     80200f8e:	853e                	mv	a0,a5
     80200f90:	00000097          	auipc	ra,0x0
     80200f94:	a6c080e7          	jalr	-1428(ra) # 802009fc <printint>
-    consputc('A');
+    consputc('\033');
     80200f98:	04100513          	li	a0,65
     80200f9c:	00000097          	auipc	ra,0x0
     80200fa0:	a0c080e7          	jalr	-1524(ra) # 802009a8 <consputc>
     80200fa4:	a011                	j	80200fa8 <cursor_up+0x50>
-    if (lines <= 0) return;
+
     80200fa6:	0001                	nop
-}
+    consputc('[');
     80200fa8:	60e2                	ld	ra,24(sp)
     80200faa:	6442                	ld	s0,16(sp)
     80200fac:	6105                	addi	sp,sp,32
     80200fae:	8082                	ret
 
 0000000080200fb0 <cursor_down>:
-
-// 光标下移
-void cursor_down(int lines) {
+    printint(lines, 10, 0, 0,0);
+    consputc('B');
+}
     80200fb0:	1101                	addi	sp,sp,-32
     80200fb2:	ec06                	sd	ra,24(sp)
     80200fb4:	e822                	sd	s0,16(sp)
     80200fb6:	1000                	addi	s0,sp,32
     80200fb8:	87aa                	mv	a5,a0
     80200fba:	fef42623          	sw	a5,-20(s0)
-    if (lines <= 0) return;
+
     80200fbe:	fec42783          	lw	a5,-20(s0)
     80200fc2:	2781                	sext.w	a5,a5
     80200fc4:	02f05d63          	blez	a5,80200ffe <cursor_down+0x4e>
-    consputc('\033');
+// 光标右移
     80200fc8:	456d                	li	a0,27
     80200fca:	00000097          	auipc	ra,0x0
     80200fce:	9de080e7          	jalr	-1570(ra) # 802009a8 <consputc>
-    consputc('[');
+void cursor_right(int cols) {
     80200fd2:	05b00513          	li	a0,91
     80200fd6:	00000097          	auipc	ra,0x0
     80200fda:	9d2080e7          	jalr	-1582(ra) # 802009a8 <consputc>
-    printint(lines, 10, 0);
+    if (cols <= 0) return;
     80200fde:	fec42783          	lw	a5,-20(s0)
     80200fe2:	4601                	li	a2,0
     80200fe4:	45a9                	li	a1,10
     80200fe6:	853e                	mv	a0,a5
     80200fe8:	00000097          	auipc	ra,0x0
     80200fec:	a14080e7          	jalr	-1516(ra) # 802009fc <printint>
-    consputc('B');
+    consputc('\033');
     80200ff0:	04200513          	li	a0,66
     80200ff4:	00000097          	auipc	ra,0x0
     80200ff8:	9b4080e7          	jalr	-1612(ra) # 802009a8 <consputc>
     80200ffc:	a011                	j	80201000 <cursor_down+0x50>
-    if (lines <= 0) return;
+
     80200ffe:	0001                	nop
-}
+    consputc('[');
     80201000:	60e2                	ld	ra,24(sp)
     80201002:	6442                	ld	s0,16(sp)
     80201004:	6105                	addi	sp,sp,32
     80201006:	8082                	ret
 
 0000000080201008 <cursor_right>:
-
-// 光标右移
-void cursor_right(int cols) {
+    printint(cols, 10, 0,0,0);
+    consputc('C');
+}
     80201008:	1101                	addi	sp,sp,-32
     8020100a:	ec06                	sd	ra,24(sp)
     8020100c:	e822                	sd	s0,16(sp)
     8020100e:	1000                	addi	s0,sp,32
     80201010:	87aa                	mv	a5,a0
     80201012:	fef42623          	sw	a5,-20(s0)
-    if (cols <= 0) return;
+
     80201016:	fec42783          	lw	a5,-20(s0)
     8020101a:	2781                	sext.w	a5,a5
     8020101c:	02f05d63          	blez	a5,80201056 <cursor_right+0x4e>
-    consputc('\033');
+// 光标左移
     80201020:	456d                	li	a0,27
     80201022:	00000097          	auipc	ra,0x0
     80201026:	986080e7          	jalr	-1658(ra) # 802009a8 <consputc>
-    consputc('[');
+void cursor_left(int cols) {
     8020102a:	05b00513          	li	a0,91
     8020102e:	00000097          	auipc	ra,0x0
     80201032:	97a080e7          	jalr	-1670(ra) # 802009a8 <consputc>
-    printint(cols, 10, 0);
+    if (cols <= 0) return;
     80201036:	fec42783          	lw	a5,-20(s0)
     8020103a:	4601                	li	a2,0
     8020103c:	45a9                	li	a1,10
     8020103e:	853e                	mv	a0,a5
     80201040:	00000097          	auipc	ra,0x0
     80201044:	9bc080e7          	jalr	-1604(ra) # 802009fc <printint>
-    consputc('C');
+    consputc('\033');
     80201048:	04300513          	li	a0,67
     8020104c:	00000097          	auipc	ra,0x0
     80201050:	95c080e7          	jalr	-1700(ra) # 802009a8 <consputc>
     80201054:	a011                	j	80201058 <cursor_right+0x50>
-    if (cols <= 0) return;
+
     80201056:	0001                	nop
-}
+    consputc('[');
     80201058:	60e2                	ld	ra,24(sp)
     8020105a:	6442                	ld	s0,16(sp)
     8020105c:	6105                	addi	sp,sp,32
     8020105e:	8082                	ret
 
 0000000080201060 <cursor_left>:
-
-// 光标左移
-void cursor_left(int cols) {
+    printint(cols, 10, 0,0,0);
+    consputc('D');
+}
     80201060:	1101                	addi	sp,sp,-32
     80201062:	ec06                	sd	ra,24(sp)
     80201064:	e822                	sd	s0,16(sp)
     80201066:	1000                	addi	s0,sp,32
     80201068:	87aa                	mv	a5,a0
     8020106a:	fef42623          	sw	a5,-20(s0)
-    if (cols <= 0) return;
+// 保存光标位置
     8020106e:	fec42783          	lw	a5,-20(s0)
     80201072:	2781                	sext.w	a5,a5
     80201074:	02f05d63          	blez	a5,802010ae <cursor_left+0x4e>
-    consputc('\033');
+void save_cursor(void) {
     80201078:	456d                	li	a0,27
     8020107a:	00000097          	auipc	ra,0x0
     8020107e:	92e080e7          	jalr	-1746(ra) # 802009a8 <consputc>
-    consputc('[');
+    consputc('\033');
     80201082:	05b00513          	li	a0,91
     80201086:	00000097          	auipc	ra,0x0
     8020108a:	922080e7          	jalr	-1758(ra) # 802009a8 <consputc>
-    printint(cols, 10, 0);
+    consputc('[');
     8020108e:	fec42783          	lw	a5,-20(s0)
     80201092:	4601                	li	a2,0
     80201094:	45a9                	li	a1,10
     80201096:	853e                	mv	a0,a5
     80201098:	00000097          	auipc	ra,0x0
     8020109c:	964080e7          	jalr	-1692(ra) # 802009fc <printint>
-    consputc('D');
+    consputc('s');
     802010a0:	04400513          	li	a0,68
     802010a4:	00000097          	auipc	ra,0x0
     802010a8:	904080e7          	jalr	-1788(ra) # 802009a8 <consputc>
     802010ac:	a011                	j	802010b0 <cursor_left+0x50>
-    if (cols <= 0) return;
+// 保存光标位置
     802010ae:	0001                	nop
 }
     802010b0:	60e2                	ld	ra,24(sp)
@@ -1851,25 +1853,25 @@ void cursor_left(int cols) {
     802010b6:	8082                	ret
 
 00000000802010b8 <save_cursor>:
-// 保存光标位置
-void save_cursor(void) {
+
+// 恢复光标位置
     802010b8:	1141                	addi	sp,sp,-16
     802010ba:	e406                	sd	ra,8(sp)
     802010bc:	e022                	sd	s0,0(sp)
     802010be:	0800                	addi	s0,sp,16
-    consputc('\033');
+void restore_cursor(void) {
     802010c0:	456d                	li	a0,27
     802010c2:	00000097          	auipc	ra,0x0
     802010c6:	8e6080e7          	jalr	-1818(ra) # 802009a8 <consputc>
-    consputc('[');
+    consputc('\033');
     802010ca:	05b00513          	li	a0,91
     802010ce:	00000097          	auipc	ra,0x0
     802010d2:	8da080e7          	jalr	-1830(ra) # 802009a8 <consputc>
-    consputc('s');
+    consputc('[');
     802010d6:	07300513          	li	a0,115
     802010da:	00000097          	auipc	ra,0x0
     802010de:	8ce080e7          	jalr	-1842(ra) # 802009a8 <consputc>
-}
+    consputc('u');
     802010e2:	0001                	nop
     802010e4:	60a2                	ld	ra,8(sp)
     802010e6:	6402                	ld	s0,0(sp)
@@ -1877,26 +1879,26 @@ void save_cursor(void) {
     802010ea:	8082                	ret
 
 00000000802010ec <restore_cursor>:
+}
 
-// 恢复光标位置
-void restore_cursor(void) {
+// 移动到行首
     802010ec:	1141                	addi	sp,sp,-16
     802010ee:	e406                	sd	ra,8(sp)
     802010f0:	e022                	sd	s0,0(sp)
     802010f2:	0800                	addi	s0,sp,16
-    consputc('\033');
+void cursor_to_column(int col) {
     802010f4:	456d                	li	a0,27
     802010f6:	00000097          	auipc	ra,0x0
     802010fa:	8b2080e7          	jalr	-1870(ra) # 802009a8 <consputc>
-    consputc('[');
+    if (col <= 0) col = 1;
     802010fe:	05b00513          	li	a0,91
     80201102:	00000097          	auipc	ra,0x0
     80201106:	8a6080e7          	jalr	-1882(ra) # 802009a8 <consputc>
-    consputc('u');
+    consputc('\033');
     8020110a:	07500513          	li	a0,117
     8020110e:	00000097          	auipc	ra,0x0
     80201112:	89a080e7          	jalr	-1894(ra) # 802009a8 <consputc>
-}
+    consputc('[');
     80201116:	0001                	nop
     80201118:	60a2                	ld	ra,8(sp)
     8020111a:	6402                	ld	s0,0(sp)
@@ -1904,41 +1906,41 @@ void restore_cursor(void) {
     8020111e:	8082                	ret
 
 0000000080201120 <cursor_to_column>:
-
-// 移动到行首
-void cursor_to_column(int col) {
+    printint(col, 10, 0,0,0);
+    consputc('G');
+}
     80201120:	1101                	addi	sp,sp,-32
     80201122:	ec06                	sd	ra,24(sp)
     80201124:	e822                	sd	s0,16(sp)
     80201126:	1000                	addi	s0,sp,32
     80201128:	87aa                	mv	a5,a0
     8020112a:	fef42623          	sw	a5,-20(s0)
-    if (col <= 0) col = 1;
+// 光标定位到指定行列
     8020112e:	fec42783          	lw	a5,-20(s0)
     80201132:	2781                	sext.w	a5,a5
     80201134:	00f04563          	bgtz	a5,8020113e <cursor_to_column+0x1e>
     80201138:	4785                	li	a5,1
     8020113a:	fef42623          	sw	a5,-20(s0)
-    consputc('\033');
+void goto_rc(int row, int col) {
     8020113e:	456d                	li	a0,27
     80201140:	00000097          	auipc	ra,0x0
     80201144:	868080e7          	jalr	-1944(ra) # 802009a8 <consputc>
-    consputc('[');
+    consputc('\033');
     80201148:	05b00513          	li	a0,91
     8020114c:	00000097          	auipc	ra,0x0
     80201150:	85c080e7          	jalr	-1956(ra) # 802009a8 <consputc>
-    printint(col, 10, 0);
+    consputc('[');
     80201154:	fec42783          	lw	a5,-20(s0)
     80201158:	4601                	li	a2,0
     8020115a:	45a9                	li	a1,10
     8020115c:	853e                	mv	a0,a5
     8020115e:	00000097          	auipc	ra,0x0
     80201162:	89e080e7          	jalr	-1890(ra) # 802009fc <printint>
-    consputc('G');
+    printint(row, 10, 0,0,0);
     80201166:	04700513          	li	a0,71
     8020116a:	00000097          	auipc	ra,0x0
     8020116e:	83e080e7          	jalr	-1986(ra) # 802009a8 <consputc>
-}
+    consputc(';');
     80201172:	0001                	nop
     80201174:	60e2                	ld	ra,24(sp)
     80201176:	6442                	ld	s0,16(sp)
@@ -1946,8 +1948,8 @@ void cursor_to_column(int col) {
     8020117a:	8082                	ret
 
 000000008020117c <goto_rc>:
-// 光标定位到指定行列
-void goto_rc(int row, int col) {
+    printint(col, 10, 0,0,0);
+    consputc('H');
     8020117c:	1101                	addi	sp,sp,-32
     8020117e:	ec06                	sd	ra,24(sp)
     80201180:	e822                	sd	s0,16(sp)
@@ -1957,37 +1959,37 @@ void goto_rc(int row, int col) {
     80201188:	fef42623          	sw	a5,-20(s0)
     8020118c:	87ba                	mv	a5,a4
     8020118e:	fef42423          	sw	a5,-24(s0)
-    consputc('\033');
+}
     80201192:	456d                	li	a0,27
     80201194:	00000097          	auipc	ra,0x0
     80201198:	814080e7          	jalr	-2028(ra) # 802009a8 <consputc>
-    consputc('[');
+// 颜色控制
     8020119c:	05b00513          	li	a0,91
     802011a0:	00000097          	auipc	ra,0x0
     802011a4:	808080e7          	jalr	-2040(ra) # 802009a8 <consputc>
-    printint(row, 10, 0);
+void reset_color(void) {
     802011a8:	fec42783          	lw	a5,-20(s0)
     802011ac:	4601                	li	a2,0
     802011ae:	45a9                	li	a1,10
     802011b0:	853e                	mv	a0,a5
     802011b2:	00000097          	auipc	ra,0x0
     802011b6:	84a080e7          	jalr	-1974(ra) # 802009fc <printint>
-    consputc(';');
+	uart_puts(ESC "[0m");
     802011ba:	03b00513          	li	a0,59
     802011be:	fffff097          	auipc	ra,0xfffff
     802011c2:	7ea080e7          	jalr	2026(ra) # 802009a8 <consputc>
-    printint(col, 10, 0);
+}
     802011c6:	fe842783          	lw	a5,-24(s0)
     802011ca:	4601                	li	a2,0
     802011cc:	45a9                	li	a1,10
     802011ce:	853e                	mv	a0,a5
     802011d0:	00000097          	auipc	ra,0x0
     802011d4:	82c080e7          	jalr	-2004(ra) # 802009fc <printint>
-    consputc('H');
+// 设置前景色
     802011d8:	04800513          	li	a0,72
     802011dc:	fffff097          	auipc	ra,0xfffff
     802011e0:	7cc080e7          	jalr	1996(ra) # 802009a8 <consputc>
-}
+void set_fg_color(int color) {
     802011e4:	0001                	nop
     802011e6:	60e2                	ld	ra,24(sp)
     802011e8:	6442                	ld	s0,16(sp)
@@ -1995,18 +1997,18 @@ void goto_rc(int row, int col) {
     802011ec:	8082                	ret
 
 00000000802011ee <reset_color>:
-// 颜色控制
-void reset_color(void) {
+	if (color < 30 || color > 37) return; // 支持30-37
+	consputc('\033');
     802011ee:	1141                	addi	sp,sp,-16
     802011f0:	e406                	sd	ra,8(sp)
     802011f2:	e022                	sd	s0,0(sp)
     802011f4:	0800                	addi	s0,sp,16
-	uart_puts(ESC "[0m");
+	consputc('[');
     802011f6:	00005517          	auipc	a0,0x5
     802011fa:	41a50513          	addi	a0,a0,1050 # 80206610 <small_numbers+0x220>
     802011fe:	fffff097          	auipc	ra,0xfffff
     80201202:	436080e7          	jalr	1078(ra) # 80200634 <uart_puts>
-}
+	printint(color, 10, 0,0,0);
     80201206:	0001                	nop
     80201208:	60a2                	ld	ra,8(sp)
     8020120a:	6402                	ld	s0,0(sp)
@@ -2014,15 +2016,15 @@ void reset_color(void) {
     8020120e:	8082                	ret
 
 0000000080201210 <set_fg_color>:
-// 设置前景色
-void set_fg_color(int color) {
+	consputc('m');
+}
     80201210:	1101                	addi	sp,sp,-32
     80201212:	ec06                	sd	ra,24(sp)
     80201214:	e822                	sd	s0,16(sp)
     80201216:	1000                	addi	s0,sp,32
     80201218:	87aa                	mv	a5,a0
     8020121a:	fef42623          	sw	a5,-20(s0)
-	if (color < 30 || color > 37) return; // 支持30-37
+// 设置背景色
     8020121e:	fec42783          	lw	a5,-20(s0)
     80201222:	0007871b          	sext.w	a4,a5
     80201226:	47f5                	li	a5,29
@@ -2031,44 +2033,44 @@ void set_fg_color(int color) {
     80201230:	0007871b          	sext.w	a4,a5
     80201234:	02500793          	li	a5,37
     80201238:	02e7cd63          	blt	a5,a4,80201272 <set_fg_color+0x62>
-	consputc('\033');
+void set_bg_color(int color) {
     8020123c:	456d                	li	a0,27
     8020123e:	fffff097          	auipc	ra,0xfffff
     80201242:	76a080e7          	jalr	1898(ra) # 802009a8 <consputc>
-	consputc('[');
+	if (color < 40 || color > 47) return; // 支持40-47
     80201246:	05b00513          	li	a0,91
     8020124a:	fffff097          	auipc	ra,0xfffff
     8020124e:	75e080e7          	jalr	1886(ra) # 802009a8 <consputc>
-	printint(color, 10, 0);
+	consputc('\033');
     80201252:	fec42783          	lw	a5,-20(s0)
     80201256:	4601                	li	a2,0
     80201258:	45a9                	li	a1,10
     8020125a:	853e                	mv	a0,a5
     8020125c:	fffff097          	auipc	ra,0xfffff
     80201260:	7a0080e7          	jalr	1952(ra) # 802009fc <printint>
-	consputc('m');
+	consputc('[');
     80201264:	06d00513          	li	a0,109
     80201268:	fffff097          	auipc	ra,0xfffff
     8020126c:	740080e7          	jalr	1856(ra) # 802009a8 <consputc>
     80201270:	a011                	j	80201274 <set_fg_color+0x64>
-	if (color < 30 || color > 37) return; // 支持30-37
+// 设置背景色
     80201272:	0001                	nop
-}
+	printint(color, 10, 0,0,0);
     80201274:	60e2                	ld	ra,24(sp)
     80201276:	6442                	ld	s0,16(sp)
     80201278:	6105                	addi	sp,sp,32
     8020127a:	8082                	ret
 
 000000008020127c <set_bg_color>:
-// 设置背景色
-void set_bg_color(int color) {
+	consputc('m');
+}
     8020127c:	1101                	addi	sp,sp,-32
     8020127e:	ec06                	sd	ra,24(sp)
     80201280:	e822                	sd	s0,16(sp)
     80201282:	1000                	addi	s0,sp,32
     80201284:	87aa                	mv	a5,a0
     80201286:	fef42623          	sw	a5,-20(s0)
-	if (color < 40 || color > 47) return; // 支持40-47
+// 简易文字颜色
     8020128a:	fec42783          	lw	a5,-20(s0)
     8020128e:	0007871b          	sext.w	a4,a5
     80201292:	02700793          	li	a5,39
@@ -2077,42 +2079,42 @@ void set_bg_color(int color) {
     8020129e:	0007871b          	sext.w	a4,a5
     802012a2:	02f00793          	li	a5,47
     802012a6:	02e7cd63          	blt	a5,a4,802012e0 <set_bg_color+0x64>
-	consputc('\033');
+void color_red(void) {
     802012aa:	456d                	li	a0,27
     802012ac:	fffff097          	auipc	ra,0xfffff
     802012b0:	6fc080e7          	jalr	1788(ra) # 802009a8 <consputc>
-	consputc('[');
+	set_fg_color(31); // 红色
     802012b4:	05b00513          	li	a0,91
     802012b8:	fffff097          	auipc	ra,0xfffff
     802012bc:	6f0080e7          	jalr	1776(ra) # 802009a8 <consputc>
-	printint(color, 10, 0);
+}
     802012c0:	fec42783          	lw	a5,-20(s0)
     802012c4:	4601                	li	a2,0
     802012c6:	45a9                	li	a1,10
     802012c8:	853e                	mv	a0,a5
     802012ca:	fffff097          	auipc	ra,0xfffff
     802012ce:	732080e7          	jalr	1842(ra) # 802009fc <printint>
-	consputc('m');
+void color_green(void) {
     802012d2:	06d00513          	li	a0,109
     802012d6:	fffff097          	auipc	ra,0xfffff
     802012da:	6d2080e7          	jalr	1746(ra) # 802009a8 <consputc>
     802012de:	a011                	j	802012e2 <set_bg_color+0x66>
-	if (color < 40 || color > 47) return; // 支持40-47
+// 简易文字颜色
     802012e0:	0001                	nop
-}
+	set_fg_color(32); // 绿色
     802012e2:	60e2                	ld	ra,24(sp)
     802012e4:	6442                	ld	s0,16(sp)
     802012e6:	6105                	addi	sp,sp,32
     802012e8:	8082                	ret
 
 00000000802012ea <color_red>:
-// 简易文字颜色
-void color_red(void) {
+}
+void color_yellow(void) {
     802012ea:	1141                	addi	sp,sp,-16
     802012ec:	e406                	sd	ra,8(sp)
     802012ee:	e022                	sd	s0,0(sp)
     802012f0:	0800                	addi	s0,sp,16
-	set_fg_color(31); // 红色
+	set_fg_color(33); // 黄色
     802012f2:	457d                	li	a0,31
     802012f4:	00000097          	auipc	ra,0x0
     802012f8:	f1c080e7          	jalr	-228(ra) # 80201210 <set_fg_color>
@@ -2124,12 +2126,12 @@ void color_red(void) {
     80201304:	8082                	ret
 
 0000000080201306 <color_green>:
-void color_green(void) {
+void color_blue(void) {
     80201306:	1141                	addi	sp,sp,-16
     80201308:	e406                	sd	ra,8(sp)
     8020130a:	e022                	sd	s0,0(sp)
     8020130c:	0800                	addi	s0,sp,16
-	set_fg_color(32); // 绿色
+	set_fg_color(34); // 蓝色
     8020130e:	02000513          	li	a0,32
     80201312:	00000097          	auipc	ra,0x0
     80201316:	efe080e7          	jalr	-258(ra) # 80201210 <set_fg_color>
@@ -2141,12 +2143,12 @@ void color_green(void) {
     80201322:	8082                	ret
 
 0000000080201324 <color_yellow>:
-void color_yellow(void) {
+void color_purple(void) {
     80201324:	1141                	addi	sp,sp,-16
     80201326:	e406                	sd	ra,8(sp)
     80201328:	e022                	sd	s0,0(sp)
     8020132a:	0800                	addi	s0,sp,16
-	set_fg_color(33); // 黄色
+	set_fg_color(35); // 紫色
     8020132c:	02100513          	li	a0,33
     80201330:	00000097          	auipc	ra,0x0
     80201334:	ee0080e7          	jalr	-288(ra) # 80201210 <set_fg_color>
@@ -2158,12 +2160,12 @@ void color_yellow(void) {
     80201340:	8082                	ret
 
 0000000080201342 <color_blue>:
-void color_blue(void) {
+void color_cyan(void) {
     80201342:	1141                	addi	sp,sp,-16
     80201344:	e406                	sd	ra,8(sp)
     80201346:	e022                	sd	s0,0(sp)
     80201348:	0800                	addi	s0,sp,16
-	set_fg_color(34); // 蓝色
+	set_fg_color(36); // 青色
     8020134a:	02200513          	li	a0,34
     8020134e:	00000097          	auipc	ra,0x0
     80201352:	ec2080e7          	jalr	-318(ra) # 80201210 <set_fg_color>
@@ -2175,12 +2177,12 @@ void color_blue(void) {
     8020135e:	8082                	ret
 
 0000000080201360 <color_purple>:
-void color_purple(void) {
+void color_reverse(void){
     80201360:	1141                	addi	sp,sp,-16
     80201362:	e406                	sd	ra,8(sp)
     80201364:	e022                	sd	s0,0(sp)
     80201366:	0800                	addi	s0,sp,16
-	set_fg_color(35); // 紫色
+	set_fg_color(37); // 反色
     80201368:	02300513          	li	a0,35
     8020136c:	00000097          	auipc	ra,0x0
     80201370:	ea4080e7          	jalr	-348(ra) # 80201210 <set_fg_color>
@@ -2192,16 +2194,16 @@ void color_purple(void) {
     8020137c:	8082                	ret
 
 000000008020137e <color_cyan>:
-void color_cyan(void) {
+void set_color(int fg, int bg) {
     8020137e:	1141                	addi	sp,sp,-16
     80201380:	e406                	sd	ra,8(sp)
     80201382:	e022                	sd	s0,0(sp)
     80201384:	0800                	addi	s0,sp,16
-	set_fg_color(36); // 青色
+	set_bg_color(bg);
     80201386:	02400513          	li	a0,36
     8020138a:	00000097          	auipc	ra,0x0
     8020138e:	e86080e7          	jalr	-378(ra) # 80201210 <set_fg_color>
-}
+	set_fg_color(fg);
     80201392:	0001                	nop
     80201394:	60a2                	ld	ra,8(sp)
     80201396:	6402                	ld	s0,0(sp)
@@ -2209,16 +2211,16 @@ void color_cyan(void) {
     8020139a:	8082                	ret
 
 000000008020139c <color_reverse>:
-void color_reverse(void){
+}
     8020139c:	1141                	addi	sp,sp,-16
     8020139e:	e406                	sd	ra,8(sp)
     802013a0:	e022                	sd	s0,0(sp)
     802013a2:	0800                	addi	s0,sp,16
-	set_fg_color(37); // 反色
+void clear_line(){
     802013a4:	02500513          	li	a0,37
     802013a8:	00000097          	auipc	ra,0x0
     802013ac:	e68080e7          	jalr	-408(ra) # 80201210 <set_fg_color>
-}
+	consputc('\033');
     802013b0:	0001                	nop
     802013b2:	60a2                	ld	ra,8(sp)
     802013b4:	6402                	ld	s0,0(sp)
@@ -2226,7 +2228,7 @@ void color_reverse(void){
     802013b8:	8082                	ret
 
 00000000802013ba <set_color>:
-void set_color(int fg, int bg) {
+	consputc('[');
     802013ba:	1101                	addi	sp,sp,-32
     802013bc:	ec06                	sd	ra,24(sp)
     802013be:	e822                	sd	s0,16(sp)
@@ -2236,12 +2238,12 @@ void set_color(int fg, int bg) {
     802013c6:	fef42623          	sw	a5,-20(s0)
     802013ca:	87ba                	mv	a5,a4
     802013cc:	fef42423          	sw	a5,-24(s0)
-	set_bg_color(bg);
+	consputc('2');
     802013d0:	fe842783          	lw	a5,-24(s0)
     802013d4:	853e                	mv	a0,a5
     802013d6:	00000097          	auipc	ra,0x0
     802013da:	ea6080e7          	jalr	-346(ra) # 8020127c <set_bg_color>
-	set_fg_color(fg);
+	consputc('K');
     802013de:	fec42783          	lw	a5,-20(s0)
     802013e2:	853e                	mv	a0,a5
     802013e4:	00000097          	auipc	ra,0x0
@@ -2254,28 +2256,28 @@ void set_color(int fg, int bg) {
     802013f4:	8082                	ret
 
 00000000802013f6 <clear_line>:
-void clear_line(){
+
     802013f6:	1141                	addi	sp,sp,-16
     802013f8:	e406                	sd	ra,8(sp)
     802013fa:	e022                	sd	s0,0(sp)
     802013fc:	0800                	addi	s0,sp,16
-	consputc('\033');
+void panic(const char *msg) {
     802013fe:	456d                	li	a0,27
     80201400:	fffff097          	auipc	ra,0xfffff
     80201404:	5a8080e7          	jalr	1448(ra) # 802009a8 <consputc>
-	consputc('[');
+	color_red(); // 可选：红色显示
     80201408:	05b00513          	li	a0,91
     8020140c:	fffff097          	auipc	ra,0xfffff
     80201410:	59c080e7          	jalr	1436(ra) # 802009a8 <consputc>
-	consputc('2');
+	printf("panic: %s\n", msg);
     80201414:	03200513          	li	a0,50
     80201418:	fffff097          	auipc	ra,0xfffff
     8020141c:	590080e7          	jalr	1424(ra) # 802009a8 <consputc>
-	consputc('K');
+	reset_color();
     80201420:	04b00513          	li	a0,75
     80201424:	fffff097          	auipc	ra,0xfffff
     80201428:	584080e7          	jalr	1412(ra) # 802009a8 <consputc>
-}
+	while (1) { /* 死循环，防止继续执行 */ }
     8020142c:	0001                	nop
     8020142e:	60a2                	ld	ra,8(sp)
     80201430:	6402                	ld	s0,0(sp)
@@ -2283,32 +2285,32 @@ void clear_line(){
     80201434:	8082                	ret
 
 0000000080201436 <panic>:
-
-void panic(const char *msg) {
+}
+void warning(const char *fmt, ...) {
     80201436:	1101                	addi	sp,sp,-32
     80201438:	ec06                	sd	ra,24(sp)
     8020143a:	e822                	sd	s0,16(sp)
     8020143c:	1000                	addi	s0,sp,32
     8020143e:	fea43423          	sd	a0,-24(s0)
-	color_red(); // 可选：红色显示
+    va_list ap;
     80201442:	00000097          	auipc	ra,0x0
     80201446:	ea8080e7          	jalr	-344(ra) # 802012ea <color_red>
-	printf("panic: %s\n", msg);
+    color_purple(); // 设置紫色
     8020144a:	fe843583          	ld	a1,-24(s0)
     8020144e:	00005517          	auipc	a0,0x5
     80201452:	1ca50513          	addi	a0,a0,458 # 80206618 <small_numbers+0x228>
     80201456:	fffff097          	auipc	ra,0xfffff
     8020145a:	6d8080e7          	jalr	1752(ra) # 80200b2e <printf>
-	reset_color();
+    printf("[WARNING] ");
     8020145e:	00000097          	auipc	ra,0x0
     80201462:	d90080e7          	jalr	-624(ra) # 802011ee <reset_color>
-	while (1) { /* 死循环，防止继续执行 */ }
+    va_start(ap, fmt);
     80201466:	0001                	nop
     80201468:	bffd                	j	80201466 <panic+0x30>
 
 000000008020146a <warning>:
-}
-void warning(const char *fmt, ...) {
+    printf(fmt, ap);
+    va_end(ap);
     8020146a:	7159                	addi	sp,sp,-112
     8020146c:	f406                	sd	ra,40(sp)
     8020146e:	f022                	sd	s0,32(sp)
@@ -2321,32 +2323,32 @@ void warning(const char *fmt, ...) {
     8020147e:	f41c                	sd	a5,40(s0)
     80201480:	03043823          	sd	a6,48(s0)
     80201484:	03143c23          	sd	a7,56(s0)
-    va_list ap;
-    color_purple(); // 设置紫色
+    reset_color(); // 恢复默认颜色
+}
     80201488:	00000097          	auipc	ra,0x0
     8020148c:	ed8080e7          	jalr	-296(ra) # 80201360 <color_purple>
-    printf("[WARNING] ");
+void test_printf_precision(void) {
     80201490:	00005517          	auipc	a0,0x5
     80201494:	19850513          	addi	a0,a0,408 # 80206628 <small_numbers+0x238>
     80201498:	fffff097          	auipc	ra,0xfffff
     8020149c:	696080e7          	jalr	1686(ra) # 80200b2e <printf>
-    va_start(ap, fmt);
+	clear_screen();
     802014a0:	04040793          	addi	a5,s0,64
     802014a4:	fcf43823          	sd	a5,-48(s0)
     802014a8:	fd043783          	ld	a5,-48(s0)
     802014ac:	fc878793          	addi	a5,a5,-56
     802014b0:	fef43423          	sd	a5,-24(s0)
-    printf(fmt, ap);
+    printf("=== 详细的Printf测试 ===\n");
     802014b4:	fe843783          	ld	a5,-24(s0)
     802014b8:	85be                	mv	a1,a5
     802014ba:	fd843503          	ld	a0,-40(s0)
     802014be:	fffff097          	auipc	ra,0xfffff
     802014c2:	670080e7          	jalr	1648(ra) # 80200b2e <printf>
-    va_end(ap);
-    reset_color(); // 恢复默认颜色
+    
+    // 测试十六进制格式
     802014c6:	00000097          	auipc	ra,0x0
     802014ca:	d28080e7          	jalr	-728(ra) # 802011ee <reset_color>
-}
+    printf("十六进制测试:\n");
     802014ce:	0001                	nop
     802014d0:	70a2                	ld	ra,40(sp)
     802014d2:	7402                	ld	s0,32(sp)
@@ -2354,178 +2356,178 @@ void warning(const char *fmt, ...) {
     802014d6:	8082                	ret
 
 00000000802014d8 <test_printf_precision>:
-void test_printf_precision(void) {
+    printf("  255 = 0x%x (expected: ff)\n", 255);
     802014d8:	1101                	addi	sp,sp,-32
     802014da:	ec06                	sd	ra,24(sp)
     802014dc:	e822                	sd	s0,16(sp)
     802014de:	1000                	addi	s0,sp,32
-	clear_screen();
+    printf("  4096 = 0x%x (expected: 1000)\n", 4096);
     802014e0:	00000097          	auipc	ra,0x0
     802014e4:	a46080e7          	jalr	-1466(ra) # 80200f26 <clear_screen>
-    printf("=== 详细的Printf测试 ===\n");
+    printf("  0x1234abcd = 0x%x\n", 0x1234abcd);
     802014e8:	00005517          	auipc	a0,0x5
     802014ec:	15050513          	addi	a0,a0,336 # 80206638 <small_numbers+0x248>
     802014f0:	fffff097          	auipc	ra,0xfffff
     802014f4:	63e080e7          	jalr	1598(ra) # 80200b2e <printf>
     
-    // 测试十六进制格式
-    printf("十六进制测试:\n");
+    // 测试十进制格式  
+    printf("十进制测试:\n");
     802014f8:	00005517          	auipc	a0,0x5
     802014fc:	16050513          	addi	a0,a0,352 # 80206658 <small_numbers+0x268>
     80201500:	fffff097          	auipc	ra,0xfffff
     80201504:	62e080e7          	jalr	1582(ra) # 80200b2e <printf>
-    printf("  255 = 0x%x (expected: ff)\n", 255);
+    printf("  正数: %d\n", 42);
     80201508:	0ff00593          	li	a1,255
     8020150c:	00005517          	auipc	a0,0x5
     80201510:	16450513          	addi	a0,a0,356 # 80206670 <small_numbers+0x280>
     80201514:	fffff097          	auipc	ra,0xfffff
     80201518:	61a080e7          	jalr	1562(ra) # 80200b2e <printf>
-    printf("  4096 = 0x%x (expected: 1000)\n", 4096);
+    printf("  负数: %d\n", -42);
     8020151c:	6585                	lui	a1,0x1
     8020151e:	00005517          	auipc	a0,0x5
     80201522:	17250513          	addi	a0,a0,370 # 80206690 <small_numbers+0x2a0>
     80201526:	fffff097          	auipc	ra,0xfffff
     8020152a:	608080e7          	jalr	1544(ra) # 80200b2e <printf>
-    printf("  0x1234abcd = 0x%x\n", 0x1234abcd);
+    printf("  零: %d\n", 0);
     8020152e:	1234b7b7          	lui	a5,0x1234b
     80201532:	bcd78593          	addi	a1,a5,-1075 # 1234abcd <userret+0x1234ab31>
     80201536:	00005517          	auipc	a0,0x5
     8020153a:	17a50513          	addi	a0,a0,378 # 802066b0 <small_numbers+0x2c0>
     8020153e:	fffff097          	auipc	ra,0xfffff
     80201542:	5f0080e7          	jalr	1520(ra) # 80200b2e <printf>
+    printf("  大数: %d\n", 123456789);
     
-    // 测试十进制格式  
-    printf("十进制测试:\n");
+    // 测试无符号格式
     80201546:	00005517          	auipc	a0,0x5
     8020154a:	18250513          	addi	a0,a0,386 # 802066c8 <small_numbers+0x2d8>
     8020154e:	fffff097          	auipc	ra,0xfffff
     80201552:	5e0080e7          	jalr	1504(ra) # 80200b2e <printf>
-    printf("  正数: %d\n", 42);
+    printf("无符号测试:\n");
     80201556:	02a00593          	li	a1,42
     8020155a:	00005517          	auipc	a0,0x5
     8020155e:	18650513          	addi	a0,a0,390 # 802066e0 <small_numbers+0x2f0>
     80201562:	fffff097          	auipc	ra,0xfffff
     80201566:	5cc080e7          	jalr	1484(ra) # 80200b2e <printf>
-    printf("  负数: %d\n", -42);
+    printf("  大无符号数：%u\n", 4294967295U);
     8020156a:	fd600593          	li	a1,-42
     8020156e:	00005517          	auipc	a0,0x5
     80201572:	18250513          	addi	a0,a0,386 # 802066f0 <small_numbers+0x300>
     80201576:	fffff097          	auipc	ra,0xfffff
     8020157a:	5b8080e7          	jalr	1464(ra) # 80200b2e <printf>
-    printf("  零: %d\n", 0);
+    printf("  零：%u\n", 0U);
     8020157e:	4581                	li	a1,0
     80201580:	00005517          	auipc	a0,0x5
     80201584:	18050513          	addi	a0,a0,384 # 80206700 <small_numbers+0x310>
     80201588:	fffff097          	auipc	ra,0xfffff
     8020158c:	5a6080e7          	jalr	1446(ra) # 80200b2e <printf>
-    printf("  大数: %d\n", 123456789);
+	printf("  小无符号数：%u\n", 12345U);
     80201590:	075bd7b7          	lui	a5,0x75bd
     80201594:	d1578593          	addi	a1,a5,-747 # 75bcd15 <userret+0x75bcc79>
     80201598:	00005517          	auipc	a0,0x5
     8020159c:	17850513          	addi	a0,a0,376 # 80206710 <small_numbers+0x320>
     802015a0:	fffff097          	auipc	ra,0xfffff
     802015a4:	58e080e7          	jalr	1422(ra) # 80200b2e <printf>
-    
-    // 测试无符号格式
-    printf("无符号测试:\n");
+
+	// 测试边界
+	printf("边界测试:\n");
     802015a8:	00005517          	auipc	a0,0x5
     802015ac:	17850513          	addi	a0,a0,376 # 80206720 <small_numbers+0x330>
     802015b0:	fffff097          	auipc	ra,0xfffff
     802015b4:	57e080e7          	jalr	1406(ra) # 80200b2e <printf>
-    printf("  大无符号数：%u\n", 4294967295U);
+	printf("  INT_MAX: %d\n", 2147483647);
     802015b8:	55fd                	li	a1,-1
     802015ba:	00005517          	auipc	a0,0x5
     802015be:	17e50513          	addi	a0,a0,382 # 80206738 <small_numbers+0x348>
     802015c2:	fffff097          	auipc	ra,0xfffff
     802015c6:	56c080e7          	jalr	1388(ra) # 80200b2e <printf>
-    printf("  零：%u\n", 0U);
+	printf("  INT_MIN: %d\n", -2147483648);
     802015ca:	4581                	li	a1,0
     802015cc:	00005517          	auipc	a0,0x5
     802015d0:	18450513          	addi	a0,a0,388 # 80206750 <small_numbers+0x360>
     802015d4:	fffff097          	auipc	ra,0xfffff
     802015d8:	55a080e7          	jalr	1370(ra) # 80200b2e <printf>
-	printf("  小无符号数：%u\n", 12345U);
+	printf("  UINT_MAX: %u\n", 4294967295U);
     802015dc:	678d                	lui	a5,0x3
     802015de:	03978593          	addi	a1,a5,57 # 3039 <userret+0x2f9d>
     802015e2:	00005517          	auipc	a0,0x5
     802015e6:	17e50513          	addi	a0,a0,382 # 80206760 <small_numbers+0x370>
     802015ea:	fffff097          	auipc	ra,0xfffff
     802015ee:	544080e7          	jalr	1348(ra) # 80200b2e <printf>
-
-	// 测试边界
-	printf("边界测试:\n");
+	printf(" -1 as unsigned: %u\n", (unsigned int)-1);
+    
+    // 测试字符串边界情况
     802015f2:	00005517          	auipc	a0,0x5
     802015f6:	18650513          	addi	a0,a0,390 # 80206778 <small_numbers+0x388>
     802015fa:	fffff097          	auipc	ra,0xfffff
     802015fe:	534080e7          	jalr	1332(ra) # 80200b2e <printf>
-	printf("  INT_MAX: %d\n", 2147483647);
+    printf("字符串测试:\n");
     80201602:	800007b7          	lui	a5,0x80000
     80201606:	fff7c593          	not	a1,a5
     8020160a:	00005517          	auipc	a0,0x5
     8020160e:	17e50513          	addi	a0,a0,382 # 80206788 <small_numbers+0x398>
     80201612:	fffff097          	auipc	ra,0xfffff
     80201616:	51c080e7          	jalr	1308(ra) # 80200b2e <printf>
-	printf("  INT_MIN: %d\n", -2147483648);
+    printf("  空字符串: '%s'\n", "");
     8020161a:	800005b7          	lui	a1,0x80000
     8020161e:	00005517          	auipc	a0,0x5
     80201622:	17a50513          	addi	a0,a0,378 # 80206798 <small_numbers+0x3a8>
     80201626:	fffff097          	auipc	ra,0xfffff
     8020162a:	508080e7          	jalr	1288(ra) # 80200b2e <printf>
-	printf("  UINT_MAX: %u\n", 4294967295U);
+    printf("  单字符: '%s'\n", "X");
     8020162e:	55fd                	li	a1,-1
     80201630:	00005517          	auipc	a0,0x5
     80201634:	17850513          	addi	a0,a0,376 # 802067a8 <small_numbers+0x3b8>
     80201638:	fffff097          	auipc	ra,0xfffff
     8020163c:	4f6080e7          	jalr	1270(ra) # 80200b2e <printf>
-	printf(" -1 as unsigned: %u\n", (unsigned int)-1);
+    printf("  长字符串: '%s'\n", "This is a longer test string");
     80201640:	55fd                	li	a1,-1
     80201642:	00005517          	auipc	a0,0x5
     80201646:	17650513          	addi	a0,a0,374 # 802067b8 <small_numbers+0x3c8>
     8020164a:	fffff097          	auipc	ra,0xfffff
     8020164e:	4e4080e7          	jalr	1252(ra) # 80200b2e <printf>
-    
-    // 测试字符串边界情况
-    printf("字符串测试:\n");
+	printf("  非常长字符串： '%s'\n", "Formal version: Entities should not be multiplied beyond necessity.\nPlain English: If two or more explanations fit the facts equally well, choose the simplest one.\nScientific phrasing: When multiple hypotheses explain the same observation, the simplest hypothesis that requires the fewest assumptions is most likely to be correct.");
+	
+	// 测试混合格式
     80201652:	00005517          	auipc	a0,0x5
     80201656:	17e50513          	addi	a0,a0,382 # 802067d0 <small_numbers+0x3e0>
     8020165a:	fffff097          	auipc	ra,0xfffff
     8020165e:	4d4080e7          	jalr	1236(ra) # 80200b2e <printf>
-    printf("  空字符串: '%s'\n", "");
+	printf("混合格式测试:\n");
     80201662:	00005597          	auipc	a1,0x5
     80201666:	18658593          	addi	a1,a1,390 # 802067e8 <small_numbers+0x3f8>
     8020166a:	00005517          	auipc	a0,0x5
     8020166e:	18650513          	addi	a0,a0,390 # 802067f0 <small_numbers+0x400>
     80201672:	fffff097          	auipc	ra,0xfffff
     80201676:	4bc080e7          	jalr	1212(ra) # 80200b2e <printf>
-    printf("  单字符: '%s'\n", "X");
+	printf("  Hex: 0x%x, Dec: %d, Unsigned: %u\n", 255, -255, 255U);
     8020167a:	00005597          	auipc	a1,0x5
     8020167e:	18e58593          	addi	a1,a1,398 # 80206808 <small_numbers+0x418>
     80201682:	00005517          	auipc	a0,0x5
     80201686:	18e50513          	addi	a0,a0,398 # 80206810 <small_numbers+0x420>
     8020168a:	fffff097          	auipc	ra,0xfffff
     8020168e:	4a4080e7          	jalr	1188(ra) # 80200b2e <printf>
-    printf("  长字符串: '%s'\n", "This is a longer test string");
+	
     80201692:	00005597          	auipc	a1,0x5
     80201696:	19658593          	addi	a1,a1,406 # 80206828 <small_numbers+0x438>
     8020169a:	00005517          	auipc	a0,0x5
     8020169e:	1ae50513          	addi	a0,a0,430 # 80206848 <small_numbers+0x458>
     802016a2:	fffff097          	auipc	ra,0xfffff
     802016a6:	48c080e7          	jalr	1164(ra) # 80200b2e <printf>
-	printf("  非常长字符串： '%s'\n", "Formal version: Entities should not be multiplied beyond necessity.\nPlain English: If two or more explanations fit the facts equally well, choose the simplest one.\nScientific phrasing: When multiple hypotheses explain the same observation, the simplest hypothesis that requires the fewest assumptions is most likely to be correct.");
+	// 测试百分号输出
     802016aa:	00005597          	auipc	a1,0x5
     802016ae:	1b658593          	addi	a1,a1,438 # 80206860 <small_numbers+0x470>
     802016b2:	00005517          	auipc	a0,0x5
     802016b6:	2fe50513          	addi	a0,a0,766 # 802069b0 <small_numbers+0x5c0>
     802016ba:	fffff097          	auipc	ra,0xfffff
     802016be:	474080e7          	jalr	1140(ra) # 80200b2e <printf>
+	printf("百分号输出测试:\n");
+	printf("  100%% 完成!\n");
 	
-	// 测试混合格式
-	printf("混合格式测试:\n");
     802016c2:	00005517          	auipc	a0,0x5
     802016c6:	30e50513          	addi	a0,a0,782 # 802069d0 <small_numbers+0x5e0>
     802016ca:	fffff097          	auipc	ra,0xfffff
     802016ce:	464080e7          	jalr	1124(ra) # 80200b2e <printf>
-	printf("  Hex: 0x%x, Dec: %d, Unsigned: %u\n", 255, -255, 255U);
+	// 测试NULL字符串
     802016d2:	0ff00693          	li	a3,255
     802016d6:	f0100613          	li	a2,-255
     802016da:	0ff00593          	li	a1,255
@@ -2533,88 +2535,88 @@ void test_printf_precision(void) {
     802016e2:	30a50513          	addi	a0,a0,778 # 802069e8 <small_numbers+0x5f8>
     802016e6:	fffff097          	auipc	ra,0xfffff
     802016ea:	448080e7          	jalr	1096(ra) # 80200b2e <printf>
-	
-	// 测试百分号输出
-	printf("百分号输出测试:\n");
+	char *null_str = 0;
+	printf("NULL字符串测试:\n");
+	printf("  NULL as string: '%s'\n", null_str);
     802016ee:	00005517          	auipc	a0,0x5
     802016f2:	32250513          	addi	a0,a0,802 # 80206a10 <small_numbers+0x620>
     802016f6:	fffff097          	auipc	ra,0xfffff
     802016fa:	438080e7          	jalr	1080(ra) # 80200b2e <printf>
-	printf("  100%% 完成!\n");
+	
     802016fe:	00005517          	auipc	a0,0x5
     80201702:	32a50513          	addi	a0,a0,810 # 80206a28 <small_numbers+0x638>
     80201706:	fffff097          	auipc	ra,0xfffff
     8020170a:	428080e7          	jalr	1064(ra) # 80200b2e <printf>
-	
-	// 测试NULL字符串
-	char *null_str = 0;
+	// 测试指针格式
+	int var = 42;
+	printf("指针测试:\n");
     8020170e:	fe043423          	sd	zero,-24(s0)
-	printf("NULL字符串测试:\n");
+	printf("  Address of var: %p\n", &var);
     80201712:	00005517          	auipc	a0,0x5
     80201716:	32e50513          	addi	a0,a0,814 # 80206a40 <small_numbers+0x650>
     8020171a:	fffff097          	auipc	ra,0xfffff
     8020171e:	414080e7          	jalr	1044(ra) # 80200b2e <printf>
-	printf("  NULL as string: '%s'\n", null_str);
+	
     80201722:	fe843583          	ld	a1,-24(s0)
     80201726:	00005517          	auipc	a0,0x5
     8020172a:	33250513          	addi	a0,a0,818 # 80206a58 <small_numbers+0x668>
     8020172e:	fffff097          	auipc	ra,0xfffff
     80201732:	400080e7          	jalr	1024(ra) # 80200b2e <printf>
-	
-	// 测试指针格式
-	int var = 42;
+	// 测试负数的无符号输出
+	printf("负数无符号输出测试:\n");
+	printf("  -1 as unsigned: %u\n", (unsigned int)-1);
     80201736:	02a00793          	li	a5,42
     8020173a:	fef42223          	sw	a5,-28(s0)
-	printf("指针测试:\n");
+	
     8020173e:	00005517          	auipc	a0,0x5
     80201742:	33250513          	addi	a0,a0,818 # 80206a70 <small_numbers+0x680>
     80201746:	fffff097          	auipc	ra,0xfffff
     8020174a:	3e8080e7          	jalr	1000(ra) # 80200b2e <printf>
-	printf("  Address of var: %p\n", &var);
+	// 测试不同进制的数字
     8020174e:	fe440793          	addi	a5,s0,-28
     80201752:	85be                	mv	a1,a5
     80201754:	00005517          	auipc	a0,0x5
     80201758:	32c50513          	addi	a0,a0,812 # 80206a80 <small_numbers+0x690>
     8020175c:	fffff097          	auipc	ra,0xfffff
     80201760:	3d2080e7          	jalr	978(ra) # 80200b2e <printf>
-	
-	// 测试负数的无符号输出
-	printf("负数无符号输出测试:\n");
+	printf("不同进制测试:\n");
+	printf("  Binary of 5: %b\n", 5);
+	printf("  Octal of 8 : %o\n", 8); 
     80201764:	00005517          	auipc	a0,0x5
     80201768:	33450513          	addi	a0,a0,820 # 80206a98 <small_numbers+0x6a8>
     8020176c:	fffff097          	auipc	ra,0xfffff
     80201770:	3c2080e7          	jalr	962(ra) # 80200b2e <printf>
-	printf("  -1 as unsigned: %u\n", (unsigned int)-1);
+	printf("=== Printf测试结束 ===\n");
     80201774:	55fd                	li	a1,-1
     80201776:	00005517          	auipc	a0,0x5
     8020177a:	34250513          	addi	a0,a0,834 # 80206ab8 <small_numbers+0x6c8>
     8020177e:	fffff097          	auipc	ra,0xfffff
     80201782:	3b0080e7          	jalr	944(ra) # 80200b2e <printf>
-	
-	// 测试不同进制的数字
-	printf("不同进制测试:\n");
+}
+void test_curse_move(){
+	clear_screen(); // 清屏
     80201786:	00005517          	auipc	a0,0x5
     8020178a:	34a50513          	addi	a0,a0,842 # 80206ad0 <small_numbers+0x6e0>
     8020178e:	fffff097          	auipc	ra,0xfffff
     80201792:	3a0080e7          	jalr	928(ra) # 80200b2e <printf>
-	printf("  Binary of 5: %b\n", 5);
+	printf("=== 光标移动测试 ===\n");
     80201796:	4595                	li	a1,5
     80201798:	00005517          	auipc	a0,0x5
     8020179c:	35050513          	addi	a0,a0,848 # 80206ae8 <small_numbers+0x6f8>
     802017a0:	fffff097          	auipc	ra,0xfffff
     802017a4:	38e080e7          	jalr	910(ra) # 80200b2e <printf>
-	printf("  Octal of 8 : %o\n", 8); 
+	for (int i = 3; i <= 7; i++) {
     802017a8:	45a1                	li	a1,8
     802017aa:	00005517          	auipc	a0,0x5
     802017ae:	35650513          	addi	a0,a0,854 # 80206b00 <small_numbers+0x710>
     802017b2:	fffff097          	auipc	ra,0xfffff
     802017b6:	37c080e7          	jalr	892(ra) # 80200b2e <printf>
-	printf("=== Printf测试结束 ===\n");
+		for (int j = 1; j <= 10; j++) {
     802017ba:	00005517          	auipc	a0,0x5
     802017be:	35e50513          	addi	a0,a0,862 # 80206b18 <small_numbers+0x728>
     802017c2:	fffff097          	auipc	ra,0xfffff
     802017c6:	36c080e7          	jalr	876(ra) # 80200b2e <printf>
-}
+			goto_rc(i, j);
     802017ca:	0001                	nop
     802017cc:	60e2                	ld	ra,24(sp)
     802017ce:	6442                	ld	s0,16(sp)
@@ -2622,40 +2624,40 @@ void test_printf_precision(void) {
     802017d2:	8082                	ret
 
 00000000802017d4 <test_curse_move>:
-void test_curse_move(){
+			printf("*");
     802017d4:	1101                	addi	sp,sp,-32
     802017d6:	ec06                	sd	ra,24(sp)
     802017d8:	e822                	sd	s0,16(sp)
     802017da:	1000                	addi	s0,sp,32
-	clear_screen(); // 清屏
+		}
     802017dc:	fffff097          	auipc	ra,0xfffff
     802017e0:	74a080e7          	jalr	1866(ra) # 80200f26 <clear_screen>
-	printf("=== 光标移动测试 ===\n");
+	}
     802017e4:	00005517          	auipc	a0,0x5
     802017e8:	35450513          	addi	a0,a0,852 # 80206b38 <small_numbers+0x748>
     802017ec:	fffff097          	auipc	ra,0xfffff
     802017f0:	342080e7          	jalr	834(ra) # 80200b2e <printf>
-	for (int i = 3; i <= 7; i++) {
+	goto_rc(9, 1);
     802017f4:	478d                	li	a5,3
     802017f6:	fef42623          	sw	a5,-20(s0)
     802017fa:	a881                	j	8020184a <test_curse_move+0x76>
-		for (int j = 1; j <= 10; j++) {
+	save_cursor();
     802017fc:	4785                	li	a5,1
     802017fe:	fef42423          	sw	a5,-24(s0)
     80201802:	a805                	j	80201832 <test_curse_move+0x5e>
-			goto_rc(i, j);
+	// 光标移动测试
     80201804:	fe842703          	lw	a4,-24(s0)
     80201808:	fec42783          	lw	a5,-20(s0)
     8020180c:	85ba                	mv	a1,a4
     8020180e:	853e                	mv	a0,a5
     80201810:	00000097          	auipc	ra,0x0
     80201814:	96c080e7          	jalr	-1684(ra) # 8020117c <goto_rc>
-			printf("*");
+	cursor_up(5);
     80201818:	00005517          	auipc	a0,0x5
     8020181c:	34050513          	addi	a0,a0,832 # 80206b58 <small_numbers+0x768>
     80201820:	fffff097          	auipc	ra,0xfffff
     80201824:	30e080e7          	jalr	782(ra) # 80200b2e <printf>
-		for (int j = 1; j <= 10; j++) {
+	save_cursor();
     80201828:	fe842783          	lw	a5,-24(s0)
     8020182c:	2785                	addiw	a5,a5,1 # ffffffff80000001 <_bss_end+0xfffffffeffdf3bb1>
     8020182e:	fef42423          	sw	a5,-24(s0)
@@ -2663,7 +2665,7 @@ void test_curse_move(){
     80201836:	0007871b          	sext.w	a4,a5
     8020183a:	47a9                	li	a5,10
     8020183c:	fce7d4e3          	bge	a5,a4,80201804 <test_curse_move+0x30>
-	for (int i = 3; i <= 7; i++) {
+	goto_rc(9, 1);
     80201840:	fec42783          	lw	a5,-20(s0)
     80201844:	2785                	addiw	a5,a5,1
     80201846:	fef42623          	sw	a5,-20(s0)
@@ -2671,52 +2673,52 @@ void test_curse_move(){
     8020184e:	0007871b          	sext.w	a4,a5
     80201852:	479d                	li	a5,7
     80201854:	fae7d4e3          	bge	a5,a4,802017fc <test_curse_move+0x28>
-		}
-	}
-	goto_rc(9, 1);
+	cursor_right(2);
+	printf("+++++");
+	cursor_down(2);
     80201858:	4585                	li	a1,1
     8020185a:	4525                	li	a0,9
     8020185c:	00000097          	auipc	ra,0x0
     80201860:	920080e7          	jalr	-1760(ra) # 8020117c <goto_rc>
-	save_cursor();
+	cursor_left(5);
     80201864:	00000097          	auipc	ra,0x0
     80201868:	854080e7          	jalr	-1964(ra) # 802010b8 <save_cursor>
-	// 光标移动测试
-	cursor_up(5);
+	printf("-----");
+	restore_cursor();
     8020186c:	4515                	li	a0,5
     8020186e:	fffff097          	auipc	ra,0xfffff
     80201872:	6ea080e7          	jalr	1770(ra) # 80200f58 <cursor_up>
-	cursor_right(2);
+	printf("=== 光标移动测试结束 ===\n");
     80201876:	4509                	li	a0,2
     80201878:	fffff097          	auipc	ra,0xfffff
     8020187c:	790080e7          	jalr	1936(ra) # 80201008 <cursor_right>
-	printf("+++++");
+}
     80201880:	00005517          	auipc	a0,0x5
     80201884:	2e050513          	addi	a0,a0,736 # 80206b60 <small_numbers+0x770>
     80201888:	fffff097          	auipc	ra,0xfffff
     8020188c:	2a6080e7          	jalr	678(ra) # 80200b2e <printf>
-	cursor_down(2);
+
     80201890:	4509                	li	a0,2
     80201892:	fffff097          	auipc	ra,0xfffff
     80201896:	71e080e7          	jalr	1822(ra) # 80200fb0 <cursor_down>
-	cursor_left(5);
+void test_basic_colors(void) {
     8020189a:	4515                	li	a0,5
     8020189c:	fffff097          	auipc	ra,0xfffff
     802018a0:	7c4080e7          	jalr	1988(ra) # 80201060 <cursor_left>
-	printf("-----");
+    clear_screen();
     802018a4:	00005517          	auipc	a0,0x5
     802018a8:	2c450513          	addi	a0,a0,708 # 80206b68 <small_numbers+0x778>
     802018ac:	fffff097          	auipc	ra,0xfffff
     802018b0:	282080e7          	jalr	642(ra) # 80200b2e <printf>
-	restore_cursor();
+    printf("=== 基本颜色测试 ===\n\n");
     802018b4:	00000097          	auipc	ra,0x0
     802018b8:	838080e7          	jalr	-1992(ra) # 802010ec <restore_cursor>
-	printf("=== 光标移动测试结束 ===\n");
+    
     802018bc:	00005517          	auipc	a0,0x5
     802018c0:	2b450513          	addi	a0,a0,692 # 80206b70 <small_numbers+0x780>
     802018c4:	fffff097          	auipc	ra,0xfffff
     802018c8:	26a080e7          	jalr	618(ra) # 80200b2e <printf>
-}
+    // 测试基本前景色
     802018cc:	0001                	nop
     802018ce:	60e2                	ld	ra,24(sp)
     802018d0:	6442                	ld	s0,16(sp)
@@ -2724,92 +2726,92 @@ void test_curse_move(){
     802018d4:	8082                	ret
 
 00000000802018d6 <test_basic_colors>:
-
-void test_basic_colors(void) {
+    printf("前景色测试:\n");
+    color_red();    printf("红色文字 ");
     802018d6:	1141                	addi	sp,sp,-16
     802018d8:	e406                	sd	ra,8(sp)
     802018da:	e022                	sd	s0,0(sp)
     802018dc:	0800                	addi	s0,sp,16
-    clear_screen();
+    color_green();  printf("绿色文字 ");
     802018de:	fffff097          	auipc	ra,0xfffff
     802018e2:	648080e7          	jalr	1608(ra) # 80200f26 <clear_screen>
-    printf("=== 基本颜色测试 ===\n\n");
+    color_yellow(); printf("黄色文字 ");
     802018e6:	00005517          	auipc	a0,0x5
     802018ea:	2b250513          	addi	a0,a0,690 # 80206b98 <small_numbers+0x7a8>
     802018ee:	fffff097          	auipc	ra,0xfffff
     802018f2:	240080e7          	jalr	576(ra) # 80200b2e <printf>
-    
-    // 测试基本前景色
-    printf("前景色测试:\n");
+    color_blue();   printf("蓝色文字 ");
+    color_purple(); printf("紫色文字 ");
+    color_cyan();   printf("青色文字 ");
     802018f6:	00005517          	auipc	a0,0x5
     802018fa:	2c250513          	addi	a0,a0,706 # 80206bb8 <small_numbers+0x7c8>
     802018fe:	fffff097          	auipc	ra,0xfffff
     80201902:	230080e7          	jalr	560(ra) # 80200b2e <printf>
-    color_red();    printf("红色文字 ");
+    color_reverse();  printf("反色文字");
     80201906:	00000097          	auipc	ra,0x0
     8020190a:	9e4080e7          	jalr	-1564(ra) # 802012ea <color_red>
     8020190e:	00005517          	auipc	a0,0x5
     80201912:	2c250513          	addi	a0,a0,706 # 80206bd0 <small_numbers+0x7e0>
     80201916:	fffff097          	auipc	ra,0xfffff
     8020191a:	218080e7          	jalr	536(ra) # 80200b2e <printf>
-    color_green();  printf("绿色文字 ");
+    reset_color();
     8020191e:	00000097          	auipc	ra,0x0
     80201922:	9e8080e7          	jalr	-1560(ra) # 80201306 <color_green>
     80201926:	00005517          	auipc	a0,0x5
     8020192a:	2ba50513          	addi	a0,a0,698 # 80206be0 <small_numbers+0x7f0>
     8020192e:	fffff097          	auipc	ra,0xfffff
     80201932:	200080e7          	jalr	512(ra) # 80200b2e <printf>
-    color_yellow(); printf("黄色文字 ");
+    printf("\n\n");
     80201936:	00000097          	auipc	ra,0x0
     8020193a:	9ee080e7          	jalr	-1554(ra) # 80201324 <color_yellow>
     8020193e:	00005517          	auipc	a0,0x5
     80201942:	2b250513          	addi	a0,a0,690 # 80206bf0 <small_numbers+0x800>
     80201946:	fffff097          	auipc	ra,0xfffff
     8020194a:	1e8080e7          	jalr	488(ra) # 80200b2e <printf>
-    color_blue();   printf("蓝色文字 ");
+    
     8020194e:	00000097          	auipc	ra,0x0
     80201952:	9f4080e7          	jalr	-1548(ra) # 80201342 <color_blue>
     80201956:	00005517          	auipc	a0,0x5
     8020195a:	2aa50513          	addi	a0,a0,682 # 80206c00 <small_numbers+0x810>
     8020195e:	fffff097          	auipc	ra,0xfffff
     80201962:	1d0080e7          	jalr	464(ra) # 80200b2e <printf>
-    color_purple(); printf("紫色文字 ");
+    // 测试背景色
     80201966:	00000097          	auipc	ra,0x0
     8020196a:	9fa080e7          	jalr	-1542(ra) # 80201360 <color_purple>
     8020196e:	00005517          	auipc	a0,0x5
     80201972:	2a250513          	addi	a0,a0,674 # 80206c10 <small_numbers+0x820>
     80201976:	fffff097          	auipc	ra,0xfffff
     8020197a:	1b8080e7          	jalr	440(ra) # 80200b2e <printf>
-    color_cyan();   printf("青色文字 ");
+    printf("背景色测试:\n");
     8020197e:	00000097          	auipc	ra,0x0
     80201982:	a00080e7          	jalr	-1536(ra) # 8020137e <color_cyan>
     80201986:	00005517          	auipc	a0,0x5
     8020198a:	29a50513          	addi	a0,a0,666 # 80206c20 <small_numbers+0x830>
     8020198e:	fffff097          	auipc	ra,0xfffff
     80201992:	1a0080e7          	jalr	416(ra) # 80200b2e <printf>
-    color_reverse();  printf("反色文字");
+    set_bg_color(41); printf(" 红色背景 "); reset_color();
     80201996:	00000097          	auipc	ra,0x0
     8020199a:	a06080e7          	jalr	-1530(ra) # 8020139c <color_reverse>
     8020199e:	00005517          	auipc	a0,0x5
     802019a2:	29250513          	addi	a0,a0,658 # 80206c30 <small_numbers+0x840>
     802019a6:	fffff097          	auipc	ra,0xfffff
     802019aa:	188080e7          	jalr	392(ra) # 80200b2e <printf>
-    reset_color();
+    set_bg_color(42); printf(" 绿色背景 "); reset_color();
     802019ae:	00000097          	auipc	ra,0x0
     802019b2:	840080e7          	jalr	-1984(ra) # 802011ee <reset_color>
-    printf("\n\n");
+    set_bg_color(43); printf(" 黄色背景 "); reset_color();
     802019b6:	00005517          	auipc	a0,0x5
     802019ba:	28a50513          	addi	a0,a0,650 # 80206c40 <small_numbers+0x850>
     802019be:	fffff097          	auipc	ra,0xfffff
     802019c2:	170080e7          	jalr	368(ra) # 80200b2e <printf>
-    
-    // 测试背景色
-    printf("背景色测试:\n");
+    set_bg_color(44); printf(" 蓝色背景 "); reset_color();
+	set_bg_color(47); printf(" 反色背景 "); reset_color();
+    printf("\n\n");
     802019c6:	00005517          	auipc	a0,0x5
     802019ca:	28250513          	addi	a0,a0,642 # 80206c48 <small_numbers+0x858>
     802019ce:	fffff097          	auipc	ra,0xfffff
     802019d2:	160080e7          	jalr	352(ra) # 80200b2e <printf>
-    set_bg_color(41); printf(" 红色背景 "); reset_color();
+    
     802019d6:	02900513          	li	a0,41
     802019da:	00000097          	auipc	ra,0x0
     802019de:	8a2080e7          	jalr	-1886(ra) # 8020127c <set_bg_color>
@@ -2819,7 +2821,7 @@ void test_basic_colors(void) {
     802019ee:	144080e7          	jalr	324(ra) # 80200b2e <printf>
     802019f2:	fffff097          	auipc	ra,0xfffff
     802019f6:	7fc080e7          	jalr	2044(ra) # 802011ee <reset_color>
-    set_bg_color(42); printf(" 绿色背景 "); reset_color();
+    // 测试组合效果
     802019fa:	02a00513          	li	a0,42
     802019fe:	00000097          	auipc	ra,0x0
     80201a02:	87e080e7          	jalr	-1922(ra) # 8020127c <set_bg_color>
@@ -2829,7 +2831,7 @@ void test_basic_colors(void) {
     80201a12:	120080e7          	jalr	288(ra) # 80200b2e <printf>
     80201a16:	fffff097          	auipc	ra,0xfffff
     80201a1a:	7d8080e7          	jalr	2008(ra) # 802011ee <reset_color>
-    set_bg_color(43); printf(" 黄色背景 "); reset_color();
+    printf("组合效果测试:\n");
     80201a1e:	02b00513          	li	a0,43
     80201a22:	00000097          	auipc	ra,0x0
     80201a26:	85a080e7          	jalr	-1958(ra) # 8020127c <set_bg_color>
@@ -2839,7 +2841,7 @@ void test_basic_colors(void) {
     80201a36:	0fc080e7          	jalr	252(ra) # 80200b2e <printf>
     80201a3a:	fffff097          	auipc	ra,0xfffff
     80201a3e:	7b4080e7          	jalr	1972(ra) # 802011ee <reset_color>
-    set_bg_color(44); printf(" 蓝色背景 "); reset_color();
+    set_color(31, 44); printf(" 红字蓝底 "); reset_color();
     80201a42:	02c00513          	li	a0,44
     80201a46:	00000097          	auipc	ra,0x0
     80201a4a:	836080e7          	jalr	-1994(ra) # 8020127c <set_bg_color>
@@ -2849,7 +2851,7 @@ void test_basic_colors(void) {
     80201a5a:	0d8080e7          	jalr	216(ra) # 80200b2e <printf>
     80201a5e:	fffff097          	auipc	ra,0xfffff
     80201a62:	790080e7          	jalr	1936(ra) # 802011ee <reset_color>
-	set_bg_color(47); printf(" 反色背景 "); reset_color();
+    set_color(33, 45); printf(" 黄字紫底 "); reset_color();
     80201a66:	02f00513          	li	a0,47
     80201a6a:	00000097          	auipc	ra,0x0
     80201a6e:	812080e7          	jalr	-2030(ra) # 8020127c <set_bg_color>
@@ -2859,19 +2861,19 @@ void test_basic_colors(void) {
     80201a7e:	0b4080e7          	jalr	180(ra) # 80200b2e <printf>
     80201a82:	fffff097          	auipc	ra,0xfffff
     80201a86:	76c080e7          	jalr	1900(ra) # 802011ee <reset_color>
-    printf("\n\n");
+    set_color(32, 47); printf(" 绿字反底 "); reset_color();
     80201a8a:	00005517          	auipc	a0,0x5
     80201a8e:	1b650513          	addi	a0,a0,438 # 80206c40 <small_numbers+0x850>
     80201a92:	fffff097          	auipc	ra,0xfffff
     80201a96:	09c080e7          	jalr	156(ra) # 80200b2e <printf>
-    
-    // 测试组合效果
-    printf("组合效果测试:\n");
+    printf("\n\n");
+	reset_color();
+	printf("重置为默认颜色，本行文字会被清除\n"); 
     80201a9a:	00005517          	auipc	a0,0x5
     80201a9e:	21650513          	addi	a0,a0,534 # 80206cb0 <small_numbers+0x8c0>
     80201aa2:	fffff097          	auipc	ra,0xfffff
     80201aa6:	08c080e7          	jalr	140(ra) # 80200b2e <printf>
-    set_color(31, 44); printf(" 红字蓝底 "); reset_color();
+	cursor_up(1); // 光标上移一行
     80201aaa:	02c00593          	li	a1,44
     80201aae:	457d                	li	a0,31
     80201ab0:	00000097          	auipc	ra,0x0
@@ -2882,7 +2884,7 @@ void test_basic_colors(void) {
     80201ac4:	06e080e7          	jalr	110(ra) # 80200b2e <printf>
     80201ac8:	fffff097          	auipc	ra,0xfffff
     80201acc:	726080e7          	jalr	1830(ra) # 802011ee <reset_color>
-    set_color(33, 45); printf(" 黄字紫底 "); reset_color();
+	clear_line();
     80201ad0:	02d00593          	li	a1,45
     80201ad4:	02100513          	li	a0,33
     80201ad8:	00000097          	auipc	ra,0x0
@@ -2893,7 +2895,7 @@ void test_basic_colors(void) {
     80201aec:	046080e7          	jalr	70(ra) # 80200b2e <printf>
     80201af0:	fffff097          	auipc	ra,0xfffff
     80201af4:	6fe080e7          	jalr	1790(ra) # 802011ee <reset_color>
-    set_color(32, 47); printf(" 绿字反底 "); reset_color();
+
     80201af8:	02f00593          	li	a1,47
     80201afc:	02000513          	li	a0,32
     80201b00:	00000097          	auipc	ra,0x0
@@ -2904,28 +2906,22 @@ void test_basic_colors(void) {
     80201b14:	01e080e7          	jalr	30(ra) # 80200b2e <printf>
     80201b18:	fffff097          	auipc	ra,0xfffff
     80201b1c:	6d6080e7          	jalr	1750(ra) # 802011ee <reset_color>
-    printf("\n\n");
+	printf("=== 颜色测试结束 ===\n");
     80201b20:	00005517          	auipc	a0,0x5
     80201b24:	12050513          	addi	a0,a0,288 # 80206c40 <small_numbers+0x850>
     80201b28:	fffff097          	auipc	ra,0xfffff
     80201b2c:	006080e7          	jalr	6(ra) # 80200b2e <printf>
-	reset_color();
     80201b30:	fffff097          	auipc	ra,0xfffff
     80201b34:	6be080e7          	jalr	1726(ra) # 802011ee <reset_color>
-	printf("重置为默认颜色，本行文字会被清除\n"); 
     80201b38:	00005517          	auipc	a0,0x5
     80201b3c:	1c050513          	addi	a0,a0,448 # 80206cf8 <small_numbers+0x908>
     80201b40:	fffff097          	auipc	ra,0xfffff
     80201b44:	fee080e7          	jalr	-18(ra) # 80200b2e <printf>
-	cursor_up(1); // 光标上移一行
     80201b48:	4505                	li	a0,1
     80201b4a:	fffff097          	auipc	ra,0xfffff
     80201b4e:	40e080e7          	jalr	1038(ra) # 80200f58 <cursor_up>
-	clear_line();
     80201b52:	00000097          	auipc	ra,0x0
     80201b56:	8a4080e7          	jalr	-1884(ra) # 802013f6 <clear_line>
-
-	printf("=== 颜色测试结束 ===\n");
     80201b5a:	00005517          	auipc	a0,0x5
     80201b5e:	1d650513          	addi	a0,a0,470 # 80206d30 <small_numbers+0x940>
     80201b62:	fffff097          	auipc	ra,0xfffff
@@ -6674,54 +6670,54 @@ swtch:
     80203e18:	8082                	ret
 
 0000000080203e1a <r_sstatus>:
-        if(p->state == SLEEPING && p->chan == chan) {
-            p->state = RUNNABLE;
         }
     }
 }
 void kexit() {
+    struct proc *p = myproc();
+    
     80203e1a:	1101                	addi	sp,sp,-32
     80203e1c:	ec22                	sd	s0,24(sp)
     80203e1e:	1000                	addi	s0,sp,32
-    struct proc *p = myproc();
-    
+    if (p == 0) {
+        panic("kexit: no current process");
     80203e20:	100027f3          	csrr	a5,sstatus
     80203e24:	fef43423          	sd	a5,-24(s0)
-    if (p == 0) {
+    }
     80203e28:	fe843783          	ld	a5,-24(s0)
-        panic("kexit: no current process");
+    
     80203e2c:	853e                	mv	a0,a5
     80203e2e:	6462                	ld	s0,24(sp)
     80203e30:	6105                	addi	sp,sp,32
     80203e32:	8082                	ret
 
 0000000080203e34 <w_sstatus>:
-    }
+    // 不parent为NULL的初始进程退出，目前表示为关机
     80203e34:	1101                	addi	sp,sp,-32
     80203e36:	ec22                	sd	s0,24(sp)
     80203e38:	1000                	addi	s0,sp,32
     80203e3a:	fea43423          	sd	a0,-24(s0)
-    
+    if (!p->parent){
     80203e3e:	fe843783          	ld	a5,-24(s0)
     80203e42:	10079073          	csrw	sstatus,a5
-    // 不parent为NULL的初始进程退出，目前表示为关机
+		shutdown();
     80203e46:	0001                	nop
     80203e48:	6462                	ld	s0,24(sp)
     80203e4a:	6105                	addi	sp,sp,32
     80203e4c:	8082                	ret
 
 0000000080203e4e <intr_on>:
-    if (!p->parent){
-		shutdown();
 	}
     
     // 正确设置ZOMBIE状态
     p->state = ZOMBIE;
+    
+    // 使用父进程自身地址作为通道标识
     80203e4e:	1141                	addi	sp,sp,-16
     80203e50:	e406                	sd	ra,8(sp)
     80203e52:	e022                	sd	s0,0(sp)
     80203e54:	0800                	addi	s0,sp,16
-    
+    void *chan = (void*)p->parent;
     80203e56:	00000097          	auipc	ra,0x0
     80203e5a:	fc4080e7          	jalr	-60(ra) # 80203e1a <r_sstatus>
     80203e5e:	87aa                	mv	a5,a0
@@ -6729,7 +6725,7 @@ void kexit() {
     80203e64:	853e                	mv	a0,a5
     80203e66:	00000097          	auipc	ra,0x0
     80203e6a:	fce080e7          	jalr	-50(ra) # 80203e34 <w_sstatus>
-    // 使用父进程自身地址作为通道标识
+    // 检查父进程是否在使用相同的通道等待
     80203e6e:	0001                	nop
     80203e70:	60a2                	ld	ra,8(sp)
     80203e72:	6402                	ld	s0,0(sp)
@@ -6737,13 +6733,13 @@ void kexit() {
     80203e76:	8082                	ret
 
 0000000080203e78 <intr_off>:
-    void *chan = (void*)p->parent;
-    // 检查父进程是否在使用相同的通道等待
+    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
+        wakeup(chan);
     80203e78:	1141                	addi	sp,sp,-16
     80203e7a:	e406                	sd	ra,8(sp)
     80203e7c:	e022                	sd	s0,0(sp)
     80203e7e:	0800                	addi	s0,sp,16
-    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
+    }
     80203e80:	00000097          	auipc	ra,0x0
     80203e84:	f9a080e7          	jalr	-102(ra) # 80203e1a <r_sstatus>
     80203e88:	87aa                	mv	a5,a0
@@ -6751,7 +6747,7 @@ void kexit() {
     80203e8c:	853e                	mv	a0,a5
     80203e8e:	00000097          	auipc	ra,0x0
     80203e92:	fa6080e7          	jalr	-90(ra) # 80203e34 <w_sstatus>
-        wakeup(chan);
+    
     80203e96:	0001                	nop
     80203e98:	60a2                	ld	ra,8(sp)
     80203e9a:	6402                	ld	s0,0(sp)
@@ -6759,39 +6755,39 @@ void kexit() {
     80203e9e:	8082                	ret
 
 0000000080203ea0 <w_stvec>:
-    }
-    
+    // 在调度前清除当前进程指针，防止该进程再次被调度
+    current_proc = 0;
     80203ea0:	1101                	addi	sp,sp,-32
     80203ea2:	ec22                	sd	s0,24(sp)
     80203ea4:	1000                	addi	s0,sp,32
     80203ea6:	fea43423          	sd	a0,-24(s0)
-    // 在调度前清除当前进程指针，防止该进程再次被调度
+    if (mycpu())
     80203eaa:	fe843783          	ld	a5,-24(s0)
     80203eae:	10579073          	csrw	stvec,a5
-    current_proc = 0;
+        mycpu()->proc = 0;
     80203eb2:	0001                	nop
     80203eb4:	6462                	ld	s0,24(sp)
     80203eb6:	6105                	addi	sp,sp,32
     80203eb8:	8082                	ret
 
 0000000080203eba <assert>:
-                *status = zombie_status;
-
             free_proc(zombie_child);
 			zombie_child = NULL;
             intr_on();
             return zombie_pid;
+        }
+        
     80203eba:	1101                	addi	sp,sp,-32
     80203ebc:	ec06                	sd	ra,24(sp)
     80203ebe:	e822                	sd	s0,16(sp)
     80203ec0:	1000                	addi	s0,sp,32
     80203ec2:	87aa                	mv	a5,a0
     80203ec4:	fef42623          	sw	a5,-20(s0)
-        }
+        // 检查是否有任何子进程
     80203ec8:	fec42783          	lw	a5,-20(s0)
     80203ecc:	2781                	sext.w	a5,a5
     80203ece:	e79d                	bnez	a5,80203efc <assert+0x42>
-        
+        int havekids = 0;
     80203ed0:	18900613          	li	a2,393
     80203ed4:	00004597          	auipc	a1,0x4
     80203ed8:	d4458593          	addi	a1,a1,-700 # 80207c18 <small_numbers+0x1828>
@@ -6799,13 +6795,13 @@ void kexit() {
     80203ee0:	d4c50513          	addi	a0,a0,-692 # 80207c28 <small_numbers+0x1838>
     80203ee4:	ffffd097          	auipc	ra,0xffffd
     80203ee8:	c4a080e7          	jalr	-950(ra) # 80200b2e <printf>
-        // 检查是否有任何子进程
+        for (int i = 0; i < PROC; i++) {
     80203eec:	00004517          	auipc	a0,0x4
     80203ef0:	d6450513          	addi	a0,a0,-668 # 80207c50 <small_numbers+0x1860>
     80203ef4:	ffffd097          	auipc	ra,0xffffd
     80203ef8:	542080e7          	jalr	1346(ra) # 80201436 <panic>
-        int havekids = 0;
-        for (int i = 0; i < PROC; i++) {
+            struct proc *child = proc_table[i];
+            if (child->state != UNUSED && child->parent == p) {
     80203efc:	0001                	nop
     80203efe:	60e2                	ld	ra,24(sp)
     80203f00:	6442                	ld	s0,16(sp)
@@ -7448,7 +7444,7 @@ void free_proc(struct proc *p){
     8020450a:	8082                	ret
 
 000000008020450c <create_proc>:
-int create_proc(void (*entry)(void)) {
+int create_proc(void (*entry)(void), int is_user) {
     8020450c:	7179                	addi	sp,sp,-48
     8020450e:	f406                	sd	ra,40(sp)
     80204510:	f022                	sd	s0,32(sp)
@@ -7484,18 +7480,18 @@ int create_proc(void (*entry)(void)) {
     80204558:	fe043703          	ld	a4,-32(s0)
     8020455c:	efd8                	sd	a4,152(a5)
     8020455e:	a829                	j	80204578 <create_proc+0x6c>
-		warning("Set parent to NULL\n");
+        p->parent = NULL;
     80204560:	00004517          	auipc	a0,0x4
     80204564:	82050513          	addi	a0,a0,-2016 # 80207d80 <small_numbers+0x1990>
     80204568:	ffffd097          	auipc	ra,0xffffd
     8020456c:	f02080e7          	jalr	-254(ra) # 8020146a <warning>
-        p->parent = NULL;
+    }
     80204570:	fe843783          	ld	a5,-24(s0)
     80204574:	0807bc23          	sd	zero,152(a5)
-    return p->pid;
+void exit_proc(int status) {
     80204578:	fe843783          	ld	a5,-24(s0)
     8020457c:	43dc                	lw	a5,4(a5)
-}
+    struct proc *p = myproc();
     8020457e:	853e                	mv	a0,a5
     80204580:	70a2                	ld	ra,40(sp)
     80204582:	7402                	ld	s0,32(sp)
@@ -7503,25 +7499,25 @@ int create_proc(void (*entry)(void)) {
     80204586:	8082                	ret
 
 0000000080204588 <exit_proc>:
-void exit_proc(int status) {
+    p->exit_status = status;
     80204588:	7179                	addi	sp,sp,-48
     8020458a:	f406                	sd	ra,40(sp)
     8020458c:	f022                	sd	s0,32(sp)
     8020458e:	1800                	addi	s0,sp,48
     80204590:	87aa                	mv	a5,a0
     80204592:	fcf42e23          	sw	a5,-36(s0)
-    struct proc *p = myproc();
+    kexit();
     80204596:	00000097          	auipc	ra,0x0
     8020459a:	99a080e7          	jalr	-1638(ra) # 80203f30 <myproc>
     8020459e:	fea43423          	sd	a0,-24(s0)
-    p->exit_status = status;
+}
     802045a2:	fe843783          	ld	a5,-24(s0)
     802045a6:	fdc42703          	lw	a4,-36(s0)
     802045aa:	08e7a223          	sw	a4,132(a5)
-    kexit();
+
     802045ae:	00000097          	auipc	ra,0x0
     802045b2:	390080e7          	jalr	912(ra) # 8020493e <kexit>
-}
+int wait_proc(int *status) {
     802045b6:	0001                	nop
     802045b8:	70a2                	ld	ra,40(sp)
     802045ba:	7402                	ld	s0,32(sp)
@@ -7529,18 +7525,18 @@ void exit_proc(int status) {
     802045be:	8082                	ret
 
 00000000802045c0 <wait_proc>:
-int wait_proc(int *status) {
+}
     802045c0:	1101                	addi	sp,sp,-32
     802045c2:	ec06                	sd	ra,24(sp)
     802045c4:	e822                	sd	s0,16(sp)
     802045c6:	1000                	addi	s0,sp,32
     802045c8:	fea43423          	sd	a0,-24(s0)
-    return kwait(status);
+int kfork(void) {
     802045cc:	fe843503          	ld	a0,-24(s0)
     802045d0:	00000097          	auipc	ra,0x0
     802045d4:	42e080e7          	jalr	1070(ra) # 802049fe <kwait>
     802045d8:	87aa                	mv	a5,a0
-}
+    struct proc *parent = myproc();
     802045da:	853e                	mv	a0,a5
     802045dc:	60e2                	ld	ra,24(sp)
     802045de:	6442                	ld	s0,16(sp)
@@ -7548,26 +7544,26 @@ int wait_proc(int *status) {
     802045e2:	8082                	ret
 
 00000000802045e4 <kfork>:
-int kfork(void) {
+    struct proc *child = alloc_proc();
     802045e4:	1101                	addi	sp,sp,-32
     802045e6:	ec06                	sd	ra,24(sp)
     802045e8:	e822                	sd	s0,16(sp)
     802045ea:	1000                	addi	s0,sp,32
-    struct proc *parent = myproc();
+    if(child == 0)
     802045ec:	00000097          	auipc	ra,0x0
     802045f0:	944080e7          	jalr	-1724(ra) # 80203f30 <myproc>
     802045f4:	fea43423          	sd	a0,-24(s0)
-    struct proc *child = alloc_proc();
+        return -1;
     802045f8:	00000097          	auipc	ra,0x0
     802045fc:	cf6080e7          	jalr	-778(ra) # 802042ee <alloc_proc>
     80204600:	fea43023          	sd	a0,-32(s0)
-    if(child == 0)
+
     80204604:	fe043783          	ld	a5,-32(s0)
     80204608:	e399                	bnez	a5,8020460e <kfork+0x2a>
-        return -1;
+    if(uvmcopy(parent->pagetable, child->pagetable, parent->sz) < 0){
     8020460a:	57fd                	li	a5,-1
     8020460c:	a059                	j	80204692 <kfork+0xae>
-    if(uvmcopy(parent->pagetable, child->pagetable, parent->sz) < 0){
+        return -1;
     8020460e:	fe843783          	ld	a5,-24(s0)
     80204612:	7fd8                	ld	a4,184(a5)
     80204614:	fe043783          	ld	a5,-32(s0)
@@ -7581,19 +7577,19 @@ int kfork(void) {
     8020462a:	2bc080e7          	jalr	700(ra) # 802028e2 <uvmcopy>
     8020462e:	87aa                	mv	a5,a0
     80204630:	0007da63          	bgez	a5,80204644 <kfork+0x60>
-        free_proc(child);
+    }
     80204634:	fe043503          	ld	a0,-32(s0)
     80204638:	00000097          	auipc	ra,0x0
     8020463c:	e28080e7          	jalr	-472(ra) # 80204460 <free_proc>
-        return -1;
+    child->sz = parent->sz;
     80204640:	57fd                	li	a5,-1
     80204642:	a881                	j	80204692 <kfork+0xae>
-    child->sz = parent->sz;
+    *(child->trapframe) = *(parent->trapframe);
     80204644:	fe843783          	ld	a5,-24(s0)
     80204648:	7bd8                	ld	a4,176(a5)
     8020464a:	fe043783          	ld	a5,-32(s0)
     8020464e:	fbd8                	sd	a4,176(a5)
-    *(child->trapframe) = *(parent->trapframe);
+    child->state = RUNNABLE;
     80204650:	fe843783          	ld	a5,-24(s0)
     80204654:	63f8                	ld	a4,192(a5)
     80204656:	fe043783          	ld	a5,-32(s0)
@@ -7605,22 +7601,22 @@ int kfork(void) {
     80204666:	8536                	mv	a0,a3
     80204668:	ffffd097          	auipc	ra,0xffffd
     8020466c:	618080e7          	jalr	1560(ra) # 80201c80 <memcpy>
-    child->trapframe->a0 = 0; // 子进程fork返回值为0
+    child->parent = parent;
     80204670:	fe043783          	ld	a5,-32(s0)
     80204674:	63fc                	ld	a5,192(a5)
     80204676:	0607b823          	sd	zero,112(a5)
-    child->state = RUNNABLE;
+    return child->pid;
     8020467a:	fe043783          	ld	a5,-32(s0)
     8020467e:	470d                	li	a4,3
     80204680:	c398                	sw	a4,0(a5)
-    child->parent = parent;
+}
     80204682:	fe043783          	ld	a5,-32(s0)
     80204686:	fe843703          	ld	a4,-24(s0)
     8020468a:	efd8                	sd	a4,152(a5)
-    return child->pid;
+
     8020468c:	fe043783          	ld	a5,-32(s0)
     80204690:	43dc                	lw	a5,4(a5)
-}
+// 调度器 - 简化版
     80204692:	853e                	mv	a0,a5
     80204694:	60e2                	ld	ra,24(sp)
     80204696:	6442                	ld	s0,16(sp)
@@ -7628,47 +7624,47 @@ int kfork(void) {
     8020469a:	8082                	ret
 
 000000008020469c <schedule>:
-void schedule(void) {
+  struct cpu *c = mycpu();
     8020469c:	7179                	addi	sp,sp,-48
     8020469e:	f406                	sd	ra,40(sp)
     802046a0:	f022                	sd	s0,32(sp)
     802046a2:	1800                	addi	s0,sp,48
-  struct cpu *c = mycpu();
+  if (!initialized) {
     802046a4:	00000097          	auipc	ra,0x0
     802046a8:	8a4080e7          	jalr	-1884(ra) # 80203f48 <mycpu>
     802046ac:	fea43423          	sd	a0,-24(s0)
-  if (!initialized) {
+    if(c == 0) {
     802046b0:	00008797          	auipc	a5,0x8
     802046b4:	d9878793          	addi	a5,a5,-616 # 8020c448 <initialized.0>
     802046b8:	439c                	lw	a5,0(a5)
     802046ba:	ef85                	bnez	a5,802046f2 <schedule+0x56>
-    if(c == 0) {
+    }
     802046bc:	fe843783          	ld	a5,-24(s0)
     802046c0:	eb89                	bnez	a5,802046d2 <schedule+0x36>
-      panic("schedule: no current cpu");
+    c->proc = 0;
     802046c2:	00003517          	auipc	a0,0x3
     802046c6:	6d650513          	addi	a0,a0,1750 # 80207d98 <small_numbers+0x19a8>
     802046ca:	ffffd097          	auipc	ra,0xffffd
     802046ce:	d6c080e7          	jalr	-660(ra) # 80201436 <panic>
-    c->proc = 0;
+    initialized = 1;
     802046d2:	fe843783          	ld	a5,-24(s0)
     802046d6:	0007b023          	sd	zero,0(a5)
-    current_proc = 0;
+  }
     802046da:	00006797          	auipc	a5,0x6
     802046de:	9b678793          	addi	a5,a5,-1610 # 8020a090 <current_proc>
     802046e2:	0007b023          	sd	zero,0(a5)
-    initialized = 1;
+  
     802046e6:	00008797          	auipc	a5,0x8
     802046ea:	d6278793          	addi	a5,a5,-670 # 8020c448 <initialized.0>
     802046ee:	4705                	li	a4,1
     802046f0:	c398                	sw	a4,0(a5)
-    intr_on();
+        struct proc *p = proc_table[i];
     802046f2:	fffff097          	auipc	ra,0xfffff
     802046f6:	75c080e7          	jalr	1884(ra) # 80203e4e <intr_on>
-    for(int i = 0; i < PROC; i++) {
+      	if(p->state == RUNNABLE) {
     802046fa:	fe042223          	sw	zero,-28(s0)
     802046fe:	a069                	j	80204788 <schedule+0xec>
-        struct proc *p = proc_table[i];
+			p->state = RUNNING;
     80204700:	00006717          	auipc	a4,0x6
     80204704:	cc070713          	addi	a4,a4,-832 # 8020a3c0 <proc_table>
     80204708:	fe442783          	lw	a5,-28(s0)
@@ -7676,26 +7672,26 @@ void schedule(void) {
     8020470e:	97ba                	add	a5,a5,a4
     80204710:	639c                	ld	a5,0(a5)
     80204712:	fcf43c23          	sd	a5,-40(s0)
-      	if(p->state == RUNNABLE) {
+			c->proc = p;
     80204716:	fd843783          	ld	a5,-40(s0)
     8020471a:	439c                	lw	a5,0(a5)
     8020471c:	873e                	mv	a4,a5
     8020471e:	478d                	li	a5,3
     80204720:	04f71f63          	bne	a4,a5,8020477e <schedule+0xe2>
-			p->state = RUNNING;
+			current_proc = p;
     80204724:	fd843783          	ld	a5,-40(s0)
     80204728:	4711                	li	a4,4
     8020472a:	c398                	sw	a4,0(a5)
-			c->proc = p;
+			swtch(&c->context, &p->context);
     8020472c:	fe843783          	ld	a5,-24(s0)
     80204730:	fd843703          	ld	a4,-40(s0)
     80204734:	e398                	sd	a4,0(a5)
-			current_proc = p;
+			c = mycpu();
     80204736:	00006797          	auipc	a5,0x6
     8020473a:	95a78793          	addi	a5,a5,-1702 # 8020a090 <current_proc>
     8020473e:	fd843703          	ld	a4,-40(s0)
     80204742:	e398                	sd	a4,0(a5)
-			swtch(&c->context, &p->context);
+			c->proc = 0;
     80204744:	fe843783          	ld	a5,-24(s0)
     80204748:	00878713          	addi	a4,a5,8
     8020474c:	fd843783          	ld	a5,-40(s0)
@@ -7704,18 +7700,18 @@ void schedule(void) {
     80204754:	853a                	mv	a0,a4
     80204756:	fffff097          	auipc	ra,0xfffff
     8020475a:	65a080e7          	jalr	1626(ra) # 80203db0 <swtch>
-			c = mycpu();
+			current_proc = 0;
     8020475e:	fffff097          	auipc	ra,0xfffff
     80204762:	7ea080e7          	jalr	2026(ra) # 80203f48 <mycpu>
     80204766:	fea43423          	sd	a0,-24(s0)
-			c->proc = 0;
+      }
     8020476a:	fe843783          	ld	a5,-24(s0)
     8020476e:	0007b023          	sd	zero,0(a5)
-			current_proc = 0;
+    }
     80204772:	00006797          	auipc	a5,0x6
     80204776:	91e78793          	addi	a5,a5,-1762 # 8020a090 <current_proc>
     8020477a:	0007b023          	sd	zero,0(a5)
-    for(int i = 0; i < PROC; i++) {
+      	if(p->state == RUNNABLE) {
     8020477e:	fe442783          	lw	a5,-28(s0)
     80204782:	2785                	addiw	a5,a5,1
     80204784:	fef42223          	sw	a5,-28(s0)
@@ -7723,29 +7719,29 @@ void schedule(void) {
     8020478c:	0007871b          	sext.w	a4,a5
     80204790:	1ff00793          	li	a5,511
     80204794:	f6e7d6e3          	bge	a5,a4,80204700 <schedule+0x64>
-    intr_on();
+        struct proc *p = proc_table[i];
     80204798:	bfa9                	j	802046f2 <schedule+0x56>
 
 000000008020479a <yield>:
-void yield(void) {
+    if (p == 0) {
     8020479a:	1101                	addi	sp,sp,-32
     8020479c:	ec06                	sd	ra,24(sp)
     8020479e:	e822                	sd	s0,16(sp)
     802047a0:	1000                	addi	s0,sp,32
-    struct proc *p = myproc();
+        return;
     802047a2:	fffff097          	auipc	ra,0xfffff
     802047a6:	78e080e7          	jalr	1934(ra) # 80203f30 <myproc>
     802047aa:	fea43423          	sd	a0,-24(s0)
-    if (p == 0) {
+    }
     802047ae:	fe843783          	ld	a5,-24(s0)
     802047b2:	c7cd                	beqz	a5,8020485c <yield+0xc2>
-    if (p->state != RUNNING) {
+        return;
     802047b4:	fe843783          	ld	a5,-24(s0)
     802047b8:	439c                	lw	a5,0(a5)
     802047ba:	873e                	mv	a4,a5
     802047bc:	4791                	li	a5,4
     802047be:	00f70f63          	beq	a4,a5,802047dc <yield+0x42>
-        warning("yield when status is not RUNNING (%d)\n", p->state);
+    }
     802047c2:	fe843783          	ld	a5,-24(s0)
     802047c6:	439c                	lw	a5,0(a5)
     802047c8:	85be                	mv	a1,a5
@@ -7753,46 +7749,46 @@ void yield(void) {
     802047ce:	5ee50513          	addi	a0,a0,1518 # 80207db8 <small_numbers+0x19c8>
     802047d2:	ffffd097          	auipc	ra,0xffffd
     802047d6:	c98080e7          	jalr	-872(ra) # 8020146a <warning>
-        return;
+    
     802047da:	a051                	j	8020485e <yield+0xc4>
-    intr_off();
+    // 获取当前CPU
     802047dc:	fffff097          	auipc	ra,0xfffff
     802047e0:	69c080e7          	jalr	1692(ra) # 80203e78 <intr_off>
-    struct cpu *c = mycpu();
+    // 设置进程状态为RUNNABLE
     802047e4:	fffff097          	auipc	ra,0xfffff
     802047e8:	764080e7          	jalr	1892(ra) # 80203f48 <mycpu>
     802047ec:	fea43023          	sd	a0,-32(s0)
-    p->state = RUNNABLE;
+    // 获取当前返回地址
     802047f0:	fe843783          	ld	a5,-24(s0)
     802047f4:	470d                	li	a4,3
     802047f6:	c398                	sw	a4,0(a5)
-    p->context.ra = ra;
+    if (c->context.ra == 0) {
     802047f8:	8706                	mv	a4,ra
     802047fa:	fe843783          	ld	a5,-24(s0)
     802047fe:	eb98                	sd	a4,16(a5)
-    if (c->context.ra == 0) {
+        c->context.sp = (uint64)c + PGSIZE;
     80204800:	fe043783          	ld	a5,-32(s0)
     80204804:	679c                	ld	a5,8(a5)
     80204806:	ef99                	bnez	a5,80204824 <yield+0x8a>
-        c->context.ra = (uint64)schedule;
+    }
     80204808:	00000717          	auipc	a4,0x0
     8020480c:	e9470713          	addi	a4,a4,-364 # 8020469c <schedule>
     80204810:	fe043783          	ld	a5,-32(s0)
     80204814:	e798                	sd	a4,8(a5)
-        c->context.sp = (uint64)c + PGSIZE;
+    
     80204816:	fe043703          	ld	a4,-32(s0)
     8020481a:	6785                	lui	a5,0x1
     8020481c:	973e                	add	a4,a4,a5
     8020481e:	fe043783          	ld	a5,-32(s0)
     80204822:	eb98                	sd	a4,16(a5)
-    current_proc = 0;
+    
     80204824:	00006797          	auipc	a5,0x6
     80204828:	86c78793          	addi	a5,a5,-1940 # 8020a090 <current_proc>
     8020482c:	0007b023          	sd	zero,0(a5)
-    c->proc = 0;
+    // 直接进行上下文切换
     80204830:	fe043783          	ld	a5,-32(s0)
     80204834:	0007b023          	sd	zero,0(a5)
-    swtch(&p->context, &c->context);
+    intr_on();
     80204838:	fe843783          	ld	a5,-24(s0)
     8020483c:	01078713          	addi	a4,a5,16
     80204840:	fe043783          	ld	a5,-32(s0)
@@ -7801,46 +7797,46 @@ void yield(void) {
     80204848:	853a                	mv	a0,a4
     8020484a:	fffff097          	auipc	ra,0xfffff
     8020484e:	566080e7          	jalr	1382(ra) # 80203db0 <swtch>
-    intr_on();
+void sleep(void *chan){
     80204852:	fffff097          	auipc	ra,0xfffff
     80204856:	5fc080e7          	jalr	1532(ra) # 80203e4e <intr_on>
     8020485a:	a011                	j	8020485e <yield+0xc4>
-        return;
+    
     8020485c:	0001                	nop
-}
+    struct proc *p = myproc();
     8020485e:	60e2                	ld	ra,24(sp)
     80204860:	6442                	ld	s0,16(sp)
     80204862:	6105                	addi	sp,sp,32
     80204864:	8082                	ret
 
 0000000080204866 <sleep>:
-void sleep(void *chan){
+    struct cpu *c = mycpu();
     80204866:	7179                	addi	sp,sp,-48
     80204868:	f406                	sd	ra,40(sp)
     8020486a:	f022                	sd	s0,32(sp)
     8020486c:	1800                	addi	s0,sp,48
     8020486e:	fca43c23          	sd	a0,-40(s0)
-    struct proc *p = myproc();
+    
     80204872:	fffff097          	auipc	ra,0xfffff
     80204876:	6be080e7          	jalr	1726(ra) # 80203f30 <myproc>
     8020487a:	fea43423          	sd	a0,-24(s0)
-    struct cpu *c = mycpu();
+    // 获取当前返回地址，确保唤醒后能回到正确位置
     8020487e:	fffff097          	auipc	ra,0xfffff
     80204882:	6ca080e7          	jalr	1738(ra) # 80203f48 <mycpu>
     80204886:	fea43023          	sd	a0,-32(s0)
-    p->context.ra = ra;
+    p->state = SLEEPING;
     8020488a:	8706                	mv	a4,ra
     8020488c:	fe843783          	ld	a5,-24(s0)
     80204890:	eb98                	sd	a4,16(a5)
-    p->chan = chan;
+    
     80204892:	fe843783          	ld	a5,-24(s0)
     80204896:	fd843703          	ld	a4,-40(s0)
     8020489a:	f3d8                	sd	a4,160(a5)
-    p->state = SLEEPING;
+    // 直接进行上下文切换
     8020489c:	fe843783          	ld	a5,-24(s0)
     802048a0:	4709                	li	a4,2
     802048a2:	c398                	sw	a4,0(a5)
-    swtch(&p->context, &c->context);
+    p->chan = 0;  // 显式清除通道标记
     802048a4:	fe843783          	ld	a5,-24(s0)
     802048a8:	01078713          	addi	a4,a5,16
     802048ac:	fe043783          	ld	a5,-32(s0)
@@ -7849,10 +7845,10 @@ void sleep(void *chan){
     802048b4:	853a                	mv	a0,a4
     802048b6:	fffff097          	auipc	ra,0xfffff
     802048ba:	4fa080e7          	jalr	1274(ra) # 80203db0 <swtch>
-    p->chan = 0;  // 显式清除通道标记
+void wakeup(void *chan) {
     802048be:	fe843783          	ld	a5,-24(s0)
     802048c2:	0a07b023          	sd	zero,160(a5)
-}
+    for(int i = 0; i < PROC; i++) {
     802048c6:	0001                	nop
     802048c8:	70a2                	ld	ra,40(sp)
     802048ca:	7402                	ld	s0,32(sp)
@@ -7860,15 +7856,15 @@ void sleep(void *chan){
     802048ce:	8082                	ret
 
 00000000802048d0 <wakeup>:
-void wakeup(void *chan) {
+        struct proc *p = proc_table[i];
     802048d0:	7179                	addi	sp,sp,-48
     802048d2:	f422                	sd	s0,40(sp)
     802048d4:	1800                	addi	s0,sp,48
     802048d6:	fca43c23          	sd	a0,-40(s0)
-    for(int i = 0; i < PROC; i++) {
+        if(p->state == SLEEPING && p->chan == chan) {
     802048da:	fe042623          	sw	zero,-20(s0)
     802048de:	a099                	j	80204924 <wakeup+0x54>
-        struct proc *p = proc_table[i];
+            p->state = RUNNABLE;
     802048e0:	00006717          	auipc	a4,0x6
     802048e4:	ae070713          	addi	a4,a4,-1312 # 8020a3c0 <proc_table>
     802048e8:	fec42783          	lw	a5,-20(s0)
@@ -7876,7 +7872,7 @@ void wakeup(void *chan) {
     802048ee:	97ba                	add	a5,a5,a4
     802048f0:	639c                	ld	a5,0(a5)
     802048f2:	fef43023          	sd	a5,-32(s0)
-        if(p->state == SLEEPING && p->chan == chan) {
+        }
     802048f6:	fe043783          	ld	a5,-32(s0)
     802048fa:	439c                	lw	a5,0(a5)
     802048fc:	873e                	mv	a4,a5
@@ -7886,11 +7882,11 @@ void wakeup(void *chan) {
     80204908:	73dc                	ld	a5,160(a5)
     8020490a:	fd843703          	ld	a4,-40(s0)
     8020490e:	00f71663          	bne	a4,a5,8020491a <wakeup+0x4a>
-            p->state = RUNNABLE;
+    }
     80204912:	fe043783          	ld	a5,-32(s0)
     80204916:	470d                	li	a4,3
     80204918:	c398                	sw	a4,0(a5)
-    for(int i = 0; i < PROC; i++) {
+        if(p->state == SLEEPING && p->chan == chan) {
     8020491a:	fec42783          	lw	a5,-20(s0)
     8020491e:	2785                	addiw	a5,a5,1
     80204920:	fef42623          	sw	a5,-20(s0)
@@ -7898,7 +7894,7 @@ void wakeup(void *chan) {
     80204928:	0007871b          	sext.w	a4,a5
     8020492c:	1ff00793          	li	a5,511
     80204930:	fae7d8e3          	bge	a5,a4,802048e0 <wakeup+0x10>
-}
+    struct proc *p = myproc();
     80204934:	0001                	nop
     80204936:	0001                	nop
     80204938:	7422                	ld	s0,40(sp)
@@ -7906,39 +7902,39 @@ void wakeup(void *chan) {
     8020493c:	8082                	ret
 
 000000008020493e <kexit>:
-void kexit() {
+    
     8020493e:	1101                	addi	sp,sp,-32
     80204940:	ec06                	sd	ra,24(sp)
     80204942:	e822                	sd	s0,16(sp)
     80204944:	1000                	addi	s0,sp,32
-    struct proc *p = myproc();
+    if (p == 0) {
     80204946:	fffff097          	auipc	ra,0xfffff
     8020494a:	5ea080e7          	jalr	1514(ra) # 80203f30 <myproc>
     8020494e:	fea43423          	sd	a0,-24(s0)
-    if (p == 0) {
+    }
     80204952:	fe843783          	ld	a5,-24(s0)
     80204956:	eb89                	bnez	a5,80204968 <kexit+0x2a>
-        panic("kexit: no current process");
+    
     80204958:	00003517          	auipc	a0,0x3
     8020495c:	48850513          	addi	a0,a0,1160 # 80207de0 <small_numbers+0x19f0>
     80204960:	ffffd097          	auipc	ra,0xffffd
     80204964:	ad6080e7          	jalr	-1322(ra) # 80201436 <panic>
-    if (!p->parent){
+	}
     80204968:	fe843783          	ld	a5,-24(s0)
     8020496c:	6fdc                	ld	a5,152(a5)
     8020496e:	e789                	bnez	a5,80204978 <kexit+0x3a>
-		shutdown();
+    
     80204970:	fffff097          	auipc	ra,0xfffff
     80204974:	596080e7          	jalr	1430(ra) # 80203f06 <shutdown>
-    p->state = ZOMBIE;
+    // 使用父进程自身地址作为通道标识
     80204978:	fe843783          	ld	a5,-24(s0)
     8020497c:	4715                	li	a4,5
     8020497e:	c398                	sw	a4,0(a5)
-    void *chan = (void*)p->parent;
+    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
     80204980:	fe843783          	ld	a5,-24(s0)
     80204984:	6fdc                	ld	a5,152(a5)
     80204986:	fef43023          	sd	a5,-32(s0)
-    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
+    }
     8020498a:	fe843783          	ld	a5,-24(s0)
     8020498e:	6fdc                	ld	a5,152(a5)
     80204990:	439c                	lw	a5,0(a5)
@@ -7950,33 +7946,33 @@ void kexit() {
     802049a0:	73dc                	ld	a5,160(a5)
     802049a2:	fe043703          	ld	a4,-32(s0)
     802049a6:	00f71863          	bne	a4,a5,802049b6 <kexit+0x78>
-        wakeup(chan);
+    
     802049aa:	fe043503          	ld	a0,-32(s0)
     802049ae:	00000097          	auipc	ra,0x0
     802049b2:	f22080e7          	jalr	-222(ra) # 802048d0 <wakeup>
-    current_proc = 0;
+        mycpu()->proc = 0;
     802049b6:	00005797          	auipc	a5,0x5
     802049ba:	6da78793          	addi	a5,a5,1754 # 8020a090 <current_proc>
     802049be:	0007b023          	sd	zero,0(a5)
-    if (mycpu())
+        
     802049c2:	fffff097          	auipc	ra,0xfffff
     802049c6:	586080e7          	jalr	1414(ra) # 80203f48 <mycpu>
     802049ca:	87aa                	mv	a5,a0
     802049cc:	cb81                	beqz	a5,802049dc <kexit+0x9e>
-        mycpu()->proc = 0;
+    schedule();
     802049ce:	fffff097          	auipc	ra,0xfffff
     802049d2:	57a080e7          	jalr	1402(ra) # 80203f48 <mycpu>
     802049d6:	87aa                	mv	a5,a0
     802049d8:	0007b023          	sd	zero,0(a5)
-    schedule();
+    panic("kexit should not return after schedule");
     802049dc:	00000097          	auipc	ra,0x0
     802049e0:	cc0080e7          	jalr	-832(ra) # 8020469c <schedule>
-    panic("kexit should not return after schedule");
+int kwait(int *status) {
     802049e4:	00003517          	auipc	a0,0x3
     802049e8:	41c50513          	addi	a0,a0,1052 # 80207e00 <small_numbers+0x1a10>
     802049ec:	ffffd097          	auipc	ra,0xffffd
     802049f0:	a4a080e7          	jalr	-1462(ra) # 80201436 <panic>
-}
+    struct proc *p = myproc();
     802049f4:	0001                	nop
     802049f6:	60e2                	ld	ra,24(sp)
     802049f8:	6442                	ld	s0,16(sp)
@@ -7984,42 +7980,42 @@ void kexit() {
     802049fc:	8082                	ret
 
 00000000802049fe <kwait>:
-int kwait(int *status) {
+    
     802049fe:	7159                	addi	sp,sp,-112
     80204a00:	f486                	sd	ra,104(sp)
     80204a02:	f0a2                	sd	s0,96(sp)
     80204a04:	1880                	addi	s0,sp,112
     80204a06:	f8a43c23          	sd	a0,-104(s0)
-    struct proc *p = myproc();
+    if (p == 0) {
     80204a0a:	fffff097          	auipc	ra,0xfffff
     80204a0e:	526080e7          	jalr	1318(ra) # 80203f30 <myproc>
     80204a12:	fca43023          	sd	a0,-64(s0)
-    if (p == 0) {
+        return -1;
     80204a16:	fc043783          	ld	a5,-64(s0)
     80204a1a:	eb99                	bnez	a5,80204a30 <kwait+0x32>
-        printf("Warning: kwait called with no current process\n");
+    }
     80204a1c:	00003517          	auipc	a0,0x3
     80204a20:	40c50513          	addi	a0,a0,1036 # 80207e28 <small_numbers+0x1a38>
     80204a24:	ffffc097          	auipc	ra,0xffffc
     80204a28:	10a080e7          	jalr	266(ra) # 80200b2e <printf>
-        return -1;
+    
     80204a2c:	57fd                	li	a5,-1
     80204a2e:	aa45                	j	80204bde <kwait+0x1e0>
-        intr_off();
+        // 优先检查是否有僵尸子进程
     80204a30:	fffff097          	auipc	ra,0xfffff
     80204a34:	448080e7          	jalr	1096(ra) # 80203e78 <intr_off>
-        int found_zombie = 0;
-    80204a38:	fe042623          	sw	zero,-20(s0)
-        int zombie_pid = 0;
-    80204a3c:	fe042423          	sw	zero,-24(s0)
         int zombie_status = 0;
-    80204a40:	fe042223          	sw	zero,-28(s0)
+    80204a38:	fe042623          	sw	zero,-20(s0)
         struct proc *zombie_child = 0;
+    80204a3c:	fe042423          	sw	zero,-24(s0)
+        
+    80204a40:	fe042223          	sw	zero,-28(s0)
+        // 先查找ZOMBIE状态的子进程
     80204a44:	fc043c23          	sd	zero,-40(s0)
-        for (int i = 0; i < PROC; i++) {
+            if (child->state == ZOMBIE && child->parent == p) {
     80204a48:	fc042a23          	sw	zero,-44(s0)
     80204a4c:	a095                	j	80204ab0 <kwait+0xb2>
-            struct proc *child = proc_table[i];
+                found_zombie = 1;
     80204a4e:	00006717          	auipc	a4,0x6
     80204a52:	97270713          	addi	a4,a4,-1678 # 8020a3c0 <proc_table>
     80204a56:	fd442783          	lw	a5,-44(s0)
@@ -8027,7 +8023,7 @@ int kwait(int *status) {
     80204a5c:	97ba                	add	a5,a5,a4
     80204a5e:	639c                	ld	a5,0(a5)
     80204a60:	faf43c23          	sd	a5,-72(s0)
-            if (child->state == ZOMBIE && child->parent == p) {
+                zombie_pid = child->pid;
     80204a64:	fb843783          	ld	a5,-72(s0)
     80204a68:	439c                	lw	a5,0(a5)
     80204a6a:	873e                	mv	a4,a5
@@ -8037,23 +8033,23 @@ int kwait(int *status) {
     80204a76:	6fdc                	ld	a5,152(a5)
     80204a78:	fc043703          	ld	a4,-64(s0)
     80204a7c:	02f71563          	bne	a4,a5,80204aa6 <kwait+0xa8>
-                found_zombie = 1;
+                zombie_status = child->exit_status;
     80204a80:	4785                	li	a5,1
     80204a82:	fef42623          	sw	a5,-20(s0)
-                zombie_pid = child->pid;
+                zombie_child = child;
     80204a86:	fb843783          	ld	a5,-72(s0)
     80204a8a:	43dc                	lw	a5,4(a5)
     80204a8c:	fef42423          	sw	a5,-24(s0)
-                zombie_status = child->exit_status;
+                break;
     80204a90:	fb843783          	ld	a5,-72(s0)
     80204a94:	0847a783          	lw	a5,132(a5)
     80204a98:	fef42223          	sw	a5,-28(s0)
-                zombie_child = child;
+            }
     80204a9c:	fb843783          	ld	a5,-72(s0)
     80204aa0:	fcf43c23          	sd	a5,-40(s0)
-                break;
+        }
     80204aa4:	a831                	j	80204ac0 <kwait+0xc2>
-        for (int i = 0; i < PROC; i++) {
+            if (child->state == ZOMBIE && child->parent == p) {
     80204aa6:	fd442783          	lw	a5,-44(s0)
     80204aaa:	2785                	addiw	a5,a5,1
     80204aac:	fcf42a23          	sw	a5,-44(s0)
@@ -8061,35 +8057,35 @@ int kwait(int *status) {
     80204ab4:	0007871b          	sext.w	a4,a5
     80204ab8:	1ff00793          	li	a5,511
     80204abc:	f8e7d9e3          	bge	a5,a4,80204a4e <kwait+0x50>
-        if (found_zombie) {
+                *status = zombie_status;
     80204ac0:	fec42783          	lw	a5,-20(s0)
     80204ac4:	2781                	sext.w	a5,a5
     80204ac6:	cb85                	beqz	a5,80204af6 <kwait+0xf8>
-            if (status)
+
     80204ac8:	f9843783          	ld	a5,-104(s0)
     80204acc:	c791                	beqz	a5,80204ad8 <kwait+0xda>
-                *status = zombie_status;
+            free_proc(zombie_child);
     80204ace:	f9843783          	ld	a5,-104(s0)
     80204ad2:	fe442703          	lw	a4,-28(s0)
     80204ad6:	c398                	sw	a4,0(a5)
-            free_proc(zombie_child);
+            intr_on();
     80204ad8:	fd843503          	ld	a0,-40(s0)
     80204adc:	00000097          	auipc	ra,0x0
     80204ae0:	984080e7          	jalr	-1660(ra) # 80204460 <free_proc>
-			zombie_child = NULL;
+            return zombie_pid;
     80204ae4:	fc043c23          	sd	zero,-40(s0)
-            intr_on();
+        }
     80204ae8:	fffff097          	auipc	ra,0xfffff
     80204aec:	366080e7          	jalr	870(ra) # 80203e4e <intr_on>
-            return zombie_pid;
+        
     80204af0:	fe842783          	lw	a5,-24(s0)
     80204af4:	a0ed                	j	80204bde <kwait+0x1e0>
-        int havekids = 0;
+            struct proc *child = proc_table[i];
     80204af6:	fc042823          	sw	zero,-48(s0)
-        for (int i = 0; i < PROC; i++) {
+            if (child->state != UNUSED && child->parent == p) {
     80204afa:	fc042623          	sw	zero,-52(s0)
     80204afe:	a83d                	j	80204b3c <kwait+0x13e>
-            struct proc *child = proc_table[i];
+                havekids = 1;
     80204b00:	00006717          	auipc	a4,0x6
     80204b04:	8c070713          	addi	a4,a4,-1856 # 8020a3c0 <proc_table>
     80204b08:	fcc42783          	lw	a5,-52(s0)
@@ -8097,7 +8093,7 @@ int kwait(int *status) {
     80204b0e:	97ba                	add	a5,a5,a4
     80204b10:	639c                	ld	a5,0(a5)
     80204b12:	faf43023          	sd	a5,-96(s0)
-            if (child->state != UNUSED && child->parent == p) {
+            }
     80204b16:	fa043783          	ld	a5,-96(s0)
     80204b1a:	439c                	lw	a5,0(a5)
     80204b1c:	cb99                	beqz	a5,80204b32 <kwait+0x134>
@@ -8105,10 +8101,10 @@ int kwait(int *status) {
     80204b22:	6fdc                	ld	a5,152(a5)
     80204b24:	fc043703          	ld	a4,-64(s0)
     80204b28:	00f71563          	bne	a4,a5,80204b32 <kwait+0x134>
-                havekids = 1;
+        }
     80204b2c:	4785                	li	a5,1
     80204b2e:	fcf42823          	sw	a5,-48(s0)
-        for (int i = 0; i < PROC; i++) {
+            if (child->state != UNUSED && child->parent == p) {
     80204b32:	fcc42783          	lw	a5,-52(s0)
     80204b36:	2785                	addiw	a5,a5,1
     80204b38:	fcf42623          	sw	a5,-52(s0)
@@ -8116,53 +8112,53 @@ int kwait(int *status) {
     80204b40:	0007871b          	sext.w	a4,a5
     80204b44:	1ff00793          	li	a5,511
     80204b48:	fae7dce3          	bge	a5,a4,80204b00 <kwait+0x102>
-            }
-        }
         
         if (!havekids) {
+            intr_on();
+            return -1;
     80204b4c:	fd042783          	lw	a5,-48(s0)
     80204b50:	2781                	sext.w	a5,a5
     80204b52:	e799                	bnez	a5,80204b60 <kwait+0x162>
-            intr_on();
+        }
     80204b54:	fffff097          	auipc	ra,0xfffff
     80204b58:	2fa080e7          	jalr	762(ra) # 80203e4e <intr_on>
-            return -1;
+        void *wait_chan = (void*)p;
     80204b5c:	57fd                	li	a5,-1
     80204b5e:	a041                	j	80204bde <kwait+0x1e0>
-        }
-        void *wait_chan = (void*)p;
-    80204b60:	fc043783          	ld	a5,-64(s0)
-    80204b64:	faf43823          	sd	a5,-80(s0)
 		register uint64 ra asm("ra");
 		p->context.ra = ra;
+    80204b60:	fc043783          	ld	a5,-64(s0)
+    80204b64:	faf43823          	sd	a5,-80(s0)
+        p->chan = wait_chan;
+        p->state = SLEEPING;
     80204b68:	8706                	mv	a4,ra
     80204b6a:	fc043783          	ld	a5,-64(s0)
     80204b6e:	eb98                	sd	a4,16(a5)
-        p->chan = wait_chan;
+        
     80204b70:	fc043783          	ld	a5,-64(s0)
     80204b74:	fb043703          	ld	a4,-80(s0)
     80204b78:	f3d8                	sd	a4,160(a5)
-        p->state = SLEEPING;
+		struct cpu *c = mycpu();
     80204b7a:	fc043783          	ld	a5,-64(s0)
     80204b7e:	4709                	li	a4,2
     80204b80:	c398                	sw	a4,0(a5)
-        
-		struct cpu *c = mycpu();
+		current_proc = 0;
+		c->proc = 0;
     80204b82:	fffff097          	auipc	ra,0xfffff
     80204b86:	3c6080e7          	jalr	966(ra) # 80203f48 <mycpu>
     80204b8a:	faa43423          	sd	a0,-88(s0)
-		current_proc = 0;
+        // 在睡眠前确保中断是开启的
     80204b8e:	00005797          	auipc	a5,0x5
     80204b92:	50278793          	addi	a5,a5,1282 # 8020a090 <current_proc>
     80204b96:	0007b023          	sd	zero,0(a5)
-		c->proc = 0;
+        intr_on();
     80204b9a:	fa843783          	ld	a5,-88(s0)
     80204b9e:	0007b023          	sd	zero,0(a5)
-        // 在睡眠前确保中断是开启的
-        intr_on();
+        swtch(&p->context,&c->context);
+        intr_off();
     80204ba2:	fffff097          	auipc	ra,0xfffff
     80204ba6:	2ac080e7          	jalr	684(ra) # 80203e4e <intr_on>
-        swtch(&p->context,&c->context);
+        p->state = RUNNING;
     80204baa:	fc043783          	ld	a5,-64(s0)
     80204bae:	01078713          	addi	a4,a5,16
     80204bb2:	fa843783          	ld	a5,-88(s0)
@@ -8171,20 +8167,20 @@ int kwait(int *status) {
     80204bba:	853a                	mv	a0,a4
     80204bbc:	fffff097          	auipc	ra,0xfffff
     80204bc0:	1f4080e7          	jalr	500(ra) # 80203db0 <swtch>
-        intr_off();
+        intr_on();
     80204bc4:	fffff097          	auipc	ra,0xfffff
     80204bc8:	2b4080e7          	jalr	692(ra) # 80203e78 <intr_off>
-        p->state = RUNNING;
+    }
     80204bcc:	fc043783          	ld	a5,-64(s0)
     80204bd0:	4711                	li	a4,4
     80204bd2:	c398                	sw	a4,0(a5)
-        intr_on();
+}
     80204bd4:	fffff097          	auipc	ra,0xfffff
     80204bd8:	27a080e7          	jalr	634(ra) # 80203e4e <intr_on>
-    while (1) {
+        intr_off();
     80204bdc:	bd91                	j	80204a30 <kwait+0x32>
-    }
-}
+
+void print_proc_table(void) {
     80204bde:	853e                	mv	a0,a5
     80204be0:	70a6                	ld	ra,104(sp)
     80204be2:	7406                	ld	s0,96(sp)
@@ -8192,30 +8188,30 @@ int kwait(int *status) {
     80204be6:	8082                	ret
 
 0000000080204be8 <print_proc_table>:
-
-void print_proc_table(void) {
+    int count = 0;
+    printf("PID  TYPE STATUS     PPID   FUNC_ADDR      STACK_ADDR    \n");
     80204be8:	1101                	addi	sp,sp,-32
     80204bea:	ec06                	sd	ra,24(sp)
     80204bec:	e822                	sd	s0,16(sp)
     80204bee:	1000                	addi	s0,sp,32
-    int count = 0;
+    printf("----------------------------------------------------------\n");
     80204bf0:	fe042623          	sw	zero,-20(s0)
-    
-    printf("PID  status     parent  func_address    stack_address\n");
+    for(int i = 0; i < PROC; i++) {
+        struct proc *p = proc_table[i];
     80204bf4:	00003517          	auipc	a0,0x3
     80204bf8:	26450513          	addi	a0,a0,612 # 80207e58 <small_numbers+0x1a68>
     80204bfc:	ffffc097          	auipc	ra,0xffffc
     80204c00:	f32080e7          	jalr	-206(ra) # 80200b2e <printf>
-    printf("--------------------------------------------\n");
+        if(p->state != UNUSED) {
     80204c04:	00003517          	auipc	a0,0x3
     80204c08:	28c50513          	addi	a0,a0,652 # 80207e90 <small_numbers+0x1aa0>
     80204c0c:	ffffc097          	auipc	ra,0xffffc
     80204c10:	f22080e7          	jalr	-222(ra) # 80200b2e <printf>
-    
-    for(int i = 0; i < PROC; i++) {
+            count++;
+            const char *type = (p->is_user ? "USR" : "SYS");
     80204c14:	fe042423          	sw	zero,-24(s0)
     80204c18:	a249                	j	80204d9a <print_proc_table+0x1b2>
-        struct proc *p = proc_table[i];
+            const char *status;
     80204c1a:	00005717          	auipc	a4,0x5
     80204c1e:	7a670713          	addi	a4,a4,1958 # 8020a3c0 <proc_table>
     80204c22:	fe842783          	lw	a5,-24(s0)
@@ -8223,15 +8219,15 @@ void print_proc_table(void) {
     80204c28:	97ba                	add	a5,a5,a4
     80204c2a:	639c                	ld	a5,0(a5)
     80204c2c:	fef43023          	sd	a5,-32(s0)
-        if(p->state != UNUSED) {
+            switch(p->state) {
     80204c30:	fe043783          	ld	a5,-32(s0)
     80204c34:	439c                	lw	a5,0(a5)
     80204c36:	14078d63          	beqz	a5,80204d90 <print_proc_table+0x1a8>
-            count++;
+                case UNUSED:   status = "UNUSED"; break;
     80204c3a:	fec42783          	lw	a5,-20(s0)
     80204c3e:	2785                	addiw	a5,a5,1
     80204c40:	fef42623          	sw	a5,-20(s0)
-            printf("%d ", p->pid);
+                case USED:     status = "USED"; break;
     80204c44:	fe043783          	ld	a5,-32(s0)
     80204c48:	43dc                	lw	a5,4(a5)
     80204c4a:	85be                	mv	a1,a5
@@ -8239,8 +8235,8 @@ void print_proc_table(void) {
     80204c50:	27450513          	addi	a0,a0,628 # 80207ec0 <small_numbers+0x1ad0>
     80204c54:	ffffc097          	auipc	ra,0xffffc
     80204c58:	eda080e7          	jalr	-294(ra) # 80200b2e <printf>
-            
-            switch(p->state) {
+                case SLEEPING: status = "SLEEP"; break;
+                case RUNNABLE: status = "RUNNABLE"; break;
     80204c5c:	fe043783          	ld	a5,-32(s0)
     80204c60:	439c                	lw	a5,0(a5)
     80204c62:	86be                	mv	a3,a5
@@ -8256,43 +8252,43 @@ void print_proc_table(void) {
     80204c82:	2f278793          	addi	a5,a5,754 # 80207f70 <small_numbers+0x1b80>
     80204c86:	97ba                	add	a5,a5,a4
     80204c88:	8782                	jr	a5
-                case UNUSED:   printf("UNUSED    "); break;
+                case RUNNING:  status = "RUNNING"; break;
     80204c8a:	00003517          	auipc	a0,0x3
     80204c8e:	23e50513          	addi	a0,a0,574 # 80207ec8 <small_numbers+0x1ad8>
     80204c92:	ffffc097          	auipc	ra,0xffffc
     80204c96:	e9c080e7          	jalr	-356(ra) # 80200b2e <printf>
     80204c9a:	a89d                	j	80204d10 <print_proc_table+0x128>
-                case USED:     printf("USED      "); break;
+                case ZOMBIE:   status = "ZOMBIE"; break;
     80204c9c:	00003517          	auipc	a0,0x3
     80204ca0:	23c50513          	addi	a0,a0,572 # 80207ed8 <small_numbers+0x1ae8>
     80204ca4:	ffffc097          	auipc	ra,0xffffc
     80204ca8:	e8a080e7          	jalr	-374(ra) # 80200b2e <printf>
     80204cac:	a095                	j	80204d10 <print_proc_table+0x128>
-                case SLEEPING: printf("SLEEP     "); break;
+                default:       status = "UNKNOWN"; break;
     80204cae:	00003517          	auipc	a0,0x3
     80204cb2:	23a50513          	addi	a0,a0,570 # 80207ee8 <small_numbers+0x1af8>
     80204cb6:	ffffc097          	auipc	ra,0xffffc
     80204cba:	e78080e7          	jalr	-392(ra) # 80200b2e <printf>
     80204cbe:	a889                	j	80204d10 <print_proc_table+0x128>
-                case RUNNABLE: printf("RUNNABLE  "); break;
+            }
     80204cc0:	00003517          	auipc	a0,0x3
     80204cc4:	23850513          	addi	a0,a0,568 # 80207ef8 <small_numbers+0x1b08>
     80204cc8:	ffffc097          	auipc	ra,0xffffc
     80204ccc:	e66080e7          	jalr	-410(ra) # 80200b2e <printf>
     80204cd0:	a081                	j	80204d10 <print_proc_table+0x128>
-                case RUNNING:  printf("RUNNING   "); break;
+            int ppid = p->parent ? p->parent->pid : -1;
     80204cd2:	00003517          	auipc	a0,0x3
     80204cd6:	23650513          	addi	a0,a0,566 # 80207f08 <small_numbers+0x1b18>
     80204cda:	ffffc097          	auipc	ra,0xffffc
     80204cde:	e54080e7          	jalr	-428(ra) # 80200b2e <printf>
     80204ce2:	a03d                	j	80204d10 <print_proc_table+0x128>
-                case ZOMBIE:   printf("ZOMBIE    "); break;
+            unsigned long func_addr = p->trapframe ? p->trapframe->epc : 0;
     80204ce4:	00003517          	auipc	a0,0x3
     80204ce8:	23450513          	addi	a0,a0,564 # 80207f18 <small_numbers+0x1b28>
     80204cec:	ffffc097          	auipc	ra,0xffffc
     80204cf0:	e42080e7          	jalr	-446(ra) # 80200b2e <printf>
     80204cf4:	a831                	j	80204d10 <print_proc_table+0x128>
-                default:       printf("UNKNOWN(%d) ", p->state); break;
+            unsigned long stack_addr = p->kstack;
     80204cf6:	fe043783          	ld	a5,-32(s0)
     80204cfa:	439c                	lw	a5,0(a5)
     80204cfc:	85be                	mv	a1,a5
@@ -8301,13 +8297,13 @@ void print_proc_table(void) {
     80204d06:	ffffc097          	auipc	ra,0xffffc
     80204d0a:	e28080e7          	jalr	-472(ra) # 80200b2e <printf>
     80204d0e:	0001                	nop
-            }
-            
-            if(p->parent)
+            printf("%2d  %3s %8s %4d 0x%012lx 0x%012lx\n",
+                p->pid, type, status, ppid, func_addr, stack_addr);
+        }
     80204d10:	fe043783          	ld	a5,-32(s0)
     80204d14:	6fdc                	ld	a5,152(a5)
     80204d16:	cf99                	beqz	a5,80204d34 <print_proc_table+0x14c>
-                printf("%d ", p->parent->pid);
+    }
     80204d18:	fe043783          	ld	a5,-32(s0)
     80204d1c:	6fdc                	ld	a5,152(a5)
     80204d1e:	43dc                	lw	a5,4(a5)
@@ -8317,18 +8313,18 @@ void print_proc_table(void) {
     80204d2a:	ffffc097          	auipc	ra,0xffffc
     80204d2e:	e04080e7          	jalr	-508(ra) # 80200b2e <printf>
     80204d32:	a809                	j	80204d44 <print_proc_table+0x15c>
-            else
-                printf("none    ");
+    printf("----------------------------------------------------------\n");
+    printf("%d active processes\n", count);
     80204d34:	00003517          	auipc	a0,0x3
     80204d38:	20450513          	addi	a0,a0,516 # 80207f38 <small_numbers+0x1b48>
     80204d3c:	ffffc097          	auipc	ra,0xffffc
     80204d40:	df2080e7          	jalr	-526(ra) # 80200b2e <printf>
-                
-            if(p->trapframe)
+}
+// 简单测试任务，用于测试进程创建
     80204d44:	fe043783          	ld	a5,-32(s0)
     80204d48:	63fc                	ld	a5,192(a5)
     80204d4a:	cf99                	beqz	a5,80204d68 <print_proc_table+0x180>
-                printf("%p ", (void*)p->trapframe->epc);
+void simple_task(void) {
     80204d4c:	fe043783          	ld	a5,-32(s0)
     80204d50:	63fc                	ld	a5,192(a5)
     80204d52:	6f9c                	ld	a5,24(a5)
@@ -8338,14 +8334,14 @@ void print_proc_table(void) {
     80204d5e:	ffffc097          	auipc	ra,0xffffc
     80204d62:	dd0080e7          	jalr	-560(ra) # 80200b2e <printf>
     80204d66:	a809                	j	80204d78 <print_proc_table+0x190>
-            else
-                printf("none    ");
+    // 简单任务，只打印并退出
+    printf("Simple task running in PID %d\n", myproc()->pid);
     80204d68:	00003517          	auipc	a0,0x3
     80204d6c:	1d050513          	addi	a0,a0,464 # 80207f38 <small_numbers+0x1b48>
     80204d70:	ffffc097          	auipc	ra,0xffffc
     80204d74:	dbe080e7          	jalr	-578(ra) # 80200b2e <printf>
-                
-            printf("%p\n", (void*)p->kstack);
+}
+void test_process_creation(void) {
     80204d78:	fe043783          	ld	a5,-32(s0)
     80204d7c:	679c                	ld	a5,8(a5)
     80204d7e:	85be                	mv	a1,a5
@@ -8353,7 +8349,7 @@ void print_proc_table(void) {
     80204d84:	1d050513          	addi	a0,a0,464 # 80207f50 <small_numbers+0x1b60>
     80204d88:	ffffc097          	auipc	ra,0xffffc
     80204d8c:	da6080e7          	jalr	-602(ra) # 80200b2e <printf>
-    for(int i = 0; i < PROC; i++) {
+            const char *type = (p->is_user ? "USR" : "SYS");
     80204d90:	fe842783          	lw	a5,-24(s0)
     80204d94:	2785                	addiw	a5,a5,1
     80204d96:	fef42423          	sw	a5,-24(s0)
@@ -8361,23 +8357,23 @@ void print_proc_table(void) {
     80204d9e:	0007871b          	sext.w	a4,a5
     80204da2:	1ff00793          	li	a5,511
     80204da6:	e6e7dae3          	bge	a5,a4,80204c1a <print_proc_table+0x32>
-        }
-    }
-    
-    printf("--------------------------------------------\n");
+    printf("===== 测试开始: 进程创建与管理测试 =====\n");
+
+    // 测试基本的进程创建
+    int pid = create_proc(simple_task,1);
     80204daa:	00003517          	auipc	a0,0x3
     80204dae:	0e650513          	addi	a0,a0,230 # 80207e90 <small_numbers+0x1aa0>
     80204db2:	ffffc097          	auipc	ra,0xffffc
     80204db6:	d7c080e7          	jalr	-644(ra) # 80200b2e <printf>
-    printf("%d active processes\n", count);
+    assert(pid > 0);
     80204dba:	fec42783          	lw	a5,-20(s0)
     80204dbe:	85be                	mv	a1,a5
     80204dc0:	00003517          	auipc	a0,0x3
     80204dc4:	19850513          	addi	a0,a0,408 # 80207f58 <small_numbers+0x1b68>
     80204dc8:	ffffc097          	auipc	ra,0xffffc
     80204dcc:	d66080e7          	jalr	-666(ra) # 80200b2e <printf>
+    printf("【测试结果】: 基本进程创建成功，PID: %d，正常退出\n", pid);
 
-}
     80204dd0:	0001                	nop
     80204dd2:	60e2                	ld	ra,24(sp)
     80204dd4:	6442                	ld	s0,16(sp)
@@ -8385,15 +8381,15 @@ void print_proc_table(void) {
     80204dd8:	8082                	ret
 
 0000000080204dda <simple_task>:
-
-// 简单测试任务，用于测试进程创建
-void simple_task(void) {
+    int count = 1;
+    printf("\n----- 测试进程表容量限制 -----\n");
+    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
     80204dda:	1141                	addi	sp,sp,-16
     80204ddc:	e406                	sd	ra,8(sp)
     80204dde:	e022                	sd	s0,0(sp)
     80204de0:	0800                	addi	s0,sp,16
-    // 简单任务，只打印并退出
-    printf("Simple task running in PID %d\n", myproc()->pid);
+        int pid = create_proc(simple_task,1);
+        if (pid > 0) {
     80204de2:	fffff097          	auipc	ra,0xfffff
     80204de6:	14e080e7          	jalr	334(ra) # 80203f30 <myproc>
     80204dea:	87aa                	mv	a5,a0
@@ -8403,7 +8399,7 @@ void simple_task(void) {
     80204df4:	19850513          	addi	a0,a0,408 # 80207f88 <small_numbers+0x1b98>
     80204df8:	ffffc097          	auipc	ra,0xffffc
     80204dfc:	d36080e7          	jalr	-714(ra) # 80200b2e <printf>
-}
+            count++; 
     80204e00:	0001                	nop
     80204e02:	60a2                	ld	ra,8(sp)
     80204e04:	6402                	ld	s0,0(sp)
@@ -8411,26 +8407,26 @@ void simple_task(void) {
     80204e08:	8082                	ret
 
 0000000080204e0a <test_process_creation>:
-void test_process_creation(void) {
+        } else {
     80204e0a:	7139                	addi	sp,sp,-64
     80204e0c:	fc06                	sd	ra,56(sp)
     80204e0e:	f822                	sd	s0,48(sp)
     80204e10:	0080                	addi	s0,sp,64
-    printf("===== 测试开始: 进程创建与管理测试 =====\n");
+			warning("process table was full\n");
     80204e12:	00003517          	auipc	a0,0x3
     80204e16:	19650513          	addi	a0,a0,406 # 80207fa8 <small_numbers+0x1bb8>
     80204e1a:	ffffc097          	auipc	ra,0xffffc
     80204e1e:	d14080e7          	jalr	-748(ra) # 80200b2e <printf>
-
-    // 测试基本的进程创建
-    int pid = create_proc(simple_task);
+            break;
+        }
+    }
     80204e22:	00000517          	auipc	a0,0x0
     80204e26:	fb850513          	addi	a0,a0,-72 # 80204dda <simple_task>
     80204e2a:	fffff097          	auipc	ra,0xfffff
     80204e2e:	6e2080e7          	jalr	1762(ra) # 8020450c <create_proc>
     80204e32:	87aa                	mv	a5,a0
     80204e34:	fcf42823          	sw	a5,-48(s0)
-    assert(pid > 0);
+    printf("【测试结果】: 成功创建 %d 个进程 (最大限制: %d)\n", count, PROC);
     80204e38:	fd042783          	lw	a5,-48(s0)
     80204e3c:	2781                	sext.w	a5,a5
     80204e3e:	00f027b3          	sgtz	a5,a5
@@ -8439,50 +8435,50 @@ void test_process_creation(void) {
     80204e48:	853e                	mv	a0,a5
     80204e4a:	fffff097          	auipc	ra,0xfffff
     80204e4e:	070080e7          	jalr	112(ra) # 80203eba <assert>
-    printf("【测试结果】: 基本进程创建成功，PID: %d，正常退出\n", pid);
+	print_proc_table();
     80204e52:	fd042783          	lw	a5,-48(s0)
     80204e56:	85be                	mv	a1,a5
     80204e58:	00003517          	auipc	a0,0x3
     80204e5c:	18850513          	addi	a0,a0,392 # 80207fe0 <small_numbers+0x1bf0>
     80204e60:	ffffc097          	auipc	ra,0xffffc
     80204e64:	cce080e7          	jalr	-818(ra) # 80200b2e <printf>
-
-    int count = 1;
+    // 清理测试进程
+    printf("\n----- 测试进程等待与清理 -----\n");
     80204e68:	4785                	li	a5,1
     80204e6a:	fef42623          	sw	a5,-20(s0)
-    printf("\n----- 测试进程表容量限制 -----\n");
+    int success_count = 0;
     80204e6e:	00003517          	auipc	a0,0x3
     80204e72:	1ba50513          	addi	a0,a0,442 # 80208028 <small_numbers+0x1c38>
     80204e76:	ffffc097          	auipc	ra,0xffffc
     80204e7a:	cb8080e7          	jalr	-840(ra) # 80200b2e <printf>
-    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
+    for (int i = 0; i < count; i++) {
     80204e7e:	fe042423          	sw	zero,-24(s0)
     80204e82:	a0a9                	j	80204ecc <test_process_creation+0xc2>
-        int pid = create_proc(simple_task);
+        int waited_pid = wait_proc(NULL);
     80204e84:	00000517          	auipc	a0,0x0
     80204e88:	f5650513          	addi	a0,a0,-170 # 80204dda <simple_task>
     80204e8c:	fffff097          	auipc	ra,0xfffff
     80204e90:	680080e7          	jalr	1664(ra) # 8020450c <create_proc>
     80204e94:	87aa                	mv	a5,a0
     80204e96:	fcf42623          	sw	a5,-52(s0)
-        if (pid > 0) {
+        if (waited_pid > 0) {
     80204e9a:	fcc42783          	lw	a5,-52(s0)
     80204e9e:	2781                	sext.w	a5,a5
     80204ea0:	00f05863          	blez	a5,80204eb0 <test_process_creation+0xa6>
-            count++; 
+            success_count++;
     80204ea4:	fec42783          	lw	a5,-20(s0)
     80204ea8:	2785                	addiw	a5,a5,1
     80204eaa:	fef42623          	sw	a5,-20(s0)
     80204eae:	a811                	j	80204ec2 <test_process_creation+0xb8>
         } else {
-			warning("process table was full\n");
+            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
     80204eb0:	00003517          	auipc	a0,0x3
     80204eb4:	1a850513          	addi	a0,a0,424 # 80208058 <small_numbers+0x1c68>
     80204eb8:	ffffc097          	auipc	ra,0xffffc
     80204ebc:	5b2080e7          	jalr	1458(ra) # 8020146a <warning>
-            break;
+        }
     80204ec0:	a831                	j	80204edc <test_process_creation+0xd2>
-    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
+    for (int i = 0; i < count; i++) {
     80204ec2:	fe842783          	lw	a5,-24(s0)
     80204ec6:	2785                	addiw	a5,a5,1
     80204ec8:	fef42423          	sw	a5,-24(s0)
@@ -8490,9 +8486,9 @@ void test_process_creation(void) {
     80204ed0:	0007871b          	sext.w	a4,a5
     80204ed4:	20400793          	li	a5,516
     80204ed8:	fae7d6e3          	bge	a5,a4,80204e84 <test_process_creation+0x7a>
-        }
     }
-    printf("【测试结果】: 成功创建 %d 个进程 (最大限制: %d)\n", count, PROC);
+    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
+	print_proc_table();
     80204edc:	fec42783          	lw	a5,-20(s0)
     80204ee0:	20000613          	li	a2,512
     80204ee4:	85be                	mv	a1,a5
@@ -8500,44 +8496,44 @@ void test_process_creation(void) {
     80204eea:	18a50513          	addi	a0,a0,394 # 80208070 <small_numbers+0x1c80>
     80204eee:	ffffc097          	auipc	ra,0xffffc
     80204ef2:	c40080e7          	jalr	-960(ra) # 80200b2e <printf>
-	print_proc_table();
+    // 增强测试：清理后尝试重新创建进程
     80204ef6:	00000097          	auipc	ra,0x0
     80204efa:	cf2080e7          	jalr	-782(ra) # 80204be8 <print_proc_table>
-    // 清理测试进程
-    printf("\n----- 测试进程等待与清理 -----\n");
+	printf("\n----- 清理后尝试重新填满进程表 -----\n");
+	int refill_count = 0;
     80204efe:	00003517          	auipc	a0,0x3
     80204f02:	1ba50513          	addi	a0,a0,442 # 802080b8 <small_numbers+0x1cc8>
     80204f06:	ffffc097          	auipc	ra,0xffffc
     80204f0a:	c28080e7          	jalr	-984(ra) # 80200b2e <printf>
-    int success_count = 0;
+	for (int i = 0; i < PROC; i++) {
     80204f0e:	fe042223          	sw	zero,-28(s0)
-    for (int i = 0; i < count; i++) {
+		int pid = create_proc(simple_task,1);
     80204f12:	fe042023          	sw	zero,-32(s0)
     80204f16:	a0a1                	j	80204f5e <test_process_creation+0x154>
-        int waited_pid = wait_proc(NULL);
+		if (pid > 0) {
     80204f18:	4501                	li	a0,0
     80204f1a:	fffff097          	auipc	ra,0xfffff
     80204f1e:	6a6080e7          	jalr	1702(ra) # 802045c0 <wait_proc>
     80204f22:	87aa                	mv	a5,a0
     80204f24:	fcf42023          	sw	a5,-64(s0)
-        if (waited_pid > 0) {
+			refill_count++;
     80204f28:	fc042783          	lw	a5,-64(s0)
     80204f2c:	2781                	sext.w	a5,a5
     80204f2e:	00f05863          	blez	a5,80204f3e <test_process_creation+0x134>
-            success_count++;
+		} else {
     80204f32:	fe442783          	lw	a5,-28(s0)
     80204f36:	2785                	addiw	a5,a5,1
     80204f38:	fef42223          	sw	a5,-28(s0)
     80204f3c:	a821                	j	80204f54 <test_process_creation+0x14a>
-        } else {
-            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+			warning("process table was full\n");
+			break;
     80204f3e:	fc042783          	lw	a5,-64(s0)
     80204f42:	85be                	mv	a1,a5
     80204f44:	00003517          	auipc	a0,0x3
     80204f48:	1a450513          	addi	a0,a0,420 # 802080e8 <small_numbers+0x1cf8>
     80204f4c:	ffffc097          	auipc	ra,0xffffc
     80204f50:	be2080e7          	jalr	-1054(ra) # 80200b2e <printf>
-    for (int i = 0; i < count; i++) {
+		int pid = create_proc(simple_task,1);
     80204f54:	fe042783          	lw	a5,-32(s0)
     80204f58:	2785                	addiw	a5,a5,1
     80204f5a:	fef42023          	sw	a5,-32(s0)
@@ -8547,9 +8543,9 @@ void test_process_creation(void) {
     80204f68:	2701                	sext.w	a4,a4
     80204f6a:	2781                	sext.w	a5,a5
     80204f6c:	faf746e3          	blt	a4,a5,80204f18 <test_process_creation+0x10e>
-        }
-    }
-    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
+		}
+	}
+	printf("【测试结果】: 清理后成功重新创建 %d 个进程\n", refill_count);
     80204f70:	fec42703          	lw	a4,-20(s0)
     80204f74:	fe442783          	lw	a5,-28(s0)
     80204f78:	863a                	mv	a2,a4
@@ -8561,42 +8557,42 @@ void test_process_creation(void) {
 	print_proc_table();
     80204f8c:	00000097          	auipc	ra,0x0
     80204f90:	c5c080e7          	jalr	-932(ra) # 80204be8 <print_proc_table>
-    // 增强测试：清理后尝试重新创建进程
-	printf("\n----- 清理后尝试重新填满进程表 -----\n");
+	printf("\n----- 测试进程等待与清理 -----\n");
+    success_count = 0;
     80204f94:	00003517          	auipc	a0,0x3
     80204f98:	1bc50513          	addi	a0,a0,444 # 80208150 <small_numbers+0x1d60>
     80204f9c:	ffffc097          	auipc	ra,0xffffc
     80204fa0:	b92080e7          	jalr	-1134(ra) # 80200b2e <printf>
-	int refill_count = 0;
+    for (int i = 0; i < count; i++) {
     80204fa4:	fc042e23          	sw	zero,-36(s0)
-	for (int i = 0; i < PROC; i++) {
+        int waited_pid = wait_proc(NULL);
     80204fa8:	fc042c23          	sw	zero,-40(s0)
     80204fac:	a0a9                	j	80204ff6 <test_process_creation+0x1ec>
-		int pid = create_proc(simple_task);
+        if (waited_pid > 0) {
     80204fae:	00000517          	auipc	a0,0x0
     80204fb2:	e2c50513          	addi	a0,a0,-468 # 80204dda <simple_task>
     80204fb6:	fffff097          	auipc	ra,0xfffff
     80204fba:	556080e7          	jalr	1366(ra) # 8020450c <create_proc>
     80204fbe:	87aa                	mv	a5,a0
     80204fc0:	fcf42423          	sw	a5,-56(s0)
-		if (pid > 0) {
+            success_count++;
     80204fc4:	fc842783          	lw	a5,-56(s0)
     80204fc8:	2781                	sext.w	a5,a5
     80204fca:	00f05863          	blez	a5,80204fda <test_process_creation+0x1d0>
-			refill_count++;
+        } else {
     80204fce:	fdc42783          	lw	a5,-36(s0)
     80204fd2:	2785                	addiw	a5,a5,1
     80204fd4:	fcf42e23          	sw	a5,-36(s0)
     80204fd8:	a811                	j	80204fec <test_process_creation+0x1e2>
-		} else {
-			printf("【错误】: 进程槽已满或分配失败\n");
+            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+        }
     80204fda:	00003517          	auipc	a0,0x3
     80204fde:	1ae50513          	addi	a0,a0,430 # 80208188 <small_numbers+0x1d98>
     80204fe2:	ffffc097          	auipc	ra,0xffffc
     80204fe6:	b4c080e7          	jalr	-1204(ra) # 80200b2e <printf>
-			break;
+    }
     80204fea:	a831                	j	80205006 <test_process_creation+0x1fc>
-	for (int i = 0; i < PROC; i++) {
+        int waited_pid = wait_proc(NULL);
     80204fec:	fd842783          	lw	a5,-40(s0)
     80204ff0:	2785                	addiw	a5,a5,1
     80204ff2:	fcf42c23          	sw	a5,-40(s0)
@@ -8604,52 +8600,52 @@ void test_process_creation(void) {
     80204ffa:	0007871b          	sext.w	a4,a5
     80204ffe:	1ff00793          	li	a5,511
     80205002:	fae7d6e3          	bge	a5,a4,80204fae <test_process_creation+0x1a4>
-		}
-	}
-	printf("【测试结果】: 清理后成功重新创建 %d 个进程\n", refill_count);
+    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
+	print_proc_table();
+    printf("===== 测试结束: 进程创建与管理测试 =====\n");
     80205006:	fdc42783          	lw	a5,-36(s0)
     8020500a:	85be                	mv	a1,a5
     8020500c:	00003517          	auipc	a0,0x3
     80205010:	1ac50513          	addi	a0,a0,428 # 802081b8 <small_numbers+0x1dc8>
     80205014:	ffffc097          	auipc	ra,0xffffc
     80205018:	b1a080e7          	jalr	-1254(ra) # 80200b2e <printf>
-	print_proc_table();
+}
     8020501c:	00000097          	auipc	ra,0x0
     80205020:	bcc080e7          	jalr	-1076(ra) # 80204be8 <print_proc_table>
-	printf("\n----- 测试进程等待与清理 -----\n");
+
     80205024:	00003517          	auipc	a0,0x3
     80205028:	09450513          	addi	a0,a0,148 # 802080b8 <small_numbers+0x1cc8>
     8020502c:	ffffc097          	auipc	ra,0xffffc
     80205030:	b02080e7          	jalr	-1278(ra) # 80200b2e <printf>
-    success_count = 0;
+void cpu_intensive_task(void) {
     80205034:	fe042223          	sw	zero,-28(s0)
-    for (int i = 0; i < count; i++) {
+    uint64 sum = 0;
     80205038:	fc042a23          	sw	zero,-44(s0)
     8020503c:	a0a1                	j	80205084 <test_process_creation+0x27a>
-        int waited_pid = wait_proc(NULL);
+    for (uint64 i = 0; i < 10000000; i++) {
     8020503e:	4501                	li	a0,0
     80205040:	fffff097          	auipc	ra,0xfffff
     80205044:	580080e7          	jalr	1408(ra) # 802045c0 <wait_proc>
     80205048:	87aa                	mv	a5,a0
     8020504a:	fcf42223          	sw	a5,-60(s0)
-        if (waited_pid > 0) {
+        sum += i;
     8020504e:	fc442783          	lw	a5,-60(s0)
     80205052:	2781                	sext.w	a5,a5
     80205054:	00f05863          	blez	a5,80205064 <test_process_creation+0x25a>
-            success_count++;
+    }
     80205058:	fe442783          	lw	a5,-28(s0)
     8020505c:	2785                	addiw	a5,a5,1
     8020505e:	fef42223          	sw	a5,-28(s0)
     80205062:	a821                	j	8020507a <test_process_creation+0x270>
-        } else {
-            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+    printf("CPU intensive task done in PID %d, sum=%lu\n", myproc()->pid, sum);
+    exit_proc(0);
     80205064:	fc442783          	lw	a5,-60(s0)
     80205068:	85be                	mv	a1,a5
     8020506a:	00003517          	auipc	a0,0x3
     8020506e:	07e50513          	addi	a0,a0,126 # 802080e8 <small_numbers+0x1cf8>
     80205072:	ffffc097          	auipc	ra,0xffffc
     80205076:	abc080e7          	jalr	-1348(ra) # 80200b2e <printf>
-    for (int i = 0; i < count; i++) {
+    uint64 sum = 0;
     8020507a:	fd442783          	lw	a5,-44(s0)
     8020507e:	2785                	addiw	a5,a5,1
     80205080:	fcf42a23          	sw	a5,-44(s0)
@@ -8659,9 +8655,9 @@ void test_process_creation(void) {
     8020508e:	2701                	sext.w	a4,a4
     80205090:	2781                	sext.w	a5,a5
     80205092:	faf746e3          	blt	a4,a5,8020503e <test_process_creation+0x234>
-        }
-    }
-    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
+}
+
+void test_scheduler(void) {
     80205096:	fec42703          	lw	a4,-20(s0)
     8020509a:	fe442783          	lw	a5,-28(s0)
     8020509e:	863a                	mv	a2,a4
@@ -8670,15 +8666,15 @@ void test_process_creation(void) {
     802050a6:	07e50513          	addi	a0,a0,126 # 80208120 <small_numbers+0x1d30>
     802050aa:	ffffc097          	auipc	ra,0xffffc
     802050ae:	a84080e7          	jalr	-1404(ra) # 80200b2e <printf>
-	print_proc_table();
+    printf("===== 测试开始: 调度器测试 =====\n");
     802050b2:	00000097          	auipc	ra,0x0
     802050b6:	b36080e7          	jalr	-1226(ra) # 80204be8 <print_proc_table>
-    printf("===== 测试结束: 进程创建与管理测试 =====\n");
+
     802050ba:	00003517          	auipc	a0,0x3
     802050be:	13e50513          	addi	a0,a0,318 # 802081f8 <small_numbers+0x1e08>
     802050c2:	ffffc097          	auipc	ra,0xffffc
     802050c6:	a6c080e7          	jalr	-1428(ra) # 80200b2e <printf>
-}
+    // 创建多个计算密集型进程
     802050ca:	0001                	nop
     802050cc:	70e2                	ld	ra,56(sp)
     802050ce:	7442                	ld	s0,48(sp)
@@ -8686,23 +8682,23 @@ void test_process_creation(void) {
     802050d2:	8082                	ret
 
 00000000802050d4 <cpu_intensive_task>:
-
-void cpu_intensive_task(void) {
+    for (int i = 0; i < 3; i++) {
+        create_proc(cpu_intensive_task,1);
     802050d4:	1101                	addi	sp,sp,-32
     802050d6:	ec06                	sd	ra,24(sp)
     802050d8:	e822                	sd	s0,16(sp)
     802050da:	1000                	addi	s0,sp,32
-    uint64 sum = 0;
+    }
     802050dc:	fe043423          	sd	zero,-24(s0)
-    for (uint64 i = 0; i < 10000000; i++) {
+
     802050e0:	fe043023          	sd	zero,-32(s0)
     802050e4:	a829                	j	802050fe <cpu_intensive_task+0x2a>
-        sum += i;
+    // 观察调度行为
     802050e6:	fe843703          	ld	a4,-24(s0)
     802050ea:	fe043783          	ld	a5,-32(s0)
     802050ee:	97ba                	add	a5,a5,a4
     802050f0:	fef43423          	sd	a5,-24(s0)
-    for (uint64 i = 0; i < 10000000; i++) {
+
     802050f4:	fe043783          	ld	a5,-32(s0)
     802050f8:	0785                	addi	a5,a5,1
     802050fa:	fef43023          	sd	a5,-32(s0)
@@ -8710,8 +8706,8 @@ void cpu_intensive_task(void) {
     80205102:	009897b7          	lui	a5,0x989
     80205106:	67f78793          	addi	a5,a5,1663 # 98967f <userret+0x9895e3>
     8020510a:	fce7fee3          	bgeu	a5,a4,802050e6 <cpu_intensive_task+0x12>
-    }
-    printf("CPU intensive task done in PID %d, sum=%lu\n", myproc()->pid, sum);
+    uint64 start_time = get_time();
+	for (int i = 0; i < 3; i++) {
     8020510e:	fffff097          	auipc	ra,0xfffff
     80205112:	e22080e7          	jalr	-478(ra) # 80203f30 <myproc>
     80205116:	87aa                	mv	a5,a0
@@ -8722,11 +8718,11 @@ void cpu_intensive_task(void) {
     80205124:	11050513          	addi	a0,a0,272 # 80208230 <small_numbers+0x1e40>
     80205128:	ffffc097          	auipc	ra,0xffffc
     8020512c:	a06080e7          	jalr	-1530(ra) # 80200b2e <printf>
-    exit_proc(0);
+    	wait_proc(NULL); // 等待所有子进程结束
     80205130:	4501                	li	a0,0
     80205132:	fffff097          	auipc	ra,0xfffff
     80205136:	456080e7          	jalr	1110(ra) # 80204588 <exit_proc>
-}
+	}
     8020513a:	0001                	nop
     8020513c:	60e2                	ld	ra,24(sp)
     8020513e:	6442                	ld	s0,16(sp)
@@ -8734,28 +8730,28 @@ void cpu_intensive_task(void) {
     80205142:	8082                	ret
 
 0000000080205144 <test_scheduler>:
+    uint64 end_time = get_time();
 
-void test_scheduler(void) {
     80205144:	7179                	addi	sp,sp,-48
     80205146:	f406                	sd	ra,40(sp)
     80205148:	f022                	sd	s0,32(sp)
     8020514a:	1800                	addi	s0,sp,48
-    printf("===== 测试开始: 调度器测试 =====\n");
+    printf("Scheduler test completed in %lu cycles\n", end_time - start_time);
     8020514c:	00003517          	auipc	a0,0x3
     80205150:	11450513          	addi	a0,a0,276 # 80208260 <small_numbers+0x1e70>
     80205154:	ffffc097          	auipc	ra,0xffffc
     80205158:	9da080e7          	jalr	-1574(ra) # 80200b2e <printf>
-
-    // 创建多个计算密集型进程
-    for (int i = 0; i < 3; i++) {
+    printf("===== 测试结束 =====\n");
+}
+static int proc_buffer = 0;
     8020515c:	fe042623          	sw	zero,-20(s0)
     80205160:	a831                	j	8020517c <test_scheduler+0x38>
-        create_proc(cpu_intensive_task);
+static int proc_produced = 0;
     80205162:	00000517          	auipc	a0,0x0
     80205166:	f7250513          	addi	a0,a0,-142 # 802050d4 <cpu_intensive_task>
     8020516a:	fffff097          	auipc	ra,0xfffff
     8020516e:	3a2080e7          	jalr	930(ra) # 8020450c <create_proc>
-    for (int i = 0; i < 3; i++) {
+static int proc_buffer = 0;
     80205172:	fec42783          	lw	a5,-20(s0)
     80205176:	2785                	addiw	a5,a5,1
     80205178:	fef42623          	sw	a5,-20(s0)
@@ -8763,21 +8759,21 @@ void test_scheduler(void) {
     80205180:	0007871b          	sext.w	a4,a5
     80205184:	4789                	li	a5,2
     80205186:	fce7dee3          	bge	a5,a4,80205162 <test_scheduler+0x1e>
-    }
 
-    // 观察调度行为
-    uint64 start_time = get_time();
+void shared_buffer_init() {
+    proc_buffer = 0;
+    proc_produced = 0;
     8020518a:	ffffe097          	auipc	ra,0xffffe
     8020518e:	560080e7          	jalr	1376(ra) # 802036ea <get_time>
     80205192:	fea43023          	sd	a0,-32(s0)
-	for (int i = 0; i < 3; i++) {
+}
     80205196:	fe042423          	sw	zero,-24(s0)
     8020519a:	a819                	j	802051b0 <test_scheduler+0x6c>
-    	wait_proc(NULL); // 等待所有子进程结束
+
     8020519c:	4501                	li	a0,0
     8020519e:	fffff097          	auipc	ra,0xfffff
     802051a2:	422080e7          	jalr	1058(ra) # 802045c0 <wait_proc>
-	for (int i = 0; i < 3; i++) {
+}
     802051a6:	fe842783          	lw	a5,-24(s0)
     802051aa:	2785                	addiw	a5,a5,1
     802051ac:	fef42423          	sw	a5,-24(s0)
@@ -8785,13 +8781,13 @@ void test_scheduler(void) {
     802051b4:	0007871b          	sext.w	a4,a5
     802051b8:	4789                	li	a5,2
     802051ba:	fee7d1e3          	bge	a5,a4,8020519c <test_scheduler+0x58>
-	}
-    uint64 end_time = get_time();
+void producer_task(void) {
+    proc_buffer = 42;
     802051be:	ffffe097          	auipc	ra,0xffffe
     802051c2:	52c080e7          	jalr	1324(ra) # 802036ea <get_time>
     802051c6:	fca43c23          	sd	a0,-40(s0)
-
-    printf("Scheduler test completed in %lu cycles\n", end_time - start_time);
+    proc_produced = 1;
+    wakeup(&proc_produced); // 唤醒消费者
     802051ca:	fd843703          	ld	a4,-40(s0)
     802051ce:	fe043783          	ld	a5,-32(s0)
     802051d2:	40f707b3          	sub	a5,a4,a5
@@ -8800,12 +8796,12 @@ void test_scheduler(void) {
     802051dc:	0b850513          	addi	a0,a0,184 # 80208290 <small_numbers+0x1ea0>
     802051e0:	ffffc097          	auipc	ra,0xffffc
     802051e4:	94e080e7          	jalr	-1714(ra) # 80200b2e <printf>
-    printf("===== 测试结束 =====\n");
+    printf("Producer: produced value %d\n", proc_buffer);
     802051e8:	00003517          	auipc	a0,0x3
     802051ec:	0d050513          	addi	a0,a0,208 # 802082b8 <small_numbers+0x1ec8>
     802051f0:	ffffc097          	auipc	ra,0xffffc
     802051f4:	93e080e7          	jalr	-1730(ra) # 80200b2e <printf>
-}
+    exit_proc(0);
     802051f8:	0001                	nop
     802051fa:	70a2                	ld	ra,40(sp)
     802051fc:	7402                	ld	s0,32(sp)
@@ -8813,50 +8809,50 @@ void test_scheduler(void) {
     80205200:	8082                	ret
 
 0000000080205202 <shared_buffer_init>:
-static int proc_buffer = 0;
-static int proc_produced = 0;
+}
 
-void shared_buffer_init() {
+void consumer_task(void) {
+    while (!proc_produced) {
     80205202:	1141                	addi	sp,sp,-16
     80205204:	e422                	sd	s0,8(sp)
     80205206:	0800                	addi	s0,sp,16
-    proc_buffer = 0;
+        sleep(&proc_produced); // 等待生产者
     80205208:	00007797          	auipc	a5,0x7
     8020520c:	1c078793          	addi	a5,a5,448 # 8020c3c8 <proc_buffer>
     80205210:	0007a023          	sw	zero,0(a5)
-    proc_produced = 0;
+    }
     80205214:	00007797          	auipc	a5,0x7
     80205218:	1b878793          	addi	a5,a5,440 # 8020c3cc <proc_produced>
     8020521c:	0007a023          	sw	zero,0(a5)
-}
+    printf("Consumer: consumed value %d\n", proc_buffer);
     80205220:	0001                	nop
     80205222:	6422                	ld	s0,8(sp)
     80205224:	0141                	addi	sp,sp,16
     80205226:	8082                	ret
 
 0000000080205228 <producer_task>:
-
-void producer_task(void) {
+    exit_proc(0);
+}
     80205228:	1141                	addi	sp,sp,-16
     8020522a:	e406                	sd	ra,8(sp)
     8020522c:	e022                	sd	s0,0(sp)
     8020522e:	0800                	addi	s0,sp,16
-    proc_buffer = 42;
+void test_synchronization(void) {
     80205230:	00007797          	auipc	a5,0x7
     80205234:	19878793          	addi	a5,a5,408 # 8020c3c8 <proc_buffer>
     80205238:	02a00713          	li	a4,42
     8020523c:	c398                	sw	a4,0(a5)
-    proc_produced = 1;
+    printf("===== 测试开始: 同步机制测试 =====\n");
     8020523e:	00007797          	auipc	a5,0x7
     80205242:	18e78793          	addi	a5,a5,398 # 8020c3cc <proc_produced>
     80205246:	4705                	li	a4,1
     80205248:	c398                	sw	a4,0(a5)
-    wakeup(&proc_produced); // 唤醒消费者
+
     8020524a:	00007517          	auipc	a0,0x7
     8020524e:	18250513          	addi	a0,a0,386 # 8020c3cc <proc_produced>
     80205252:	fffff097          	auipc	ra,0xfffff
     80205256:	67e080e7          	jalr	1662(ra) # 802048d0 <wakeup>
-    printf("Producer: produced value %d\n", proc_buffer);
+    // 初始化共享缓冲区
     8020525a:	00007797          	auipc	a5,0x7
     8020525e:	16e78793          	addi	a5,a5,366 # 8020c3c8 <proc_buffer>
     80205262:	439c                	lw	a5,0(a5)
@@ -8865,11 +8861,11 @@ void producer_task(void) {
     8020526a:	07250513          	addi	a0,a0,114 # 802082d8 <small_numbers+0x1ee8>
     8020526e:	ffffc097          	auipc	ra,0xffffc
     80205272:	8c0080e7          	jalr	-1856(ra) # 80200b2e <printf>
-    exit_proc(0);
+    shared_buffer_init();
     80205276:	4501                	li	a0,0
     80205278:	fffff097          	auipc	ra,0xfffff
     8020527c:	310080e7          	jalr	784(ra) # 80204588 <exit_proc>
-}
+
     80205280:	0001                	nop
     80205282:	60a2                	ld	ra,8(sp)
     80205284:	6402                	ld	s0,0(sp)
@@ -8877,26 +8873,26 @@ void producer_task(void) {
     80205288:	8082                	ret
 
 000000008020528a <consumer_task>:
-
-void consumer_task(void) {
+    // 创建生产者和消费者进程
+    create_proc(producer_task,1);
     8020528a:	1141                	addi	sp,sp,-16
     8020528c:	e406                	sd	ra,8(sp)
     8020528e:	e022                	sd	s0,0(sp)
     80205290:	0800                	addi	s0,sp,16
-    while (!proc_produced) {
+    create_proc(consumer_task,1);
     80205292:	a809                	j	802052a4 <consumer_task+0x1a>
-        sleep(&proc_produced); // 等待生产者
+
     80205294:	00007517          	auipc	a0,0x7
     80205298:	13850513          	addi	a0,a0,312 # 8020c3cc <proc_produced>
     8020529c:	fffff097          	auipc	ra,0xfffff
     802052a0:	5ca080e7          	jalr	1482(ra) # 80204866 <sleep>
-    while (!proc_produced) {
+    create_proc(consumer_task,1);
     802052a4:	00007797          	auipc	a5,0x7
     802052a8:	12878793          	addi	a5,a5,296 # 8020c3cc <proc_produced>
     802052ac:	439c                	lw	a5,0(a5)
     802052ae:	d3fd                	beqz	a5,80205294 <consumer_task+0xa>
-    }
-    printf("Consumer: consumed value %d\n", proc_buffer);
+    // 等待两个进程完成
+    wait_proc(NULL);
     802052b0:	00007797          	auipc	a5,0x7
     802052b4:	11878793          	addi	a5,a5,280 # 8020c3c8 <proc_buffer>
     802052b8:	439c                	lw	a5,0(a5)
@@ -8905,11 +8901,11 @@ void consumer_task(void) {
     802052c0:	03c50513          	addi	a0,a0,60 # 802082f8 <small_numbers+0x1f08>
     802052c4:	ffffc097          	auipc	ra,0xffffc
     802052c8:	86a080e7          	jalr	-1942(ra) # 80200b2e <printf>
-    exit_proc(0);
+    wait_proc(NULL);
     802052cc:	4501                	li	a0,0
     802052ce:	fffff097          	auipc	ra,0xfffff
     802052d2:	2ba080e7          	jalr	698(ra) # 80204588 <exit_proc>
-}
+
     802052d6:	0001                	nop
     802052d8:	60a2                	ld	ra,8(sp)
     802052da:	6402                	ld	s0,0(sp)
@@ -8917,49 +8913,50 @@ void consumer_task(void) {
     802052de:	8082                	ret
 
 00000000802052e0 <test_synchronization>:
-void test_synchronization(void) {
+    printf("===== 测试结束 =====\n");
     802052e0:	1141                	addi	sp,sp,-16
     802052e2:	e406                	sd	ra,8(sp)
     802052e4:	e022                	sd	s0,0(sp)
     802052e6:	0800                	addi	s0,sp,16
-    printf("===== 测试开始: 同步机制测试 =====\n");
+}
     802052e8:	00003517          	auipc	a0,0x3
     802052ec:	03050513          	addi	a0,a0,48 # 80208318 <small_numbers+0x1f28>
     802052f0:	ffffc097          	auipc	ra,0xffffc
     802052f4:	83e080e7          	jalr	-1986(ra) # 80200b2e <printf>
 
-    // 初始化共享缓冲区
-    shared_buffer_init();
+void sys_access_task(void) {
+    volatile int *ptr = (int*)0x80000000; // 典型内核空间地址
     802052f8:	00000097          	auipc	ra,0x0
     802052fc:	f0a080e7          	jalr	-246(ra) # 80205202 <shared_buffer_init>
-
-    // 创建生产者和消费者进程
-    create_proc(producer_task);
+    printf("SYS: try write kernel addr 0x80000000\n");
+    *ptr = 1234;
+    printf("SYS: write success, value=%d\n", *ptr);
     80205300:	00000517          	auipc	a0,0x0
     80205304:	f2850513          	addi	a0,a0,-216 # 80205228 <producer_task>
     80205308:	fffff097          	auipc	ra,0xfffff
     8020530c:	204080e7          	jalr	516(ra) # 8020450c <create_proc>
-    create_proc(consumer_task);
+    exit_proc(0);
     80205310:	00000517          	auipc	a0,0x0
     80205314:	f7a50513          	addi	a0,a0,-134 # 8020528a <consumer_task>
     80205318:	fffff097          	auipc	ra,0xfffff
     8020531c:	1f4080e7          	jalr	500(ra) # 8020450c <create_proc>
+}
 
-    // 等待两个进程完成
-    wait_proc(NULL);
+void usr_access_task(void) {
     80205320:	4501                	li	a0,0
     80205322:	fffff097          	auipc	ra,0xfffff
     80205326:	29e080e7          	jalr	670(ra) # 802045c0 <wait_proc>
-    wait_proc(NULL);
+    volatile int *ptr = (int*)0x80000000; // 典型内核空间地址
     8020532a:	4501                	li	a0,0
     8020532c:	fffff097          	auipc	ra,0xfffff
     80205330:	294080e7          	jalr	660(ra) # 802045c0 <wait_proc>
-
-    printf("===== 测试结束 =====\n");
+    printf("USR: try write kernel addr 0x80000000\n");
+    *ptr = 1234; // 这里理想情况下应触发异常
     80205334:	00003517          	auipc	a0,0x3
     80205338:	f8450513          	addi	a0,a0,-124 # 802082b8 <small_numbers+0x1ec8>
     8020533c:	ffffb097          	auipc	ra,0xffffb
     80205340:	7f2080e7          	jalr	2034(ra) # 80200b2e <printf>
+    printf("USR: write success, value=%d\n", *ptr);
     80205344:	0001                	nop
     80205346:	60a2                	ld	ra,8(sp)
     80205348:	6402                	ld	s0,0(sp)

@@ -592,23 +592,70 @@ void sys_access_task(void) {
     exit_proc(0);
 }
 
-void usr_access_task(void) {
-    volatile int *ptr = (int*)0x80000000; // 典型内核空间地址
-    printf("USR: try write kernel addr 0x80000000\n");
-    *ptr = 1234; // 这里理想情况下应触发异常
-    printf("USR: write success, value=%d\n", *ptr);
-    exit_proc(0);
+int create_user_proc(const unsigned char *bin, int bin_len) {
+    struct proc *p = alloc_proc();
+    if (!p) return -1;
+
+    // 1. 分配用户代码页
+    uint64 user_va = 0x10000;
+    void *user_page = alloc_page();
+    if (!user_page) {
+        free_proc(p);
+        return -1;
+    }
+    // 拷贝用户程序
+    int copy_len = bin_len > PGSIZE ? PGSIZE : bin_len;
+    memcpy(user_page, bin, copy_len);
+
+    // 2. 映射用户代码页到用户页表
+    if (map_page(p->pagetable, user_va, (uint64)user_page, PTE_R | PTE_W | PTE_X | PTE_U) != 0) {
+        free_page(user_page);
+        free_proc(p);
+        return -1;
+    }
+
+    // 3. 设置 trapframe 关键字段
+    memset(p->trapframe, 0, sizeof(struct trapframe));
+    p->trapframe->epc = user_va;                // 用户入口
+    p->trapframe->sp  = 0x20000;                // 用户栈顶（可自定义）
+    p->trapframe->sstatus = SSTATUS_SPIE;       // 使能用户中断
+    // 你可以根据 trapframe 结构补充其它字段
+
+    p->is_user = 1;
+    p->state = RUNNABLE;
+
+    // 设置父进程
+    struct proc *parent = myproc();
+    p->parent = parent ? parent : NULL;
+
+    return p->pid;
 }
 
 void test_sys_usr(void) {
     printf("===== 测试: 用户/系统进程访问内核空间 =====\n");
-    int sys_pid = create_proc(sys_access_task, 0); // 系统进程
-	printf("创建系统进程：%d成功",sys_pid);
-	wait_proc(NULL); // 等待系统进程
-	warning("This test is unfinish for the user process is unavaliable\n");
-	return;
-    int usr_pid = create_proc(usr_access_task, 1); // 用户进程
-	printf("创建用户进程：%d成功",usr_pid);
-    wait_proc(NULL); // 等待用户进程
+
+    int exit_status = 0;
+    int ret_val;
+
+    // 1. 创建并测试系统进程访问内核空间
+    int sys_pid = create_kernel_proc(sys_access_task);
+    if (sys_pid > 0) {
+        printf("创建系统进程：%d 成功\n", sys_pid);
+        ret_val = wait_proc(&exit_status);
+        printf("系统进程 %d 退出，退出码为 %d\n", ret_val, exit_status);
+    } else {
+        printf("创建系统进程失败\n");
+    }
+
+    // 2. 创建并测试用户进程运行 user_test_bin
+    int usr_pid = create_user_proc(user_test_bin, user_test_bin_len);
+    if (usr_pid > 0) {
+        printf("创建用户进程：%d 成功\n", usr_pid);
+        ret_val = wait_proc(&exit_status);
+        printf("用户进程 %d 退出，退出码为 %d\n", ret_val, exit_status);
+    } else {
+        printf("创建用户进程失败\n");
+    }
+
     printf("===== 测试结束 =====\n");
 }
