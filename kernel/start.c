@@ -19,7 +19,6 @@ void start(){
 	pmm_init();
 	// 虚拟内存
 	kvminit();
-    kvminithart();
 	// 中断和异常处理
 	trap_init();
 	uart_init();
@@ -30,7 +29,7 @@ void start(){
     printf("===============================================\n\n");
 
 	init_proc(); // 初始化进程管理子系统
-	int main_pid = create_proc(kernel_main,0);
+	int main_pid = create_kernel_proc(kernel_main);
 	if (main_pid < 0){
 		panic("START: create main process failed!\n");
 	}
@@ -73,7 +72,7 @@ void console(void) {
             int found = 0;
             for (int i = 0; i < COMMAND_COUNT; i++) {
                 if (strcmp(input_buffer, command_table[i].name) == 0) {
-                    int pid = create_proc(command_table[i].func,0);
+                    int pid = create_kernel_proc(command_table[i].func);
                     if (pid < 0) {
                         printf("创建%s进程失败\n", command_table[i].name);
                     } else {
@@ -101,7 +100,7 @@ void console(void) {
 void kernel_main(void){
 	// 内核主函数
 	clear_screen();
-	int console_pid = create_proc(console,0);
+	int console_pid = create_kernel_proc(console);
 	if (console_pid < 0){
 		panic("KERNEL_MAIN: create console process failed!\n");
 	}else{

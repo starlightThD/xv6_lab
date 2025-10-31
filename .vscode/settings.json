@@ -9,6 +9,7 @@
 		"uart.h": "c",
 		"riscv.h": "c",
 		"stdarg.h": "c",
-		"defs.h": "c"
+		"defs.h": "c",
+		"user_test_bin.h": "c"
 	}
 }

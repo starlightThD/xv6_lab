@@ -73,49 +73,41 @@ typedef __builtin_va_list va_list;
 // ========================
 
 struct trapframe {
-  uint64 kernel_satp;     // 0    内核页表的 satp
-  uint64 kernel_sp;       // 8    内核栈顶
-  uint64 kernel_trap;     // 16   内核 trap handler 地址
-  uint64 sstatus;         // 24   S 态 sstatus
-  uint64 epc;             // 32   用户态返回地址
-  uint64 kernel_hartid;   // 40   当前 hart id
-
-  // 通用寄存器
-  uint64 ra;              // 48
-  uint64 sp;              // 56
-  uint64 gp;              // 64
-  uint64 tp;              // 72
-  uint64 t0;              // 80
-  uint64 t1;              // 88
-  uint64 t2;              // 96
-  uint64 s0;              // 104
-  uint64 s1;              // 112
-  uint64 a0;              // 120
-  uint64 a1;              // 128
-  uint64 a2;              // 136
-  uint64 a3;              // 144
-  uint64 a4;              // 152
-  uint64 a5;              // 160
-  uint64 a6;              // 168
-  uint64 a7;              // 176
-  uint64 s2;              // 184
-  uint64 s3;              // 192
-  uint64 s4;              // 200
-  uint64 s5;              // 208
-  uint64 s6;              // 216
-  uint64 s7;              // 224
-  uint64 s8;              // 232
-  uint64 s9;              // 240
-  uint64 s10;             // 248
-  uint64 s11;             // 256
-  uint64 t3;              // 264
-  uint64 t4;              // 272
-  uint64 t5;              // 280
-  uint64 t6;              // 288
-
-  // 下面是 trampoline 相关
-  uint64 usertrap;        // 296  usertrap C 函数地址
-  uint64 kernel_vec;      // 304  内核 trap 向量地址
+  uint64 kernel_satp;	//0
+  uint64 kernel_sp;		//8
+  uint64 kernel_trap;	//16
+  uint64 sstatus;		//24
+  uint64 epc;			//32
+  uint64 kernel_hartid;	//40
+  uint64 ra;			//48
+  uint64 sp;			//56
+  uint64 gp;			//64
+  uint64 tp;			//72
+  uint64 t0;			//80
+  uint64 t1;			//88
+  uint64 t2;			//96
+  uint64 s0;			//104
+  uint64 s1;			//112
+  uint64 a0;			//120
+  uint64 a1;			//128
+  uint64 a2;			//136
+  uint64 a3;
+  uint64 a4;
+  uint64 a5;
+  uint64 a6;
+  uint64 a7;
+  uint64 s2;
+  uint64 s3;
+  uint64 s4;
+  uint64 s5;
+  uint64 s6;
+  uint64 s7;
+  uint64 s8;
+  uint64 s9;
+  uint64 s10;
+  uint64 s11;
+  uint64 usertrap; 		//264
+  uint64 kernel_vec;	//272
 };
 
 struct uart_input_buf_t {
@@ -233,11 +225,12 @@ pagetable_t create_pagetable(void);
 int map_page(pagetable_t pt, uint64 va, uint64 pa, int perm);
 void free_pagetable(pagetable_t pt);
 void kvminit(void);
-void kvminithart(void);
 void check_mapping(uint64 va);
 int check_is_mapped(uint64 va);
 int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz);
 void test_pagetable(void);
+pte_t* walk_lookup(pagetable_t pt, uint64 va);
+void print_pagetable(pagetable_t pagetable, int level, uint64 va_base);
 
 // printf.h
 void printf(const char *fmt, ...);
@@ -286,6 +279,8 @@ void handle_store_page_fault(struct trapframe *tf, struct trap_info *info);
 int handle_page_fault(uint64 va, int type);
 void test_timer_interrupt(void);
 void test_exception(void);
+void usertrap(void);
+void usertrapret(void);
 
 // proc.h
 extern void swtch(struct context *old, struct context *new);
@@ -293,8 +288,8 @@ struct proc* myproc(void);
 struct cpu* mycpu(void);
 void init_proc(void);
 void free_proc_table(void);
-int create_proc(void (*entry)(void),int is_user);
-struct proc* alloc_proc(void);
+int create_kernel_proc(void (*entry)(void));
+struct proc* alloc_proc(int is_user);
 void free_proc(struct proc *p);
 void exit_proc(int status);
 int wait_proc(int *status);
@@ -335,6 +330,9 @@ static inline uint64 r_sstatus() {
 }
 static inline void w_sstatus(uint64 x) {
   asm volatile("csrw sstatus, %0" : : "r"(x));
+}
+static inline void w_sscratch(uint64 x) {
+  asm volatile("csrw sscratch, %0" : : "r"(x));
 }
 
 static inline void w_sepc(uint64 x) {
@@ -401,4 +399,14 @@ static inline void assert(int expr) {
         printf("assert failed: file %s, line %d\n", __FILE__, __LINE__);
         panic("assert");
     }
+}
+static inline uint64 sv39_sign_extend(uint64 va) {
+    if (va & (1L << 38))
+        return va | (~((1ULL << 39) - 1));
+    else
+        return va & ((1ULL << 39) - 1);
+}
+static inline int sv39_check_valid(uint64 va) {
+    // Sv39 有效范围：0x000000000000 ~ 0x7FFFFFFFFF 或 0xFFFFFFFFC0000000 ~ 0xFFFFFFFFFFFFFFFF
+    return (va < (1ULL << 39)) || (va >= (uint64)(-1LL << 39));
 }

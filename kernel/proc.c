@@ -1,10 +1,13 @@
 #include "defs.h"
+#include "user_test_bin.h"
 #define PROC 64 // 设定64个进程，目前最多达到512个
 
 struct proc *proc_table[PROC]; // 指针数组
 static int proc_table_pages = 0; //记录分配的物理页以进行释放
 static void *proc_table_mem[PROC]; // 每个进程一页
-extern char trampoline[], userret[];
+extern pagetable_t kernel_pagetable;
+extern char trampoline[],uservec[], userret[];
+extern char kernelvec[];
 struct proc *current_proc = 0;
 struct cpu *current_cpu=0;
 
@@ -37,30 +40,24 @@ void return_to_user(void) {
     if (p == 0) {
         panic("return_to_user: no current process");
     }
-    // 如果是从等待子进程的进程唤醒，应该让它继续执行
     if (p->chan != 0) {
-        p->chan = 0;  // 清除通道标记
-        return;  // 直接返回，不做任何状态更改
+        p->chan = 0;
+        return;
     }
-    
-    // 检查地址是否有效
     if ((uint64)trampoline == 0 || (uint64)userret == 0) {
         panic("return_to_user: 无效的跳转地址");
     }
-    
-    // 正常的用户态返回逻辑
-    w_stvec(TRAMPOLINE);
+    w_stvec(TRAMPOLINE + (uservec - trampoline));
     uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
     uint64 satp = MAKE_SATP(p->pagetable);
-    
-    // 确保地址有效
-    if (trampoline_userret < TRAMPOLINE || trampoline_userret >= TRAMPOLINE + PGSIZE) {
-        panic("return_to_user: 跳转地址超出trampoline页范围");
-    }
-    
-    ((void (*)(uint64, uint64))trampoline_userret)(TRAPFRAME, satp);
-    
-    // 不应该返回到这里
+
+	if ((trampoline_userret & ~(PGSIZE - 1)) != TRAMPOLINE) {
+		panic("return_to_user: 跳转地址超出trampoline页范围");
+	}
+    // 用函数指针调用 trampoline_userret
+    void (*userret_fn)(uint64, uint64) = (void (*)(uint64, uint64))trampoline_userret;
+    userret_fn(TRAPFRAME, satp);
+
     panic("return_to_user: 不应该返回到这里");
 }
 void forkret(void){
@@ -76,7 +73,9 @@ void forkret(void){
     }
 	// 入口点是否设置，直接执行入口函数
     uint64 entry = p->trapframe->epc;
-    if (entry != 0) {
+	if (p->is_user){
+		return_to_user();
+	}else if (entry != 0) {
         void (*fn)(void) = (void(*)(void))entry;
         fn();  // 调用入口函数
         exit_proc(0);  // 如果入口函数返回，则退出进程
@@ -110,13 +109,13 @@ void free_proc_table(void) {
         free_page(proc_table_mem[i]);
     }
 }
-struct proc* alloc_proc(void) {
+struct proc* alloc_proc(int is_user) {
     for(int i = 0;i<PROC;i++) {
 		struct proc *p = proc_table[i];
         if(p->state == UNUSED) {
             p->pid = i;
             p->state = USED;
-
+			p->is_user = is_user;
             // 分配 trapframe
             p->trapframe = (struct trapframe*)alloc_page();
             if(p->trapframe == 0){
@@ -124,17 +123,20 @@ struct proc* alloc_proc(void) {
                 p->pid = 0;
                 return 0;
             }
-
-            // 分配页表
-            p->pagetable = create_pagetable();
-            if(p->pagetable == 0){
-                free_page(p->trapframe);
-                p->trapframe = 0;
-                p->state = UNUSED;
-                p->pid = 0;
-                return 0;
-            }
-            
+			// 分配页表
+			if(p->is_user){
+				p->pagetable = create_pagetable();
+				if(p->pagetable == 0){
+					free_page(p->trapframe);
+					p->trapframe = 0;
+					p->state = UNUSED;
+					p->pid = 0;
+					return 0;
+				}
+			}else{
+				extern pagetable_t kernel_pagetable;
+				p->pagetable = kernel_pagetable;
+			}
             // 分配实际内核栈（关键修复）
             void *kstack_mem = alloc_page();
             if(kstack_mem == 0) {
@@ -161,8 +163,8 @@ void free_proc(struct proc *p){
     if(p->trapframe)
         free_page(p->trapframe);
     p->trapframe = 0;
-    
-    if(p->pagetable)
+    extern pagetable_t kernel_pagetable;
+    if(p->pagetable && p->pagetable != kernel_pagetable)
         free_pagetable(p->pagetable);
     p->pagetable = 0;
     
@@ -178,13 +180,11 @@ void free_proc(struct proc *p){
     memset(&p->context, 0, sizeof(p->context));
 }
 
-int create_proc(void (*entry)(void), int is_user) {
-    struct proc *p = alloc_proc();
+int create_kernel_proc(void (*entry)(void)) {
+    struct proc *p = alloc_proc(0);
     if (!p) return -1;
-
     p->trapframe->epc = (uint64)entry;
     p->state = RUNNABLE;
-    p->is_user = is_user;
 
     struct proc *parent = myproc();
     if (parent != 0) {
@@ -192,6 +192,51 @@ int create_proc(void (*entry)(void), int is_user) {
     } else {
         p->parent = NULL;
     }
+    return p->pid;
+}
+int create_user_proc(const void *user_bin, int bin_size) {
+    struct proc *p = alloc_proc(1); // 1 表示用户进程
+    if (!p) return -1;
+
+    uint64 user_entry = 0x10000;
+    uint64 user_stack = 0x20000;
+
+    // 分配用户代码页
+    void *page = alloc_page();
+    if (!page) { free_proc(p); return -1; }
+    map_page(p->pagetable, user_entry, (uint64)page, PTE_R | PTE_W | PTE_X | PTE_U);
+    memcpy((void*)page, user_bin, bin_size);
+
+    // 分配用户栈页
+    void *stack_page = alloc_page();
+    if (!stack_page) { free_proc(p); return -1; }
+    map_page(p->pagetable, user_stack - PGSIZE, (uint64)stack_page, PTE_R | PTE_W | PTE_U);
+
+	    // 关键：将 trapframe 映射到 TRAPFRAME 虚拟地址
+    if (map_page(p->pagetable, TRAPFRAME, (uint64)p->trapframe, PTE_R | PTE_W) != 0) {
+        free_proc(p);
+        return -1;
+    }
+
+    // 设置 trapframe
+	memset(p->trapframe, 0, sizeof(*p->trapframe));
+	p->trapframe->epc = user_entry; // 应为 0x10000
+	p->trapframe->sp = user_stack;  // 应为 0x20000
+	// 设置用户初始 sstatus：SPIE=1, SPP=0
+	p->trapframe->sstatus = (1UL << 5); // 0x20
+	p->trapframe->kernel_satp = MAKE_SATP(kernel_pagetable);
+	p->trapframe->kernel_sp = p->kstack + PGSIZE;   // 内核栈顶
+	p->trapframe->usertrap  = (uint64)usertrap;     // C 层 trap 处理函数
+	p->trapframe->kernel_vec = (uint64)kernelvec;
+    p->state = RUNNABLE;
+	// 添加trampoline页面映射
+	extern uint64 trampoline_phys_addr;
+	if (map_page(p->pagetable, TRAMPOLINE, trampoline_phys_addr, PTE_X | PTE_R) != 0) {
+		free_proc(p);
+		return -1;
+	}
+    struct proc *parent = myproc();
+    p->parent = parent ? parent : NULL;
     return p->pid;
 }
 void exit_proc(int status) {
@@ -205,7 +250,7 @@ int wait_proc(int *status) {
 }
 int kfork(void) {
     struct proc *parent = myproc();
-    struct proc *child = alloc_proc();
+    struct proc *child = alloc_proc(parent->is_user);
     if(child == 0)
         return -1;
 
@@ -458,14 +503,14 @@ void test_process_creation(void) {
     printf("===== 测试开始: 进程创建与管理测试 =====\n");
 
     // 测试基本的进程创建
-    int pid = create_proc(simple_task,1);
+    int pid = create_kernel_proc(simple_task);
     assert(pid > 0);
     printf("【测试结果】: 基本进程创建成功，PID: %d，正常退出\n", pid);
 
     int count = 1;
     printf("\n----- 测试进程表容量限制 -----\n");
     for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
-        int pid = create_proc(simple_task,1);
+        int pid = create_kernel_proc(simple_task);
         if (pid > 0) {
             count++; 
         } else {
@@ -492,7 +537,7 @@ void test_process_creation(void) {
 	printf("\n----- 清理后尝试重新填满进程表 -----\n");
 	int refill_count = 0;
 	for (int i = 0; i < PROC; i++) {
-		int pid = create_proc(simple_task,1);
+		int pid = create_kernel_proc(simple_task);
 		if (pid > 0) {
 			refill_count++;
 		} else {
@@ -531,7 +576,7 @@ void test_scheduler(void) {
 
     // 创建多个计算密集型进程
     for (int i = 0; i < 3; i++) {
-        create_proc(cpu_intensive_task,1);
+        create_kernel_proc(cpu_intensive_task);
     }
 
     // 观察调度行为
@@ -574,8 +619,8 @@ void test_synchronization(void) {
     shared_buffer_init();
 
     // 创建生产者和消费者进程
-    create_proc(producer_task,1);
-    create_proc(consumer_task,1);
+    create_kernel_proc(producer_task);
+    create_kernel_proc(consumer_task);
 
     // 等待两个进程完成
     wait_proc(NULL);
@@ -585,77 +630,24 @@ void test_synchronization(void) {
 }
 
 void sys_access_task(void) {
-    volatile int *ptr = (int*)0x80000000; // 典型内核空间地址
-    printf("SYS: try write kernel addr 0x80000000\n");
-    *ptr = 1234;
-    printf("SYS: write success, value=%d\n", *ptr);
+    volatile int *ptr = (int*)0x80200000; // 内核空间地址
+    printf("SYS: try read kernel addr 0x80200000\n");
+    int val = *ptr;
+    printf("SYS: read success, value=%d\n", val);
     exit_proc(0);
-}
-
-int create_user_proc(const unsigned char *bin, int bin_len) {
-    struct proc *p = alloc_proc();
-    if (!p) return -1;
-
-    // 1. 分配用户代码页
-    uint64 user_va = 0x10000;
-    void *user_page = alloc_page();
-    if (!user_page) {
-        free_proc(p);
-        return -1;
-    }
-    // 拷贝用户程序
-    int copy_len = bin_len > PGSIZE ? PGSIZE : bin_len;
-    memcpy(user_page, bin, copy_len);
-
-    // 2. 映射用户代码页到用户页表
-    if (map_page(p->pagetable, user_va, (uint64)user_page, PTE_R | PTE_W | PTE_X | PTE_U) != 0) {
-        free_page(user_page);
-        free_proc(p);
-        return -1;
-    }
-
-    // 3. 设置 trapframe 关键字段
-    memset(p->trapframe, 0, sizeof(struct trapframe));
-    p->trapframe->epc = user_va;                // 用户入口
-    p->trapframe->sp  = 0x20000;                // 用户栈顶（可自定义）
-    p->trapframe->sstatus = SSTATUS_SPIE;       // 使能用户中断
-    // 你可以根据 trapframe 结构补充其它字段
-
-    p->is_user = 1;
-    p->state = RUNNABLE;
-
-    // 设置父进程
-    struct proc *parent = myproc();
-    p->parent = parent ? parent : NULL;
-
-    return p->pid;
 }
 
 void test_sys_usr(void) {
     printf("===== 测试: 用户/系统进程访问内核空间 =====\n");
-
-    int exit_status = 0;
-    int ret_val;
-
-    // 1. 创建并测试系统进程访问内核空间
-    int sys_pid = create_kernel_proc(sys_access_task);
-    if (sys_pid > 0) {
-        printf("创建系统进程：%d 成功\n", sys_pid);
-        ret_val = wait_proc(&exit_status);
-        printf("系统进程 %d 退出，退出码为 %d\n", ret_val, exit_status);
-    } else {
-        printf("创建系统进程失败\n");
-    }
-
-    // 2. 创建并测试用户进程运行 user_test_bin
+    int sys_pid = create_kernel_proc(sys_access_task); // 系统进程
+	printf("创建系统进程：%d成功\n",sys_pid);
+	int status =0;
+	int ret_val = wait_proc(&status); // 等待系统进程
+	printf("系统进程%d退出，退出码为%d\n",ret_val,status);
+    // 创建真正的用户进程，运行 user_test_bin
     int usr_pid = create_user_proc(user_test_bin, user_test_bin_len);
-    if (usr_pid > 0) {
-        printf("创建用户进程：%d 成功\n", usr_pid);
-        ret_val = wait_proc(&exit_status);
-        printf("用户进程 %d 退出，退出码为 %d\n", ret_val, exit_status);
-    } else {
-        printf("创建用户进程失败\n");
-    }
-
+    printf("创建用户进程：%d成功\n", usr_pid);
+    ret_val = wait_proc(&status); // 等待用户进程
+    printf("用户进程%d退出，退出码为%d\n", ret_val,status);
     printf("===== 测试结束 =====\n");
 }

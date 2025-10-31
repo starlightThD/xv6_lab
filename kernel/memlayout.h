@@ -13,7 +13,7 @@
 #define VIRTIO0_IRQ 1
 #define TIMER_IRQ 5
 #define CLINT 0x2000000L
-#define TRAMPOLINE (MAXVA - PGSIZE)
+#define TRAMPOLINE 0xfffffffffffff000UL
 
 #define KSTACK(p) (TRAMPOLINE - ((p)+1)* 2*PGSIZE)
 

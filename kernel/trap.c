@@ -1,4 +1,6 @@
 #include "defs.h"
+extern char trampoline[],uservec[], userret[];
+extern pagetable_t kernel_pagetable;
 static inline void save_exception_info(struct trapframe *tf, uint64 sepc, uint64 sstatus, uint64 scause, uint64 stval) {
     tf->epc = sepc;
     // 其他字段需要保存在全局变量或函数参数中
@@ -196,15 +198,50 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             break;
     }
 }
-// 处理系统调用
+// 将用户虚拟地址 va 转换为物理地址，失败返回0
+void* user_va2pa(pagetable_t pagetable, uint64 va) {
+    pte_t *pte = walk_lookup(pagetable, va);
+    if (!pte) return 0;
+    if (!(*pte & PTE_V)) return 0;
+    if (!(*pte & PTE_U)) return 0; // 必须是用户可访问
+    uint64 pa = (PTE2PA(*pte)) | (va & 0xFFF); // 物理页基址 + 页内偏移
+    return (void*)pa;
+}
+int copyin(char *dst, uint64 srcva, int maxlen) {
+    struct proc *p = myproc();
+    for (int i = 0; i < maxlen; i++) {
+        // 你需要 walk_lookup 查 srcva+i 是否有效并有PTE_U权限
+        char *pa = user_va2pa(p->pagetable, srcva + i); // 你需要实现 user_va2pa
+        if (!pa) return -1;
+        dst[i] = *pa;
+        if (dst[i] == 0) return 0;
+    }
+    return 0;
+}
 void handle_syscall(struct trapframe *tf, struct trap_info *info) {
-    printf("System call from sepc=0x%lx, syscall number=%ld\n", info->sepc, tf->a7);
-    
-    // 系统调用返回值存放在a0寄存器
-    // tf->a0 = sys_call(tf->a7, tf->a0, tf->a1, tf->a2, tf->a3, tf->a4, tf->a5);
-    
-    // 系统调用完成后，sepc应该指向下一条指令
-    set_sepc(tf, info->sepc + 4);
+    // 约定a7为系统调用号
+    switch (tf->a7) {
+        case 1: // 打印整数
+            printf("[user syscall] print int: %ld\n", tf->a0);
+            break;
+        case 2: // 打印字符串
+            // 这里需要从用户空间安全地拷贝字符串
+            {
+                char buf[128];
+                copyin(buf, tf->a0, sizeof(buf)-1); // 你需要实现copyin
+                buf[sizeof(buf)-1] = 0;
+                printf("[user syscall] print str: %s\n", buf);
+            }
+            break;
+		case 93: // sys_exit
+    		printf("[user syscall] exit(%ld)\n", tf->a0);
+			exit_proc(0);
+			break;
+        default:
+            printf("[user syscall] unknown syscall: %ld\n", tf->a7);
+            break;
+    }
+    set_sepc(tf, info->sepc + 4); // 返回到下一条指令
 }
 
 
@@ -380,4 +417,57 @@ void test_exception(void) {
     printf("✓ 环境调用异常处理成功\n\n");
     
     printf("===== 异常处理测试完成 =====\n\n");
+}
+
+
+void usertrap(void) {
+    struct proc *p = myproc();
+    struct trapframe *tf = p->trapframe;
+
+    uint64 scause = r_scause();
+    uint64 stval  = r_stval();
+    uint64 sepc   = tf->epc;      // 已由 trampoline 保存
+    uint64 sstatus= tf->sstatus;  // 已由 trampoline 保存
+
+    uint64 code = scause & 0xff;
+    uint64 is_intr = (scause >> 63);
+
+    if (!is_intr && code == 8) { // 用户态 ecall
+        struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };
+        handle_syscall(tf, &info);
+        // handle_syscall 应该已 set_sepc(tf, sepc+4)
+    } else if (is_intr) {
+        if (code == 5) {
+            timeintr();
+            sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
+        } else if (code == 9) {
+            handle_external_interrupt();
+        } else {
+            printf("[usertrap] unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
+        }
+    } else {
+        struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };
+        handle_exception(tf, &info);
+    }
+
+    usertrapret();
+}
+
+void usertrapret(void) {
+    struct proc *p = myproc();
+	
+    // stvec 指向 trampoline.uservec
+    uint64 uservec_va = (uint64)TRAMPOLINE + ((uint64)uservec - (uint64)trampoline);
+    w_stvec(uservec_va);
+
+    w_sscratch((uint64)TRAPFRAME);
+
+    // 用户页表 satp
+    uint64 user_satp = MAKE_SATP(p->pagetable);
+
+    // a0 = trapframe 的高地址映射
+    register uint64 a0 asm("a0") = TRAPFRAME;
+    register uint64 a1 asm("a1") = user_satp;
+    register void (*userret_fn)(uint64, uint64) asm("t0") = (void*)userret;
+    asm volatile("jr t0" :: "r"(a0), "r"(a1), "r"(userret_fn) : "memory");
 }
