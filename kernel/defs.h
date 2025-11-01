@@ -59,6 +59,8 @@
 #define MAX_IRQ 64
 #define SSTATUS_SIE (1L << 1)  // Supervisor Interrupt Enable
 
+// proc.h
+#define PROC 64 // 设定64个进程，目前最多达到512个
 // ========================
 // typedef
 // ========================
@@ -277,8 +279,6 @@ void handle_instruction_page_fault(struct trapframe *tf, struct trap_info *info)
 void handle_load_page_fault(struct trapframe *tf, struct trap_info *info);
 void handle_store_page_fault(struct trapframe *tf, struct trap_info *info);
 int handle_page_fault(uint64 va, int type);
-void test_timer_interrupt(void);
-void test_exception(void);
 void usertrap(void);
 void usertrapret(void);
 
@@ -287,15 +287,14 @@ extern void swtch(struct context *old, struct context *new);
 struct proc* myproc(void);
 struct cpu* mycpu(void);
 void init_proc(void);
-void free_proc_table(void);
-int create_kernel_proc(void (*entry)(void));
 struct proc* alloc_proc(int is_user);
 void free_proc(struct proc *p);
+void free_proc_table(void);
+int create_kernel_proc(void (*entry)(void));
+int create_user_proc(const void *user_bin, int bin_size);
+int fork_proc(void);
 void exit_proc(int status);
 int wait_proc(int *status);
-int kfork(void);
-void kexit(void);
-int kwait(int *status);
 void return_to_user(void);
 void forkret(void);
 void schedule(void);
@@ -303,11 +302,32 @@ void yield(void);
 void sleep(void *chan);
 void wakeup(void *chan);
 void print_proc_table(void);
+
+// syscall.h
+// 系统调用实现函数声明
+uint64 sys_exit(void);
+uint64 sys_getpid(void);
+uint64 sys_getppid(void);
+uint64 sys_fork(void);
+uint64 sys_wait(void);
+uint64 sys_read(void);
+uint64 sys_write(void);
+uint64 sys_open(void);
+uint64 sys_close(void);
+uint64 sys_brk(void);
+uint64 sys_mmap(void);
+uint64 sys_munmap(void);
+uint64 sys_gettimeofday(void);
+uint64 sys_sleep(void);
+
+// test.h
+void test_timer_interrupt(void);
+void test_exception(void);
+
 void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
 void test_sys_usr(void);
-
 // ========================
 // static inline 函数
 // ========================

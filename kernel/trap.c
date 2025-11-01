@@ -219,30 +219,44 @@ int copyin(char *dst, uint64 srcva, int maxlen) {
     return 0;
 }
 void handle_syscall(struct trapframe *tf, struct trap_info *info) {
-    // 约定a7为系统调用号
+    // 约定 a7 为系统调用号
     switch (tf->a7) {
         case 1: // 打印整数
-            printf("[user syscall] print int: %ld\n", tf->a0);
+            printf("[syscall] print int: %ld\n", tf->a0);
             break;
+
         case 2: // 打印字符串
-            // 这里需要从用户空间安全地拷贝字符串
-            {
-                char buf[128];
-                copyin(buf, tf->a0, sizeof(buf)-1); // 你需要实现copyin
-                buf[sizeof(buf)-1] = 0;
-                printf("[user syscall] print str: %s\n", buf);
-            }
+            char buf[128];
+            copyin(buf, tf->a0, sizeof(buf)-1); // 从用户空间拷贝
+            buf[sizeof(buf)-1] = 0;
+            printf("[syscall] print str: %s\n", buf);
             break;
-		case 93: // sys_exit
-    		printf("[user syscall] exit(%ld)\n", tf->a0);
-			exit_proc(0);
-			break;
+
+        case 93: // sys_exit (Linux ABI)
+            printf("[syscall] exit(%ld)\n", tf->a0);
+            exit_proc((int)tf->a0); // 使用 a0 作为退出码
+            break;
+
+        case 220: // sys_fork (Linux ABI: clone/fork)
+            int child_pid = fork_proc();
+            tf->a0 = child_pid;
+            printf("[syscall] fork -> %d\n", child_pid);
+            break;
+
+        case 0xFFF: // 自定义 sys_step
+            printf("[syscall] step enabled but we do not realize it\n");
+            break;
+
         default:
-            printf("[user syscall] unknown syscall: %ld\n", tf->a7);
+            printf("[syscall] unknown syscall: %ld\n", tf->a7);
+            tf->a0 = -1; // 返回错误
             break;
     }
-    set_sepc(tf, info->sepc + 4); // 返回到下一条指令
+
+    // 别忘了推进 sepc，否则会重复执行同一条 ecall
+    set_sepc(tf, info->sepc + 4);
 }
+
 
 
 // 处理指令页故障
@@ -283,142 +297,6 @@ void handle_store_page_fault(struct trapframe *tf, struct trap_info *info) {
     // 无法处理的页面故障
     panic("Unhandled store page fault");
 }
-// 获取当前时间的辅助函数
-uint64 get_time(void) {
-    return sbi_get_time();
-}
-
-// 时钟中断测试函数
-void test_timer_interrupt(void) {
-    printf("Testing timer interrupt...\n");
-
-    // 记录中断前的时间
-    uint64 start_time = get_time();
-    int interrupt_count = 0;
-	int last_count = interrupt_count;
-    // 设置测试标志
-    interrupt_test_flag = &interrupt_count;
-
-    // 等待几次中断
-    while (interrupt_count < 5) {
-        if(last_count != interrupt_count) {
-			last_count = interrupt_count;
-			printf("Received interrupt %d\n", interrupt_count);
-		}
-        // 简单延时
-        for (volatile int i = 0; i < 1000000; i++);
-    }
-
-    // 测试结束，清除标志
-    interrupt_test_flag = 0;
-
-    uint64 end_time = get_time();
-    printf("Timer test completed: %d interrupts in %lu cycles\n", 
-           interrupt_count, end_time - start_time);
-}
-
-// 修改测试异常处理函数
-void test_exception(void) {
-    printf("\n===== 开始全面异常处理测试 =====\n\n");
-    
-    // 1. 测试非法指令异常
-    printf("1. 测试非法指令异常...\n");
-    asm volatile (".word 0xffffffff");  // 非法RISC-V指令
-    printf("✓ 非法指令异常处理成功\n\n");
-    
-    // 2. 测试存储页故障
-    printf("2. 测试存储页故障异常...\n");
-    volatile uint64 *invalid_ptr = 0;
-    for (uint64 addr = 0x90000000; addr < 0x98000000; addr += 0x1000) {
-        if (check_is_mapped(addr) == 0) {
-            invalid_ptr = (uint64*)addr;
-            printf("找到未映射地址: 0x%lx\n", addr);
-            break;
-        }
-    }
-    
-    if (invalid_ptr != 0) {
-        printf("尝试写入未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
-        *invalid_ptr = 42;  // 触发存储页故障
-        printf("✓ 存储页故障异常处理成功\n\n");
-    } else {
-        printf("警告: 无法找到未映射地址进行测试!\n\n");
-    }
-    
-    // 3. 测试加载页故障
-    printf("3. 测试加载页故障异常...\n");
-    invalid_ptr = 0;
-    for (uint64 addr = 0xA0000000; addr < 0xA8000000; addr += 0x1000) {
-        if (check_is_mapped(addr) == 0) {
-            invalid_ptr = (uint64*)addr;
-            printf("找到未映射地址: 0x%lx\n", addr);
-            break;
-        }
-    }
-    
-    if (invalid_ptr != 0) {
-        printf("尝试读取未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
-        volatile uint64 value = *invalid_ptr;  // 触发加载页故障
-        printf("读取的值: %lu\n", value);  // 不太可能执行到这里，除非故障被处理
-        printf("✓ 加载页故障异常处理成功\n\n");
-    } else {
-        printf("警告: 无法找到未映射地址进行测试!\n\n");
-    }
-    
-    // 4. 测试存储地址未对齐异常
-    printf("4. 测试存储地址未对齐异常...\n");
-    uint64 aligned_addr = (uint64)alloc_page();
-    if (aligned_addr != 0) {
-        uint64 misaligned_addr = aligned_addr + 1;  // 制造未对齐地址
-        printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
-        
-        // 使用内联汇编进行未对齐访问，因为编译器可能会自动对齐
-        asm volatile (
-            "sd %0, 0(%1)"
-            : 
-            : "r" (0xdeadbeef), "r" (misaligned_addr)
-            : "memory"
-        );
-        printf("✓ 存储地址未对齐异常处理成功\n\n");
-    } else {
-        printf("警告: 无法分配内存进行未对齐访问测试!\n\n");
-    }
-    
-    // 5. 测试加载地址未对齐异常
-    printf("5. 测试加载地址未对齐异常...\n");
-    if (aligned_addr != 0) {
-        uint64 misaligned_addr = aligned_addr + 1;
-        printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
-        
-        uint64 value = 0;
-        asm volatile (
-            "ld %0, 0(%1)"
-            : "=r" (value)
-            : "r" (misaligned_addr)
-            : "memory"
-        );
-        printf("读取的值: 0x%lx\n", value);
-        printf("✓ 加载地址未对齐异常处理成功\n\n");
-    } else {
-        printf("警告: 无法分配内存进行未对齐访问测试!\n\n");
-    }
-
-	// 6. 测试断点异常
-	printf("6. 测试断点异常...\n");
-	asm volatile (
-		"nop\n\t"      // 确保ebreak前有有效指令
-		"ebreak\n\t"   // 断点指令
-		"nop\n\t"      // 确保ebreak后有有效指令
-	);
-	printf("✓ 断点异常处理成功\n\n");
-    // 7. 测试环境调用异常
-    printf("7. 测试环境调用异常...\n");
-    asm volatile ("ecall");  // 从S模式生成环境调用
-    printf("✓ 环境调用异常处理成功\n\n");
-    
-    printf("===== 异常处理测试完成 =====\n\n");
-}
-
 
 void usertrap(void) {
     struct proc *p = myproc();
