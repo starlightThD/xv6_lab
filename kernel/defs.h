@@ -61,6 +61,13 @@
 
 // proc.h
 #define PROC 64 // 设定64个进程，目前最多达到512个
+
+// syscall.h
+#define SYS_printint   1
+#define SYS_printstr   2
+#define SYS_exit      93
+#define SYS_fork     220
+#define SYS_step    0xFFF
 // ========================
 // typedef
 // ========================
@@ -302,23 +309,6 @@ void yield(void);
 void sleep(void *chan);
 void wakeup(void *chan);
 void print_proc_table(void);
-
-// syscall.h
-// 系统调用实现函数声明
-uint64 sys_exit(void);
-uint64 sys_getpid(void);
-uint64 sys_getppid(void);
-uint64 sys_fork(void);
-uint64 sys_wait(void);
-uint64 sys_read(void);
-uint64 sys_write(void);
-uint64 sys_open(void);
-uint64 sys_close(void);
-uint64 sys_brk(void);
-uint64 sys_mmap(void);
-uint64 sys_munmap(void);
-uint64 sys_gettimeofday(void);
-uint64 sys_sleep(void);
 
 // test.h
 void test_timer_interrupt(void);

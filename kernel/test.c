@@ -1,7 +1,9 @@
 #include "defs.h"
-#include "user_test_bin.h"
+#include "min_test.h"
 
 // trap_test
+
+volatile int *interrupt_test_flag = 0;
 // 获取当前时间的辅助函数
 uint64 get_time(void) {
     return sbi_get_time();
@@ -291,7 +293,7 @@ void test_sys_usr(void) {
 	int ret_val = wait_proc(&status); // 等待系统进程
 	printf("系统进程%d退出，退出码为%d\n",ret_val,status);
     // 创建真正的用户进程，运行 user_test_bin
-    int usr_pid = create_user_proc(user_test_bin, user_test_bin_len);
+    int usr_pid = create_user_proc(min_test_bin, min_test_bin_len);
     printf("创建用户进程：%d成功\n", usr_pid);
     ret_val = wait_proc(&status); // 等待用户进程
     printf("用户进程%d退出，退出码为%d\n", ret_val,status);

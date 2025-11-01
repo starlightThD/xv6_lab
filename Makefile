@@ -53,7 +53,8 @@ MINIMAL_OBJS = \
   $K/switch.o \
   $K/proc.o  \
   $K/string.o \
-  $K/test.o
+  $K/test.o \
+  $K/syscall.o
 
 $K/kernel: $(MINIMAL_OBJS) $K/kernel.ld
 	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(MINIMAL_OBJS)
@@ -110,6 +111,9 @@ $k/string.o: $K/string.c
 
 $k/test.o: $K/test.c
 	$(CC) $(CFLAGS) -c $K/test.c -o $K/test.o
+
+$k/syscall.o: $K/syscall.c
+	$(CC) $(CFLAGS) -c $K/syscall.c -o $K/syscall.o
 # 验证内存布局
 check: $K/kernel
 	@echo "=== 检查段信息 ==="

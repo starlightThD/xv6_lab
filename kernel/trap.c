@@ -15,7 +15,6 @@ static inline void set_sepc(struct trapframe *tf, uint64 sepc) {
 }
 
 // 全局测试变量，用于中断测试
-volatile int *interrupt_test_flag = 0;
 extern void kernelvec();
 interrupt_handler_t interrupt_vector[MAX_IRQ];
 void register_interrupt(int irq, interrupt_handler_t h) {
@@ -219,42 +218,42 @@ int copyin(char *dst, uint64 srcva, int maxlen) {
     return 0;
 }
 void handle_syscall(struct trapframe *tf, struct trap_info *info) {
-    // 约定 a7 为系统调用号
-    switch (tf->a7) {
-        case 1: // 打印整数
-            printf("[syscall] print int: %ld\n", tf->a0);
-            break;
+	switch (tf->a7) {
+		case SYS_printint:
+			printf("[syscall] print int: %ld\n", tf->a0);
+			break;
 
-        case 2: // 打印字符串
-            char buf[128];
-            copyin(buf, tf->a0, sizeof(buf)-1); // 从用户空间拷贝
-            buf[sizeof(buf)-1] = 0;
-            printf("[syscall] print str: %s\n", buf);
-            break;
+		case SYS_printstr: {
+			char buf[128];
+			copyin(buf, tf->a0, sizeof(buf)-1);
+			buf[sizeof(buf)-1] = 0;
+			printf("[syscall] print str: %s\n", buf);
+			break;
+		}
 
-        case 93: // sys_exit (Linux ABI)
-            printf("[syscall] exit(%ld)\n", tf->a0);
-            exit_proc((int)tf->a0); // 使用 a0 作为退出码
-            break;
+		case SYS_exit:
+			printf("[syscall] exit(%ld)\n", tf->a0);
+			exit_proc((int)tf->a0);
+			break;
 
-        case 220: // sys_fork (Linux ABI: clone/fork)
-            int child_pid = fork_proc();
-            tf->a0 = child_pid;
-            printf("[syscall] fork -> %d\n", child_pid);
-            break;
+		case SYS_fork: {
+			int child_pid = fork_proc();
+			tf->a0 = child_pid;
+			printf("[syscall] fork -> %d\n", child_pid);
+			break;
+		}
 
-        case 0xFFF: // 自定义 sys_step
-            printf("[syscall] step enabled but we do not realize it\n");
-            break;
+		case SYS_step:
+			tf->a0 = 0;
+			printf("[syscall] step enabled but do nothing\n");
+			break;
 
-        default:
-            printf("[syscall] unknown syscall: %ld\n", tf->a7);
-            tf->a0 = -1; // 返回错误
-            break;
-    }
-
-    // 别忘了推进 sepc，否则会重复执行同一条 ecall
-    set_sepc(tf, info->sepc + 4);
+		default:
+			printf("[syscall] unknown syscall: %ld\n", tf->a7);
+			tf->a0 = -1;
+			break;
+	}
+	set_sepc(tf, info->sepc + 4);
 }
 
 
@@ -333,19 +332,26 @@ void usertrap(void) {
 
 void usertrapret(void) {
     struct proc *p = myproc();
-	
-    // stvec 指向 trampoline.uservec
+
+    // 计算 trampoline 中 uservec 的虚拟地址（对双方页表一致）
     uint64 uservec_va = (uint64)TRAMPOLINE + ((uint64)uservec - (uint64)trampoline);
     w_stvec(uservec_va);
 
+    // sscratch 设为 TRAPFRAME 的虚拟地址（trampoline 代码用它访问 tf）
     w_sscratch((uint64)TRAPFRAME);
 
-    // 用户页表 satp
+    // 准备用户页表的 satp
     uint64 user_satp = MAKE_SATP(p->pagetable);
 
-    // a0 = trapframe 的高地址映射
-    register uint64 a0 asm("a0") = TRAPFRAME;
+    // 计算 trampoline 中 userret 的虚拟地址
+    uint64 userret_va = (uint64)TRAMPOLINE + ((uint64)userret - (uint64)trampoline);
+
+    // a0 = TRAPFRAME（虚拟地址，双方页表都映射）
+    // a1 = user_satp
+    register uint64 a0 asm("a0") = (uint64)TRAPFRAME;
     register uint64 a1 asm("a1") = user_satp;
-    register void (*userret_fn)(uint64, uint64) asm("t0") = (void*)userret;
-    asm volatile("jr t0" :: "r"(a0), "r"(a1), "r"(userret_fn) : "memory");
+    register void (*tgt)(uint64, uint64) asm("t0") = (void *)userret_va;
+
+    // 跳到 trampoline 上的 userret
+    asm volatile("jr t0" :: "r"(a0), "r"(a1), "r"(tgt) : "memory");
 }

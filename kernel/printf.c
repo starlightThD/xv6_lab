@@ -301,7 +301,7 @@ void warning(const char *fmt, ...) {
 }
 void test_printf_precision(void) {
 	clear_screen();
-    printf("=== 详细的Printf测试 ===\n");
+    printf("=== 详细的printf测试 ===\n");
     
     // 测试十六进制格式
     printf("十六进制测试:\n");
@@ -362,7 +362,7 @@ void test_printf_precision(void) {
 	printf("不同进制测试:\n");
 	printf("  Binary of 5: %b\n", 5);
 	printf("  Octal of 8 : %o\n", 8); 
-	printf("=== Printf测试结束 ===\n");
+	printf("=== printf测试结束 ===\n");
 }
 void test_curse_move(){
 	clear_screen(); // 清屏

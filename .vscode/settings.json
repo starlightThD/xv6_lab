@@ -10,6 +10,7 @@
 		"riscv.h": "c",
 		"stdarg.h": "c",
 		"defs.h": "c",
-		"user_test_bin.h": "c"
+		"user_test_bin.h": "c",
+		"syscall.h": "c"
 	}
 }

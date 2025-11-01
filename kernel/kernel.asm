@@ -19,10 +19,10 @@ _entry: # 定义入口点标签
 
         la a0,_bss_start
     8020000c:	0000c517          	auipc	a0,0xc
-    80200010:	09450513          	addi	a0,a0,148 # 8020c0a0 <kernel_pagetable>
+    80200010:	0a450513          	addi	a0,a0,164 # 8020c0b0 <kernel_pagetable>
         la a1,_bss_end
     80200014:	0000d597          	auipc	a1,0xd
-    80200018:	8fc58593          	addi	a1,a1,-1796 # 8020c910 <_bss_end>
+    80200018:	90c58593          	addi	a1,a1,-1780 # 8020c920 <_bss_end>
 
 000000008020001c <clear_bss>:
 clear_bss:
@@ -47,7 +47,7 @@ spin:
     80200030:	a001                	j	80200030 <spin>
 
 0000000080200032 <r_sstatus>:
-    80200032:	1101                	addi	sp,sp,-32 # 8020afe0 <user_test_bin_len+0xfe0>
+    80200032:	1101                	addi	sp,sp,-32 # 8020afe0 <min_test_bin_len+0xfe0>
     80200034:	ec22                	sd	s0,24(sp)
     80200036:	1000                	addi	s0,sp,32
     80200038:	100027f3          	csrr	a5,sstatus
@@ -144,12 +144,12 @@ void start(){
     8020010e:	b78080e7          	jalr	-1160(ra) # 80200c82 <printf>
 	init_proc(); // 初始化进程管理子系统
     80200112:	00005097          	auipc	ra,0x5
-    80200116:	c5e080e7          	jalr	-930(ra) # 80204d70 <init_proc>
+    80200116:	88e080e7          	jalr	-1906(ra) # 802049a0 <init_proc>
 	int main_pid = create_kernel_proc(kernel_main);
     8020011a:	00000517          	auipc	a0,0x0
     8020011e:	3d250513          	addi	a0,a0,978 # 802004ec <kernel_main>
     80200122:	00005097          	auipc	ra,0x5
-    80200126:	084080e7          	jalr	132(ra) # 802051a6 <create_kernel_proc>
+    80200126:	cb4080e7          	jalr	-844(ra) # 80204dd6 <create_kernel_proc>
     8020012a:	87aa                	mv	a5,a0
     8020012c:	fef42623          	sw	a5,-20(s0)
 	if (main_pid < 0){
@@ -163,7 +163,7 @@ void start(){
     80200146:	58c080e7          	jalr	1420(ra) # 802016ce <panic>
 	schedule();
     8020014a:	00005097          	auipc	ra,0x5
-    8020014e:	378080e7          	jalr	888(ra) # 802054c2 <schedule>
+    8020014e:	fa8080e7          	jalr	-88(ra) # 802050f2 <schedule>
     panic("START: main() exit unexpectedly!!!\n");
     80200152:	00007517          	auipc	a0,0x7
     80200156:	05650513          	addi	a0,a0,86 # 802071a8 <etext+0x1a8>
@@ -257,8 +257,8 @@ void console(void) {
     8020023e:	00007597          	auipc	a1,0x7
     80200242:	03a58593          	addi	a1,a1,58 # 80207278 <etext+0x278>
     80200246:	853e                	mv	a0,a5
-    80200248:	00006097          	auipc	ra,0x6
-    8020024c:	9c8080e7          	jalr	-1592(ra) # 80205c10 <strcmp>
+    80200248:	00005097          	auipc	ra,0x5
+    8020024c:	5f8080e7          	jalr	1528(ra) # 80205840 <strcmp>
     80200250:	87aa                	mv	a5,a0
     80200252:	e789                	bnez	a5,8020025c <console+0xf0>
             exit_requested = 1;
@@ -270,8 +270,8 @@ void console(void) {
     80200260:	00007597          	auipc	a1,0x7
     80200264:	02058593          	addi	a1,a1,32 # 80207280 <etext+0x280>
     80200268:	853e                	mv	a0,a5
-    8020026a:	00006097          	auipc	ra,0x6
-    8020026e:	9a6080e7          	jalr	-1626(ra) # 80205c10 <strcmp>
+    8020026a:	00005097          	auipc	ra,0x5
+    8020026e:	5d6080e7          	jalr	1494(ra) # 80205840 <strcmp>
     80200272:	87aa                	mv	a5,a0
     80200274:	e3cd                	bnez	a5,80200316 <console+0x1aa>
             printf("可用命令:\n");
@@ -335,13 +335,13 @@ void console(void) {
     8020031a:	00007597          	auipc	a1,0x7
     8020031e:	f6e58593          	addi	a1,a1,-146 # 80207288 <etext+0x288>
     80200322:	853e                	mv	a0,a5
-    80200324:	00006097          	auipc	ra,0x6
-    80200328:	8ec080e7          	jalr	-1812(ra) # 80205c10 <strcmp>
+    80200324:	00005097          	auipc	ra,0x5
+    80200328:	51c080e7          	jalr	1308(ra) # 80205840 <strcmp>
     8020032c:	87aa                	mv	a5,a0
     8020032e:	e791                	bnez	a5,8020033a <console+0x1ce>
             print_proc_table();
     80200330:	00005097          	auipc	ra,0x5
-    80200334:	6f0080e7          	jalr	1776(ra) # 80205a20 <print_proc_table>
+    80200334:	320080e7          	jalr	800(ra) # 80205650 <print_proc_table>
     80200338:	aa41                	j	802004c8 <console+0x35c>
             int found = 0;
     8020033a:	fe042023          	sw	zero,-32(s0)
@@ -361,8 +361,8 @@ void console(void) {
     8020035c:	ed040793          	addi	a5,s0,-304
     80200360:	85ba                	mv	a1,a4
     80200362:	853e                	mv	a0,a5
-    80200364:	00006097          	auipc	ra,0x6
-    80200368:	8ac080e7          	jalr	-1876(ra) # 80205c10 <strcmp>
+    80200364:	00005097          	auipc	ra,0x5
+    80200368:	4dc080e7          	jalr	1244(ra) # 80205840 <strcmp>
     8020036c:	87aa                	mv	a5,a0
     8020036e:	12079063          	bnez	a5,8020048e <console+0x322>
                     int pid = create_kernel_proc(command_table[i].func);
@@ -377,7 +377,7 @@ void console(void) {
     80200388:	679c                	ld	a5,8(a5)
     8020038a:	853e                	mv	a0,a5
     8020038c:	00005097          	auipc	ra,0x5
-    80200390:	e1a080e7          	jalr	-486(ra) # 802051a6 <create_kernel_proc>
+    80200390:	a4a080e7          	jalr	-1462(ra) # 80204dd6 <create_kernel_proc>
     80200394:	87aa                	mv	a5,a0
     80200396:	fcf42c23          	sw	a5,-40(s0)
                     if (pid < 0) {
@@ -421,7 +421,7 @@ void console(void) {
     80200400:	ecc40793          	addi	a5,s0,-308
     80200404:	853e                	mv	a0,a5
     80200406:	00005097          	auipc	ra,0x5
-    8020040a:	430080e7          	jalr	1072(ra) # 80205836 <wait_proc>
+    8020040a:	060080e7          	jalr	96(ra) # 80205466 <wait_proc>
     8020040e:	87aa                	mv	a5,a0
     80200410:	fcf42a23          	sw	a5,-44(s0)
                         if (waited_pid == pid) {
@@ -521,7 +521,7 @@ void kernel_main(void){
     802004fc:	00000517          	auipc	a0,0x0
     80200500:	c7050513          	addi	a0,a0,-912 # 8020016c <console>
     80200504:	00005097          	auipc	ra,0x5
-    80200508:	ca2080e7          	jalr	-862(ra) # 802051a6 <create_kernel_proc>
+    80200508:	8d2080e7          	jalr	-1838(ra) # 80204dd6 <create_kernel_proc>
     8020050c:	87aa                	mv	a5,a0
     8020050e:	fef42623          	sw	a5,-20(s0)
 	if (console_pid < 0){
@@ -545,7 +545,7 @@ void kernel_main(void){
     80200544:	fe440793          	addi	a5,s0,-28
     80200548:	853e                	mv	a0,a5
     8020054a:	00005097          	auipc	ra,0x5
-    8020054e:	2ec080e7          	jalr	748(ra) # 80205836 <wait_proc>
+    8020054e:	f1c080e7          	jalr	-228(ra) # 80205466 <wait_proc>
     80200552:	87aa                	mv	a5,a0
     80200554:	fef42423          	sw	a5,-24(s0)
 	if(pid != console_pid){
@@ -776,7 +776,7 @@ void uart_intr(void) {
     80200724:	a8b5                	j	802007a0 <uart_intr+0xbc>
                 int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
     80200726:	0000c797          	auipc	a5,0xc
-    8020072a:	9aa78793          	addi	a5,a5,-1622 # 8020c0d0 <uart_input_buf>
+    8020072a:	9ba78793          	addi	a5,a5,-1606 # 8020c0e0 <uart_input_buf>
     8020072e:	0847a783          	lw	a5,132(a5)
     80200732:	2785                	addiw	a5,a5,1
     80200734:	2781                	sext.w	a5,a5
@@ -785,21 +785,21 @@ void uart_intr(void) {
     8020073c:	fef42023          	sw	a5,-32(s0)
                 if (next != uart_input_buf.r) {
     80200740:	0000c797          	auipc	a5,0xc
-    80200744:	99078793          	addi	a5,a5,-1648 # 8020c0d0 <uart_input_buf>
+    80200744:	9a078793          	addi	a5,a5,-1632 # 8020c0e0 <uart_input_buf>
     80200748:	0807a703          	lw	a4,128(a5)
     8020074c:	fe042783          	lw	a5,-32(s0)
     80200750:	04f70363          	beq	a4,a5,80200796 <uart_intr+0xb2>
                     uart_input_buf.buf[uart_input_buf.w] = linebuf[i];
     80200754:	0000c797          	auipc	a5,0xc
-    80200758:	97c78793          	addi	a5,a5,-1668 # 8020c0d0 <uart_input_buf>
+    80200758:	98c78793          	addi	a5,a5,-1652 # 8020c0e0 <uart_input_buf>
     8020075c:	0847a603          	lw	a2,132(a5)
     80200760:	0000c717          	auipc	a4,0xc
-    80200764:	a0070713          	addi	a4,a4,-1536 # 8020c160 <linebuf.1>
+    80200764:	a1070713          	addi	a4,a4,-1520 # 8020c170 <linebuf.1>
     80200768:	fec42783          	lw	a5,-20(s0)
     8020076c:	97ba                	add	a5,a5,a4
     8020076e:	0007c703          	lbu	a4,0(a5)
     80200772:	0000c697          	auipc	a3,0xc
-    80200776:	95e68693          	addi	a3,a3,-1698 # 8020c0d0 <uart_input_buf>
+    80200776:	96e68693          	addi	a3,a3,-1682 # 8020c0e0 <uart_input_buf>
     8020077a:	02061793          	slli	a5,a2,0x20
     8020077e:	9381                	srli	a5,a5,0x20
     80200780:	97b6                	add	a5,a5,a3
@@ -807,14 +807,14 @@ void uart_intr(void) {
                     uart_input_buf.w = next;
     80200786:	fe042703          	lw	a4,-32(s0)
     8020078a:	0000c797          	auipc	a5,0xc
-    8020078e:	94678793          	addi	a5,a5,-1722 # 8020c0d0 <uart_input_buf>
+    8020078e:	95678793          	addi	a5,a5,-1706 # 8020c0e0 <uart_input_buf>
     80200792:	08e7a223          	sw	a4,132(a5)
             for (int i = 0; i < line_len; i++) {
     80200796:	fec42783          	lw	a5,-20(s0)
     8020079a:	2785                	addiw	a5,a5,1
     8020079c:	fef42623          	sw	a5,-20(s0)
     802007a0:	0000c797          	auipc	a5,0xc
-    802007a4:	a4078793          	addi	a5,a5,-1472 # 8020c1e0 <line_len.0>
+    802007a4:	a5078793          	addi	a5,a5,-1456 # 8020c1f0 <line_len.0>
     802007a8:	4398                	lw	a4,0(a5)
     802007aa:	fec42783          	lw	a5,-20(s0)
     802007ae:	2781                	sext.w	a5,a5
@@ -824,7 +824,7 @@ void uart_intr(void) {
             // 写入换行符
             int next = (uart_input_buf.w + 1) % INPUT_BUF_SIZE;
     802007b4:	0000c797          	auipc	a5,0xc
-    802007b8:	91c78793          	addi	a5,a5,-1764 # 8020c0d0 <uart_input_buf>
+    802007b8:	92c78793          	addi	a5,a5,-1748 # 8020c0e0 <uart_input_buf>
     802007bc:	0847a783          	lw	a5,132(a5)
     802007c0:	2785                	addiw	a5,a5,1
     802007c2:	2781                	sext.w	a5,a5
@@ -833,16 +833,16 @@ void uart_intr(void) {
     802007ca:	fef42223          	sw	a5,-28(s0)
             if (next != uart_input_buf.r) {
     802007ce:	0000c797          	auipc	a5,0xc
-    802007d2:	90278793          	addi	a5,a5,-1790 # 8020c0d0 <uart_input_buf>
+    802007d2:	91278793          	addi	a5,a5,-1774 # 8020c0e0 <uart_input_buf>
     802007d6:	0807a703          	lw	a4,128(a5)
     802007da:	fe442783          	lw	a5,-28(s0)
     802007de:	02f70a63          	beq	a4,a5,80200812 <uart_intr+0x12e>
                 uart_input_buf.buf[uart_input_buf.w] = '\n';
     802007e2:	0000c797          	auipc	a5,0xc
-    802007e6:	8ee78793          	addi	a5,a5,-1810 # 8020c0d0 <uart_input_buf>
+    802007e6:	8fe78793          	addi	a5,a5,-1794 # 8020c0e0 <uart_input_buf>
     802007ea:	0847a783          	lw	a5,132(a5)
     802007ee:	0000c717          	auipc	a4,0xc
-    802007f2:	8e270713          	addi	a4,a4,-1822 # 8020c0d0 <uart_input_buf>
+    802007f2:	8f270713          	addi	a4,a4,-1806 # 8020c0e0 <uart_input_buf>
     802007f6:	1782                	slli	a5,a5,0x20
     802007f8:	9381                	srli	a5,a5,0x20
     802007fa:	97ba                	add	a5,a5,a4
@@ -851,12 +851,12 @@ void uart_intr(void) {
                 uart_input_buf.w = next;
     80200802:	fe442703          	lw	a4,-28(s0)
     80200806:	0000c797          	auipc	a5,0xc
-    8020080a:	8ca78793          	addi	a5,a5,-1846 # 8020c0d0 <uart_input_buf>
+    8020080a:	8da78793          	addi	a5,a5,-1830 # 8020c0e0 <uart_input_buf>
     8020080e:	08e7a223          	sw	a4,132(a5)
             }
             line_len = 0;
     80200812:	0000c797          	auipc	a5,0xc
-    80200816:	9ce78793          	addi	a5,a5,-1586 # 8020c1e0 <line_len.0>
+    80200816:	9de78793          	addi	a5,a5,-1570 # 8020c1f0 <line_len.0>
     8020081a:	0007a023          	sw	zero,0(a5)
         if (c == '\r' || c == '\n') {
     8020081e:	a86d                	j	802008d8 <uart_intr+0x1f4>
@@ -871,7 +871,7 @@ void uart_intr(void) {
     8020083a:	04f71763          	bne	a4,a5,80200888 <uart_intr+0x1a4>
             if (line_len > 0) {
     8020083e:	0000c797          	auipc	a5,0xc
-    80200842:	9a278793          	addi	a5,a5,-1630 # 8020c1e0 <line_len.0>
+    80200842:	9b278793          	addi	a5,a5,-1614 # 8020c1f0 <line_len.0>
     80200846:	439c                	lw	a5,0(a5)
     80200848:	08f05863          	blez	a5,802008d8 <uart_intr+0x1f4>
                 uart_putc('\b');
@@ -888,19 +888,19 @@ void uart_intr(void) {
     80200868:	d8e080e7          	jalr	-626(ra) # 802005f2 <uart_putc>
                 line_len--;
     8020086c:	0000c797          	auipc	a5,0xc
-    80200870:	97478793          	addi	a5,a5,-1676 # 8020c1e0 <line_len.0>
+    80200870:	98478793          	addi	a5,a5,-1660 # 8020c1f0 <line_len.0>
     80200874:	439c                	lw	a5,0(a5)
     80200876:	37fd                	addiw	a5,a5,-1
     80200878:	0007871b          	sext.w	a4,a5
     8020087c:	0000c797          	auipc	a5,0xc
-    80200880:	96478793          	addi	a5,a5,-1692 # 8020c1e0 <line_len.0>
+    80200880:	97478793          	addi	a5,a5,-1676 # 8020c1f0 <line_len.0>
     80200884:	c398                	sw	a4,0(a5)
             if (line_len > 0) {
     80200886:	a889                	j	802008d8 <uart_intr+0x1f4>
             }
         } else if (line_len < LINE_BUF_SIZE - 1) {
     80200888:	0000c797          	auipc	a5,0xc
-    8020088c:	95878793          	addi	a5,a5,-1704 # 8020c1e0 <line_len.0>
+    8020088c:	96878793          	addi	a5,a5,-1688 # 8020c1f0 <line_len.0>
     80200890:	439c                	lw	a5,0(a5)
     80200892:	873e                	mv	a4,a5
     80200894:	07e00793          	li	a5,126
@@ -912,15 +912,15 @@ void uart_intr(void) {
     802008a6:	d50080e7          	jalr	-688(ra) # 802005f2 <uart_putc>
             linebuf[line_len++] = c;
     802008aa:	0000c797          	auipc	a5,0xc
-    802008ae:	93678793          	addi	a5,a5,-1738 # 8020c1e0 <line_len.0>
+    802008ae:	94678793          	addi	a5,a5,-1722 # 8020c1f0 <line_len.0>
     802008b2:	439c                	lw	a5,0(a5)
     802008b4:	0017871b          	addiw	a4,a5,1
     802008b8:	0007069b          	sext.w	a3,a4
     802008bc:	0000c717          	auipc	a4,0xc
-    802008c0:	92470713          	addi	a4,a4,-1756 # 8020c1e0 <line_len.0>
+    802008c0:	93470713          	addi	a4,a4,-1740 # 8020c1f0 <line_len.0>
     802008c4:	c314                	sw	a3,0(a4)
     802008c6:	0000c717          	auipc	a4,0xc
-    802008ca:	89a70713          	addi	a4,a4,-1894 # 8020c160 <linebuf.1>
+    802008ca:	8aa70713          	addi	a4,a4,-1878 # 8020c170 <linebuf.1>
     802008ce:	97ba                	add	a5,a5,a4
     802008d0:	feb44703          	lbu	a4,-21(s0)
     802008d4:	00e78023          	sb	a4,0(a5)
@@ -958,10 +958,10 @@ char uart_getc_blocking(void) {
     80200904:	0001                	nop
     while (uart_input_buf.r == uart_input_buf.w) {
     80200906:	0000b797          	auipc	a5,0xb
-    8020090a:	7ca78793          	addi	a5,a5,1994 # 8020c0d0 <uart_input_buf>
+    8020090a:	7da78793          	addi	a5,a5,2010 # 8020c0e0 <uart_input_buf>
     8020090e:	0807a703          	lw	a4,128(a5)
     80200912:	0000b797          	auipc	a5,0xb
-    80200916:	7be78793          	addi	a5,a5,1982 # 8020c0d0 <uart_input_buf>
+    80200916:	7ce78793          	addi	a5,a5,1998 # 8020c0e0 <uart_input_buf>
     8020091a:	0847a783          	lw	a5,132(a5)
     8020091e:	fef703e3          	beq	a4,a5,80200904 <uart_getc_blocking+0x8>
     }
@@ -969,10 +969,10 @@ char uart_getc_blocking(void) {
     // 读取字符
     char c = uart_input_buf.buf[uart_input_buf.r];
     80200922:	0000b797          	auipc	a5,0xb
-    80200926:	7ae78793          	addi	a5,a5,1966 # 8020c0d0 <uart_input_buf>
+    80200926:	7be78793          	addi	a5,a5,1982 # 8020c0e0 <uart_input_buf>
     8020092a:	0807a783          	lw	a5,128(a5)
     8020092e:	0000b717          	auipc	a4,0xb
-    80200932:	7a270713          	addi	a4,a4,1954 # 8020c0d0 <uart_input_buf>
+    80200932:	7b270713          	addi	a4,a4,1970 # 8020c0e0 <uart_input_buf>
     80200936:	1782                	slli	a5,a5,0x20
     80200938:	9381                	srli	a5,a5,0x20
     8020093a:	97ba                	add	a5,a5,a4
@@ -980,14 +980,14 @@ char uart_getc_blocking(void) {
     80200940:	fef407a3          	sb	a5,-17(s0)
     uart_input_buf.r = (uart_input_buf.r + 1) % INPUT_BUF_SIZE;
     80200944:	0000b797          	auipc	a5,0xb
-    80200948:	78c78793          	addi	a5,a5,1932 # 8020c0d0 <uart_input_buf>
+    80200948:	79c78793          	addi	a5,a5,1948 # 8020c0e0 <uart_input_buf>
     8020094c:	0807a783          	lw	a5,128(a5)
     80200950:	2785                	addiw	a5,a5,1
     80200952:	2781                	sext.w	a5,a5
     80200954:	07f7f793          	andi	a5,a5,127
     80200958:	0007871b          	sext.w	a4,a5
     8020095c:	0000b797          	auipc	a5,0xb
-    80200960:	77478793          	addi	a5,a5,1908 # 8020c0d0 <uart_input_buf>
+    80200960:	78478793          	addi	a5,a5,1924 # 8020c0e0 <uart_input_buf>
     80200964:	08e7a023          	sw	a4,128(a5)
     return c;
     80200968:	fef44783          	lbu	a5,-17(s0)
@@ -1082,25 +1082,25 @@ static void flush_printf_buffer(void) {
     80200a14:	0800                	addi	s0,sp,16
 	if (printf_buf_pos > 0) {
     80200a16:	0000c797          	auipc	a5,0xc
-    80200a1a:	85278793          	addi	a5,a5,-1966 # 8020c268 <printf_buf_pos>
+    80200a1a:	86278793          	addi	a5,a5,-1950 # 8020c278 <printf_buf_pos>
     80200a1e:	439c                	lw	a5,0(a5)
     80200a20:	02f05c63          	blez	a5,80200a58 <flush_printf_buffer+0x4a>
 		printf_buffer[printf_buf_pos] = '\0'; // Null-terminate the string
     80200a24:	0000c797          	auipc	a5,0xc
-    80200a28:	84478793          	addi	a5,a5,-1980 # 8020c268 <printf_buf_pos>
+    80200a28:	85478793          	addi	a5,a5,-1964 # 8020c278 <printf_buf_pos>
     80200a2c:	439c                	lw	a5,0(a5)
     80200a2e:	0000b717          	auipc	a4,0xb
-    80200a32:	7ba70713          	addi	a4,a4,1978 # 8020c1e8 <printf_buffer>
+    80200a32:	7ca70713          	addi	a4,a4,1994 # 8020c1f8 <printf_buffer>
     80200a36:	97ba                	add	a5,a5,a4
     80200a38:	00078023          	sb	zero,0(a5)
 		uart_puts(printf_buffer); // Send the buffer to UART
     80200a3c:	0000b517          	auipc	a0,0xb
-    80200a40:	7ac50513          	addi	a0,a0,1964 # 8020c1e8 <printf_buffer>
+    80200a40:	7bc50513          	addi	a0,a0,1980 # 8020c1f8 <printf_buffer>
     80200a44:	00000097          	auipc	ra,0x0
     80200a48:	be8080e7          	jalr	-1048(ra) # 8020062c <uart_puts>
 		printf_buf_pos = 0; // Reset buffer position
     80200a4c:	0000c797          	auipc	a5,0xc
-    80200a50:	81c78793          	addi	a5,a5,-2020 # 8020c268 <printf_buf_pos>
+    80200a50:	82c78793          	addi	a5,a5,-2004 # 8020c278 <printf_buf_pos>
     80200a54:	0007a023          	sw	zero,0(a5)
 	}
 }
@@ -1119,23 +1119,23 @@ static void buffer_char(char c) {
     80200a6a:	87aa                	mv	a5,a0
     80200a6c:	fef407a3          	sb	a5,-17(s0)
 	if (printf_buf_pos < PRINTF_BUFFER_SIZE - 1) { // Leave space for null terminator
-    80200a70:	0000b797          	auipc	a5,0xb
-    80200a74:	7f878793          	addi	a5,a5,2040 # 8020c268 <printf_buf_pos>
+    80200a70:	0000c797          	auipc	a5,0xc
+    80200a74:	80878793          	addi	a5,a5,-2040 # 8020c278 <printf_buf_pos>
     80200a78:	439c                	lw	a5,0(a5)
     80200a7a:	873e                	mv	a4,a5
     80200a7c:	07e00793          	li	a5,126
     80200a80:	02e7ca63          	blt	a5,a4,80200ab4 <buffer_char+0x52>
 		printf_buffer[printf_buf_pos++] = c;
     80200a84:	0000b797          	auipc	a5,0xb
-    80200a88:	7e478793          	addi	a5,a5,2020 # 8020c268 <printf_buf_pos>
+    80200a88:	7f478793          	addi	a5,a5,2036 # 8020c278 <printf_buf_pos>
     80200a8c:	439c                	lw	a5,0(a5)
     80200a8e:	0017871b          	addiw	a4,a5,1
     80200a92:	0007069b          	sext.w	a3,a4
     80200a96:	0000b717          	auipc	a4,0xb
-    80200a9a:	7d270713          	addi	a4,a4,2002 # 8020c268 <printf_buf_pos>
+    80200a9a:	7e270713          	addi	a4,a4,2018 # 8020c278 <printf_buf_pos>
     80200a9e:	c314                	sw	a3,0(a4)
     80200aa0:	0000b717          	auipc	a4,0xb
-    80200aa4:	74870713          	addi	a4,a4,1864 # 8020c1e8 <printf_buffer>
+    80200aa4:	75870713          	addi	a4,a4,1880 # 8020c1f8 <printf_buffer>
     80200aa8:	97ba                	add	a5,a5,a4
     80200aaa:	fef44703          	lbu	a4,-17(s0)
     80200aae:	00e78023          	sb	a4,0(a5)
@@ -1150,15 +1150,15 @@ static void buffer_char(char c) {
     80200ab8:	f5a080e7          	jalr	-166(ra) # 80200a0e <flush_printf_buffer>
 		printf_buffer[printf_buf_pos++] = c; // Add the character after flushing
     80200abc:	0000b797          	auipc	a5,0xb
-    80200ac0:	7ac78793          	addi	a5,a5,1964 # 8020c268 <printf_buf_pos>
+    80200ac0:	7bc78793          	addi	a5,a5,1980 # 8020c278 <printf_buf_pos>
     80200ac4:	439c                	lw	a5,0(a5)
     80200ac6:	0017871b          	addiw	a4,a5,1
     80200aca:	0007069b          	sext.w	a3,a4
     80200ace:	0000b717          	auipc	a4,0xb
-    80200ad2:	79a70713          	addi	a4,a4,1946 # 8020c268 <printf_buf_pos>
+    80200ad2:	7aa70713          	addi	a4,a4,1962 # 8020c278 <printf_buf_pos>
     80200ad6:	c314                	sw	a3,0(a4)
     80200ad8:	0000b717          	auipc	a4,0xb
-    80200adc:	71070713          	addi	a4,a4,1808 # 8020c1e8 <printf_buffer>
+    80200adc:	72070713          	addi	a4,a4,1824 # 8020c1f8 <printf_buffer>
     80200ae0:	97ba                	add	a5,a5,a4
     80200ae2:	fef44703          	lbu	a4,-17(s0)
     80200ae6:	00e78023          	sb	a4,0(a5)
@@ -2581,7 +2581,7 @@ void test_printf_precision(void) {
 	clear_screen();
     80201778:	00000097          	auipc	ra,0x0
     8020177c:	a22080e7          	jalr	-1502(ra) # 8020119a <clear_screen>
-    printf("=== 详细的Printf测试 ===\n");
+    printf("=== 详细的printf测试 ===\n");
     80201780:	00006517          	auipc	a0,0x6
     80201784:	d5050513          	addi	a0,a0,-688 # 802074d0 <etext+0x4d0>
     80201788:	fffff097          	auipc	ra,0xfffff
@@ -2828,7 +2828,7 @@ void test_printf_precision(void) {
     80201a46:	f5650513          	addi	a0,a0,-170 # 80207998 <etext+0x998>
     80201a4a:	fffff097          	auipc	ra,0xfffff
     80201a4e:	238080e7          	jalr	568(ra) # 80200c82 <printf>
-	printf("=== Printf测试结束 ===\n");
+	printf("=== printf测试结束 ===\n");
     80201a52:	00006517          	auipc	a0,0x6
     80201a56:	f5e50513          	addi	a0,a0,-162 # 802079b0 <etext+0x9b0>
     80201a5a:	fffff097          	auipc	ra,0xfffff
@@ -2876,7 +2876,7 @@ void test_curse_move(){
     80201abc:	1ca080e7          	jalr	458(ra) # 80200c82 <printf>
 		for (int j = 1; j <= 10; j++) {
     80201ac0:	fe842783          	lw	a5,-24(s0)
-    80201ac4:	2785                	addiw	a5,a5,1 # ffffffff80000001 <_bss_end+0xfffffffeffdf36f1>
+    80201ac4:	2785                	addiw	a5,a5,1 # ffffffff80000001 <_bss_end+0xfffffffeffdf36e1>
     80201ac6:	fef42423          	sw	a5,-24(s0)
     80201aca:	fe842783          	lw	a5,-24(s0)
     80201ace:	0007871b          	sext.w	a4,a5
@@ -3315,7 +3315,7 @@ void *memcpy(void *dst, const void *src, size_t n) {
     80201f8c:	fec42783          	lw	a5,-20(s0)
     80201f90:	2781                	sext.w	a5,a5
     80201f92:	e79d                	bnez	a5,80201fc0 <assert+0x42>
-    80201f94:	19d00613          	li	a2,413
+    80201f94:	19900613          	li	a2,409
     80201f98:	00006597          	auipc	a1,0x6
     80201f9c:	c5058593          	addi	a1,a1,-944 # 80207be8 <etext+0xbe8>
     80201fa0:	00006517          	auipc	a0,0x6
@@ -3669,8 +3669,8 @@ int map_page(pagetable_t pt, uint64 va, uint64 pa, int perm) {
     802022ec:	87b6                	mv	a5,a3
     802022ee:	faf42a23          	sw	a5,-76(s0)
     struct proc *p = myproc();
-    802022f2:	00003097          	auipc	ra,0x3
-    802022f6:	882080e7          	jalr	-1918(ra) # 80204b74 <myproc>
+    802022f2:	00002097          	auipc	ra,0x2
+    802022f6:	4b2080e7          	jalr	1202(ra) # 802047a4 <myproc>
     802022fa:	fea43023          	sd	a0,-32(s0)
     if (p && p->is_user && va >= 0x80000000) {
     802022fe:	fe043783          	ld	a5,-32(s0)
@@ -3690,7 +3690,7 @@ int map_page(pagetable_t pt, uint64 va, uint64 pa, int perm) {
         exit_proc(-1);
     8020232e:	557d                	li	a0,-1
     80202330:	00003097          	auipc	ra,0x3
-    80202334:	434080e7          	jalr	1076(ra) # 80205764 <exit_proc>
+    80202334:	064080e7          	jalr	100(ra) # 80205394 <exit_proc>
     if ((va % PGSIZE) != 0)
     80202338:	fc043703          	ld	a4,-64(s0)
     8020233c:	6785                	lui	a5,0x1
@@ -3829,7 +3829,7 @@ void free_pagetable(pagetable_t pt) {
     80202488:	078e                	slli	a5,a5,0x3
     8020248a:	fc843703          	ld	a4,-56(s0)
     8020248e:	97ba                	add	a5,a5,a4
-    80202490:	0007b023          	sd	zero,0(a5) # ffffffff80000000 <_bss_end+0xfffffffeffdf36f0>
+    80202490:	0007b023          	sd	zero,0(a5) # ffffffff80000000 <_bss_end+0xfffffffeffdf36e0>
         if ((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0) {
     80202494:	a00d                	j	802024b6 <free_pagetable+0x7e>
         } else if ((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X))) {
@@ -4017,7 +4017,7 @@ static pagetable_t kvmmake(void) {
 	memcpy(tramp_phys, trampoline, PGSIZE);
     8020268a:	6605                	lui	a2,0x1
     8020268c:	00002597          	auipc	a1,0x2
-    80202690:	29458593          	addi	a1,a1,660 # 80204920 <trampoline>
+    80202690:	ec458593          	addi	a1,a1,-316 # 80204550 <trampoline>
     80202694:	fc043503          	ld	a0,-64(s0)
     80202698:	00000097          	auipc	ra,0x0
     8020269c:	880080e7          	jalr	-1920(ra) # 80201f18 <memcpy>
@@ -4072,16 +4072,16 @@ static pagetable_t kvmmake(void) {
 	trampoline_phys_addr = (uint64)tramp_phys;
     80202726:	fc043703          	ld	a4,-64(s0)
     8020272a:	0000a797          	auipc	a5,0xa
-    8020272e:	97e78793          	addi	a5,a5,-1666 # 8020c0a8 <trampoline_phys_addr>
+    8020272e:	98e78793          	addi	a5,a5,-1650 # 8020c0b8 <trampoline_phys_addr>
     80202732:	e398                	sd	a4,0(a5)
 	trapframe_phys_addr = (uint64)trapframe_phys;
     80202734:	fb843703          	ld	a4,-72(s0)
     80202738:	0000a797          	auipc	a5,0xa
-    8020273c:	97878793          	addi	a5,a5,-1672 # 8020c0b0 <trapframe_phys_addr>
+    8020273c:	98878793          	addi	a5,a5,-1656 # 8020c0c0 <trapframe_phys_addr>
     80202740:	e398                	sd	a4,0(a5)
 	printf("trampoline_phy_addr = %lx\n",trampoline_phys_addr);
     80202742:	0000a797          	auipc	a5,0xa
-    80202746:	96678793          	addi	a5,a5,-1690 # 8020c0a8 <trampoline_phys_addr>
+    80202746:	97678793          	addi	a5,a5,-1674 # 8020c0b8 <trampoline_phys_addr>
     8020274a:	639c                	ld	a5,0(a5)
     8020274c:	85be                	mv	a1,a5
     8020274e:	00005517          	auipc	a0,0x5
@@ -4090,7 +4090,7 @@ static pagetable_t kvmmake(void) {
     8020275a:	52c080e7          	jalr	1324(ra) # 80200c82 <printf>
 	printf("trapframe_phys_addr = %lx\n",trapframe_phys_addr);
     8020275e:	0000a797          	auipc	a5,0xa
-    80202762:	95278793          	addi	a5,a5,-1710 # 8020c0b0 <trapframe_phys_addr>
+    80202762:	96278793          	addi	a5,a5,-1694 # 8020c0c0 <trapframe_phys_addr>
     80202766:	639c                	ld	a5,0(a5)
     80202768:	85be                	mv	a1,a5
     8020276a:	00005517          	auipc	a0,0x5
@@ -4145,14 +4145,14 @@ void kvminit(void) {
     802027c0:	d2a080e7          	jalr	-726(ra) # 802024e6 <kvmmake>
     802027c4:	872a                	mv	a4,a0
     802027c6:	0000a797          	auipc	a5,0xa
-    802027ca:	8da78793          	addi	a5,a5,-1830 # 8020c0a0 <kernel_pagetable>
+    802027ca:	8ea78793          	addi	a5,a5,-1814 # 8020c0b0 <kernel_pagetable>
     802027ce:	e398                	sd	a4,0(a5)
     sfence_vma();
     802027d0:	00000097          	auipc	ra,0x0
     802027d4:	fd2080e7          	jalr	-46(ra) # 802027a2 <sfence_vma>
     w_satp(MAKE_SATP(kernel_pagetable));
     802027d8:	0000a797          	auipc	a5,0xa
-    802027dc:	8c878793          	addi	a5,a5,-1848 # 8020c0a0 <kernel_pagetable>
+    802027dc:	8d878793          	addi	a5,a5,-1832 # 8020c0b0 <kernel_pagetable>
     802027e0:	639c                	ld	a5,0(a5)
     802027e2:	00c7d713          	srli	a4,a5,0xc
     802027e6:	57fd                	li	a5,-1
@@ -4166,7 +4166,7 @@ void kvminit(void) {
     802027fa:	fac080e7          	jalr	-84(ra) # 802027a2 <sfence_vma>
     printf("[KVM] 内核分页已启用，satp=0x%lx\n", MAKE_SATP(kernel_pagetable));
     802027fe:	0000a797          	auipc	a5,0xa
-    80202802:	8a278793          	addi	a5,a5,-1886 # 8020c0a0 <kernel_pagetable>
+    80202802:	8b278793          	addi	a5,a5,-1870 # 8020c0b0 <kernel_pagetable>
     80202806:	639c                	ld	a5,0(a5)
     80202808:	00c7d713          	srli	a4,a5,0xc
     8020280c:	57fd                	li	a5,-1
@@ -4191,7 +4191,7 @@ pagetable_t get_current_pagetable(void) {
     80202832:	0800                	addi	s0,sp,16
     return kernel_pagetable;  // 在没有进程时返回内核页表
     80202834:	0000a797          	auipc	a5,0xa
-    80202838:	86c78793          	addi	a5,a5,-1940 # 8020c0a0 <kernel_pagetable>
+    80202838:	87c78793          	addi	a5,a5,-1924 # 8020c0b0 <kernel_pagetable>
     8020283c:	639c                	ld	a5,0(a5)
 }
     8020283e:	853e                	mv	a0,a5
@@ -4341,11 +4341,11 @@ int handle_page_fault(uint64 va, int type) {
     802029b2:	aae9                	j	80202b8c <handle_page_fault+0x230>
     struct proc *p = myproc();
     802029b4:	00002097          	auipc	ra,0x2
-    802029b8:	1c0080e7          	jalr	448(ra) # 80204b74 <myproc>
+    802029b8:	df0080e7          	jalr	-528(ra) # 802047a4 <myproc>
     802029bc:	fca43823          	sd	a0,-48(s0)
     pagetable_t pt = kernel_pagetable;
     802029c0:	00009797          	auipc	a5,0x9
-    802029c4:	6e078793          	addi	a5,a5,1760 # 8020c0a0 <kernel_pagetable>
+    802029c4:	6f078793          	addi	a5,a5,1776 # 8020c0b0 <kernel_pagetable>
     802029c8:	639c                	ld	a5,0(a5)
     802029ca:	fef43423          	sd	a5,-24(s0)
     if (p && p->pagetable && p->is_user) {
@@ -4856,7 +4856,7 @@ void check_mapping(uint64 va) {
     80202f1e:	fca43c23          	sd	a0,-40(s0)
     pte_t *pte = walk_lookup(kernel_pagetable, va);
     80202f22:	00009797          	auipc	a5,0x9
-    80202f26:	17e78793          	addi	a5,a5,382 # 8020c0a0 <kernel_pagetable>
+    80202f26:	18e78793          	addi	a5,a5,398 # 8020c0b0 <kernel_pagetable>
     80202f2a:	639c                	ld	a5,0(a5)
     80202f2c:	fd843583          	ld	a1,-40(s0)
     80202f30:	853e                	mv	a0,a5
@@ -5073,7 +5073,7 @@ int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz) {
     80203142:	fec42783          	lw	a5,-20(s0)
     80203146:	2781                	sext.w	a5,a5
     80203148:	e79d                	bnez	a5,80203176 <assert+0x42>
-    8020314a:	18f00613          	li	a2,399
+    8020314a:	19900613          	li	a2,409
     8020314e:	00005597          	auipc	a1,0x5
     80203152:	1c258593          	addi	a1,a1,450 # 80208310 <etext+0x1310>
     80203156:	00005517          	auipc	a0,0x5
@@ -5140,7 +5140,7 @@ void pmm_init(void) {
     802031e0:	47c5                	li	a5,17
     802031e2:	01b79593          	slli	a1,a5,0x1b
     802031e6:	00009517          	auipc	a0,0x9
-    802031ea:	72a50513          	addi	a0,a0,1834 # 8020c910 <_bss_end>
+    802031ea:	73a50513          	addi	a0,a0,1850 # 8020c920 <_bss_end>
     802031ee:	00000097          	auipc	ra,0x0
     802031f2:	f92080e7          	jalr	-110(ra) # 80203180 <freerange>
 }
@@ -5158,7 +5158,7 @@ void* alloc_page(void) {
     80203206:	1000                	addi	s0,sp,32
   struct run *r = freelist;
     80203208:	00009797          	auipc	a5,0x9
-    8020320c:	06878793          	addi	a5,a5,104 # 8020c270 <freelist>
+    8020320c:	07878793          	addi	a5,a5,120 # 8020c280 <freelist>
     80203210:	639c                	ld	a5,0(a5)
     80203212:	fef43423          	sd	a5,-24(s0)
   if(r)
@@ -5168,7 +5168,7 @@ void* alloc_page(void) {
     8020321c:	fe843783          	ld	a5,-24(s0)
     80203220:	6398                	ld	a4,0(a5)
     80203222:	00009797          	auipc	a5,0x9
-    80203226:	04e78793          	addi	a5,a5,78 # 8020c270 <freelist>
+    80203226:	05e78793          	addi	a5,a5,94 # 8020c280 <freelist>
     8020322a:	e398                	sd	a4,0(a5)
   if(r)
     8020322c:	fe843783          	ld	a5,-24(s0)
@@ -5215,7 +5215,7 @@ void free_page(void* page) {
     8020328a:	ef99                	bnez	a5,802032a8 <free_page+0x3c>
     8020328c:	fd843703          	ld	a4,-40(s0)
     80203290:	00009797          	auipc	a5,0x9
-    80203294:	68078793          	addi	a5,a5,1664 # 8020c910 <_bss_end>
+    80203294:	69078793          	addi	a5,a5,1680 # 8020c920 <_bss_end>
     80203298:	00f76863          	bltu	a4,a5,802032a8 <free_page+0x3c>
     8020329c:	fd843703          	ld	a4,-40(s0)
     802032a0:	47c5                	li	a5,17
@@ -5228,13 +5228,13 @@ void free_page(void* page) {
     802032b4:	41e080e7          	jalr	1054(ra) # 802016ce <panic>
   r->next = freelist;
     802032b8:	00009797          	auipc	a5,0x9
-    802032bc:	fb878793          	addi	a5,a5,-72 # 8020c270 <freelist>
+    802032bc:	fc878793          	addi	a5,a5,-56 # 8020c280 <freelist>
     802032c0:	6398                	ld	a4,0(a5)
     802032c2:	fe843783          	ld	a5,-24(s0)
     802032c6:	e398                	sd	a4,0(a5)
   freelist = r;
     802032c8:	00009797          	auipc	a5,0x9
-    802032cc:	fa878793          	addi	a5,a5,-88 # 8020c270 <freelist>
+    802032cc:	fb878793          	addi	a5,a5,-72 # 8020c280 <freelist>
     802032d0:	fe843703          	ld	a4,-24(s0)
     802032d4:	e398                	sd	a4,0(a5)
 }
@@ -5442,12 +5442,12 @@ void timeintr(void){
     802034be:	0800                	addi	s0,sp,16
 	if (interrupt_test_flag)
     802034c0:	00009797          	auipc	a5,0x9
-    802034c4:	bf878793          	addi	a5,a5,-1032 # 8020c0b8 <interrupt_test_flag>
+    802034c4:	c1878793          	addi	a5,a5,-1000 # 8020c0d8 <interrupt_test_flag>
     802034c8:	639c                	ld	a5,0(a5)
     802034ca:	cb99                	beqz	a5,802034e0 <timeintr+0x26>
         (*interrupt_test_flag)++;
     802034cc:	00009797          	auipc	a5,0x9
-    802034d0:	bec78793          	addi	a5,a5,-1044 # 8020c0b8 <interrupt_test_flag>
+    802034d0:	c0c78793          	addi	a5,a5,-1012 # 8020c0d8 <interrupt_test_flag>
     802034d4:	639c                	ld	a5,0(a5)
     802034d6:	4398                	lw	a4,0(a5)
     802034d8:	2701                	sext.w	a4,a4
@@ -5460,119 +5460,119 @@ void timeintr(void){
     802034e6:	8082                	ret
 
 00000000802034e8 <r_sie>:
-    printf("Timer test completed: %d interrupts in %lu cycles\n", 
-           interrupt_count, end_time - start_time);
-}
-
-// 修改测试异常处理函数
-void test_exception(void) {
+            handle_external_interrupt();
+        } else {
+            printf("[usertrap] unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
+        }
+    } else {
+        struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };
     802034e8:	1101                	addi	sp,sp,-32
     802034ea:	ec22                	sd	s0,24(sp)
     802034ec:	1000                	addi	s0,sp,32
-    printf("\n===== 开始全面异常处理测试 =====\n\n");
-    
+        handle_exception(tf, &info);
+    }
     802034ee:	104027f3          	csrr	a5,sie
     802034f2:	fef43423          	sd	a5,-24(s0)
-    // 1. 测试非法指令异常
+
     802034f6:	fe843783          	ld	a5,-24(s0)
-    printf("1. 测试非法指令异常...\n");
+    usertrapret();
     802034fa:	853e                	mv	a0,a5
     802034fc:	6462                	ld	s0,24(sp)
     802034fe:	6105                	addi	sp,sp,32
     80203500:	8082                	ret
 
 0000000080203502 <w_sie>:
-    asm volatile (".word 0xffffffff");  // 非法RISC-V指令
-    printf("✓ 非法指令异常处理成功\n\n");
+}
+
     80203502:	1101                	addi	sp,sp,-32
     80203504:	ec22                	sd	s0,24(sp)
     80203506:	1000                	addi	s0,sp,32
     80203508:	fea43423          	sd	a0,-24(s0)
-    
+void usertrapret(void) {
     8020350c:	fe843783          	ld	a5,-24(s0)
     80203510:	10479073          	csrw	sie,a5
-    // 2. 测试存储页故障
+    struct proc *p = myproc();
     80203514:	0001                	nop
     80203516:	6462                	ld	s0,24(sp)
     80203518:	6105                	addi	sp,sp,32
     8020351a:	8082                	ret
 
 000000008020351c <r_sstatus>:
-    printf("2. 测试存储页故障异常...\n");
-    volatile uint64 *invalid_ptr = 0;
+
+    // 计算 trampoline 中 uservec 的虚拟地址（对双方页表一致）
     8020351c:	1101                	addi	sp,sp,-32
     8020351e:	ec22                	sd	s0,24(sp)
     80203520:	1000                	addi	s0,sp,32
-    for (uint64 addr = 0x90000000; addr < 0x98000000; addr += 0x1000) {
-        if (check_is_mapped(addr) == 0) {
+    uint64 uservec_va = (uint64)TRAMPOLINE + ((uint64)uservec - (uint64)trampoline);
+    w_stvec(uservec_va);
     80203522:	100027f3          	csrr	a5,sstatus
     80203526:	fef43423          	sd	a5,-24(s0)
-            invalid_ptr = (uint64*)addr;
+
     8020352a:	fe843783          	ld	a5,-24(s0)
-            printf("找到未映射地址: 0x%lx\n", addr);
+    // sscratch 设为 TRAPFRAME 的虚拟地址（trampoline 代码用它访问 tf）
     8020352e:	853e                	mv	a0,a5
     80203530:	6462                	ld	s0,24(sp)
     80203532:	6105                	addi	sp,sp,32
     80203534:	8082                	ret
 
 0000000080203536 <w_sstatus>:
-            break;
+    w_sscratch((uint64)TRAPFRAME);
     80203536:	1101                	addi	sp,sp,-32
     80203538:	ec22                	sd	s0,24(sp)
     8020353a:	1000                	addi	s0,sp,32
     8020353c:	fea43423          	sd	a0,-24(s0)
-        }
+
     80203540:	fe843783          	ld	a5,-24(s0)
     80203544:	10079073          	csrw	sstatus,a5
-    }
+    // 准备用户页表的 satp
     80203548:	0001                	nop
     8020354a:	6462                	ld	s0,24(sp)
     8020354c:	6105                	addi	sp,sp,32
     8020354e:	8082                	ret
 
 0000000080203550 <w_sscratch>:
-    
+    uint64 user_satp = MAKE_SATP(p->pagetable);
     80203550:	1101                	addi	sp,sp,-32
     80203552:	ec22                	sd	s0,24(sp)
     80203554:	1000                	addi	s0,sp,32
     80203556:	fea43423          	sd	a0,-24(s0)
-    if (invalid_ptr != 0) {
+
     8020355a:	fe843783          	ld	a5,-24(s0)
     8020355e:	14079073          	csrw	sscratch,a5
-        printf("尝试写入未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
+    // 计算 trampoline 中 userret 的虚拟地址
     80203562:	0001                	nop
     80203564:	6462                	ld	s0,24(sp)
     80203566:	6105                	addi	sp,sp,32
     80203568:	8082                	ret
 
 000000008020356a <w_sepc>:
-        *invalid_ptr = 42;  // 触发存储页故障
-        printf("✓ 存储页故障异常处理成功\n\n");
+    uint64 userret_va = (uint64)TRAMPOLINE + ((uint64)userret - (uint64)trampoline);
+
     8020356a:	1101                	addi	sp,sp,-32
     8020356c:	ec22                	sd	s0,24(sp)
     8020356e:	1000                	addi	s0,sp,32
     80203570:	fea43423          	sd	a0,-24(s0)
-    } else {
+    // a0 = TRAPFRAME（虚拟地址，双方页表都映射）
     80203574:	fe843783          	ld	a5,-24(s0)
     80203578:	14179073          	csrw	sepc,a5
-        printf("警告: 无法找到未映射地址进行测试!\n\n");
+    // a1 = user_satp
     8020357c:	0001                	nop
     8020357e:	6462                	ld	s0,24(sp)
     80203580:	6105                	addi	sp,sp,32
     80203582:	8082                	ret
 
 0000000080203584 <intr_off>:
-    }
-    
-    // 3. 测试加载页故障
-    printf("3. 测试加载页故障异常...\n");
-    invalid_ptr = 0;
-    for (uint64 addr = 0xA0000000; addr < 0xA8000000; addr += 0x1000) {
+    register uint64 a0 asm("a0") = (uint64)TRAPFRAME;
+    register uint64 a1 asm("a1") = user_satp;
+    register void (*tgt)(uint64, uint64) asm("t0") = (void *)userret_va;
+
+    // 跳到 trampoline 上的 userret
+    asm volatile("jr t0" :: "r"(a0), "r"(a1), "r"(tgt) : "memory");
     80203584:	1141                	addi	sp,sp,-16
     80203586:	e406                	sd	ra,8(sp)
     80203588:	e022                	sd	s0,0(sp)
     8020358a:	0800                	addi	s0,sp,16
-        if (check_is_mapped(addr) == 0) {
+}
     8020358c:	00000097          	auipc	ra,0x0
     80203590:	f90080e7          	jalr	-112(ra) # 8020351c <r_sstatus>
     80203594:	87aa                	mv	a5,a0
@@ -5580,7 +5580,6 @@ void test_exception(void) {
     80203598:	853e                	mv	a0,a5
     8020359a:	00000097          	auipc	ra,0x0
     8020359e:	f9c080e7          	jalr	-100(ra) # 80203536 <w_sstatus>
-            invalid_ptr = (uint64*)addr;
     802035a2:	0001                	nop
     802035a4:	60a2                	ld	ra,8(sp)
     802035a6:	6402                	ld	s0,0(sp)
@@ -5588,74 +5587,48 @@ void test_exception(void) {
     802035aa:	8082                	ret
 
 00000000802035ac <w_stvec>:
-            printf("找到未映射地址: 0x%lx\n", addr);
-            break;
     802035ac:	1101                	addi	sp,sp,-32
     802035ae:	ec22                	sd	s0,24(sp)
     802035b0:	1000                	addi	s0,sp,32
     802035b2:	fea43423          	sd	a0,-24(s0)
-        }
     802035b6:	fe843783          	ld	a5,-24(s0)
     802035ba:	10579073          	csrw	stvec,a5
-    }
     802035be:	0001                	nop
     802035c0:	6462                	ld	s0,24(sp)
     802035c2:	6105                	addi	sp,sp,32
     802035c4:	8082                	ret
 
 00000000802035c6 <r_scause>:
-        printf("尝试读取未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
-        volatile uint64 value = *invalid_ptr;  // 触发加载页故障
-        printf("读取的值: %lu\n", value);  // 不太可能执行到这里，除非故障被处理
-        printf("✓ 加载页故障异常处理成功\n\n");
-    } else {
-        printf("警告: 无法找到未映射地址进行测试!\n\n");
     802035c6:	1101                	addi	sp,sp,-32
     802035c8:	ec22                	sd	s0,24(sp)
     802035ca:	1000                	addi	s0,sp,32
-    }
-    
     802035cc:	142027f3          	csrr	a5,scause
     802035d0:	fef43423          	sd	a5,-24(s0)
-    // 4. 测试存储地址未对齐异常
     802035d4:	fe843783          	ld	a5,-24(s0)
-    printf("4. 测试存储地址未对齐异常...\n");
     802035d8:	853e                	mv	a0,a5
     802035da:	6462                	ld	s0,24(sp)
     802035dc:	6105                	addi	sp,sp,32
     802035de:	8082                	ret
 
 00000000802035e0 <r_sepc>:
-    uint64 aligned_addr = (uint64)alloc_page();
-    if (aligned_addr != 0) {
     802035e0:	1101                	addi	sp,sp,-32
     802035e2:	ec22                	sd	s0,24(sp)
     802035e4:	1000                	addi	s0,sp,32
-        uint64 misaligned_addr = aligned_addr + 1;  // 制造未对齐地址
-        printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
     802035e6:	141027f3          	csrr	a5,sepc
     802035ea:	fef43423          	sd	a5,-24(s0)
-        
     802035ee:	fe843783          	ld	a5,-24(s0)
-        // 使用内联汇编进行未对齐访问，因为编译器可能会自动对齐
     802035f2:	853e                	mv	a0,a5
     802035f4:	6462                	ld	s0,24(sp)
     802035f6:	6105                	addi	sp,sp,32
     802035f8:	8082                	ret
 
 00000000802035fa <r_stval>:
-        asm volatile (
-            "sd %0, 0(%1)"
     802035fa:	1101                	addi	sp,sp,-32
     802035fc:	ec22                	sd	s0,24(sp)
     802035fe:	1000                	addi	s0,sp,32
-            : 
-            : "r" (0xdeadbeef), "r" (misaligned_addr)
     80203600:	143027f3          	csrr	a5,stval
     80203604:	fef43423          	sd	a5,-24(s0)
-            : "memory"
     80203608:	fe843783          	ld	a5,-24(s0)
-        );
     8020360c:	853e                	mv	a0,a5
     8020360e:	6462                	ld	s0,24(sp)
     80203610:	6105                	addi	sp,sp,32
@@ -5731,7 +5704,7 @@ void register_interrupt(int irq, interrupt_handler_t h) {
     8020369e:	00e7cd63          	blt	a5,a4,802036b8 <register_interrupt+0x40>
         interrupt_vector[irq] = h;
     802036a2:	00009717          	auipc	a4,0x9
-    802036a6:	bd670713          	addi	a4,a4,-1066 # 8020c278 <interrupt_vector>
+    802036a6:	be670713          	addi	a4,a4,-1050 # 8020c288 <interrupt_vector>
     802036aa:	fec42783          	lw	a5,-20(s0)
     802036ae:	078e                	slli	a5,a5,0x3
     802036b0:	97ba                	add	a5,a5,a4
@@ -5760,7 +5733,7 @@ void unregister_interrupt(int irq) {
     802036e2:	00e7cc63          	blt	a5,a4,802036fa <unregister_interrupt+0x3a>
         interrupt_vector[irq] = 0;
     802036e6:	00009717          	auipc	a4,0x9
-    802036ea:	b9270713          	addi	a4,a4,-1134 # 8020c278 <interrupt_vector>
+    802036ea:	ba270713          	addi	a4,a4,-1118 # 8020c288 <interrupt_vector>
     802036ee:	fec42783          	lw	a5,-20(s0)
     802036f2:	078e                	slli	a5,a5,0x3
     802036f4:	97ba                	add	a5,a5,a4
@@ -5783,7 +5756,7 @@ void enable_interrupts(int irq) {
     80203710:	fec42783          	lw	a5,-20(s0)
     80203714:	853e                	mv	a0,a5
     80203716:	00001097          	auipc	ra,0x1
-    8020371a:	06c080e7          	jalr	108(ra) # 80204782 <plic_enable>
+    8020371a:	c92080e7          	jalr	-878(ra) # 802043a8 <plic_enable>
 }
     8020371e:	0001                	nop
     80203720:	60e2                	ld	ra,24(sp)
@@ -5803,7 +5776,7 @@ void disable_interrupts(int irq) {
     80203736:	fec42783          	lw	a5,-20(s0)
     8020373a:	853e                	mv	a0,a5
     8020373c:	00001097          	auipc	ra,0x1
-    80203740:	09e080e7          	jalr	158(ra) # 802047da <plic_disable>
+    80203740:	cc4080e7          	jalr	-828(ra) # 80204400 <plic_disable>
 }
     80203744:	0001                	nop
     80203746:	60e2                	ld	ra,24(sp)
@@ -5828,7 +5801,7 @@ void interrupt_dispatch(int irq) {
     8020376e:	03f00793          	li	a5,63
     80203772:	02e7c663          	blt	a5,a4,8020379e <interrupt_dispatch+0x50>
     80203776:	00009717          	auipc	a4,0x9
-    8020377a:	b0270713          	addi	a4,a4,-1278 # 8020c278 <interrupt_vector>
+    8020377a:	b1270713          	addi	a4,a4,-1262 # 8020c288 <interrupt_vector>
     8020377e:	fec42783          	lw	a5,-20(s0)
     80203782:	078e                	slli	a5,a5,0x3
     80203784:	97ba                	add	a5,a5,a4
@@ -5836,7 +5809,7 @@ void interrupt_dispatch(int irq) {
     80203788:	cb99                	beqz	a5,8020379e <interrupt_dispatch+0x50>
 		interrupt_vector[irq]();
     8020378a:	00009717          	auipc	a4,0x9
-    8020378e:	aee70713          	addi	a4,a4,-1298 # 8020c278 <interrupt_vector>
+    8020378e:	afe70713          	addi	a4,a4,-1282 # 8020c288 <interrupt_vector>
     80203792:	fec42783          	lw	a5,-20(s0)
     80203796:	078e                	slli	a5,a5,0x3
     80203798:	97ba                	add	a5,a5,a4
@@ -5857,7 +5830,7 @@ void handle_external_interrupt(void) {
     802037ae:	1000                	addi	s0,sp,32
     int irq = plic_claim();
     802037b0:	00001097          	auipc	ra,0x1
-    802037b4:	088080e7          	jalr	136(ra) # 80204838 <plic_claim>
+    802037b4:	cae080e7          	jalr	-850(ra) # 8020445e <plic_claim>
     802037b8:	87aa                	mv	a5,a0
     802037ba:	fef42623          	sw	a5,-20(s0)
     if (irq == 0) {
@@ -5880,7 +5853,7 @@ void handle_external_interrupt(void) {
     802037e6:	fec42783          	lw	a5,-20(s0)
     802037ea:	853e                	mv	a0,a5
     802037ec:	00001097          	auipc	ra,0x1
-    802037f0:	074080e7          	jalr	116(ra) # 80204860 <plic_complete>
+    802037f0:	c9a080e7          	jalr	-870(ra) # 80204486 <plic_complete>
 }
     802037f4:	60e2                	ld	ra,24(sp)
     802037f6:	6442                	ld	s0,16(sp)
@@ -5903,7 +5876,7 @@ void trap_init(void) {
     80203818:	46e080e7          	jalr	1134(ra) # 80200c82 <printf>
 	w_stvec((uint64)kernelvec);
     8020381c:	00001797          	auipc	a5,0x1
-    80203820:	07478793          	addi	a5,a5,116 # 80204890 <kernelvec>
+    80203820:	ca478793          	addi	a5,a5,-860 # 802044c0 <kernelvec>
     80203824:	853e                	mv	a0,a5
     80203826:	00000097          	auipc	ra,0x0
     8020382a:	d86080e7          	jalr	-634(ra) # 802035ac <w_stvec>
@@ -5912,7 +5885,7 @@ void trap_init(void) {
     80203832:	a005                	j	80203852 <trap_init+0x56>
 		interrupt_vector[i] = 0;
     80203834:	00009717          	auipc	a4,0x9
-    80203838:	a4470713          	addi	a4,a4,-1468 # 8020c278 <interrupt_vector>
+    80203838:	a5470713          	addi	a4,a4,-1452 # 8020c288 <interrupt_vector>
     8020383c:	fec42783          	lw	a5,-20(s0)
     80203840:	078e                	slli	a5,a5,0x3
     80203842:	97ba                	add	a5,a5,a4
@@ -5927,7 +5900,7 @@ void trap_init(void) {
     8020385e:	fce7dbe3          	bge	a5,a4,80203834 <trap_init+0x38>
 	plic_init();
     80203862:	00001097          	auipc	ra,0x1
-    80203866:	e82080e7          	jalr	-382(ra) # 802046e4 <plic_init>
+    80203866:	aa8080e7          	jalr	-1368(ra) # 8020430a <plic_init>
     uint64 sie = r_sie();
     8020386a:	00000097          	auipc	ra,0x0
     8020386e:	c7e080e7          	jalr	-898(ra) # 802034e8 <r_sie>
@@ -5950,7 +5923,7 @@ void trap_init(void) {
     802038a2:	be6080e7          	jalr	-1050(ra) # 80203484 <sbi_set_time>
 	printf("Registered exception handlers: store_page_fault=%p\n", handle_store_page_fault);
     802038a6:	00000597          	auipc	a1,0x0
-    802038aa:	78c58593          	addi	a1,a1,1932 # 80204032 <handle_store_page_fault>
+    802038aa:	79458593          	addi	a1,a1,1940 # 8020403a <handle_store_page_fault>
     802038ae:	00005517          	auipc	a0,0x5
     802038b2:	c3250513          	addi	a0,a0,-974 # 802084e0 <etext+0x14e0>
     802038b6:	ffffd097          	auipc	ra,0xffffd
@@ -6320,21 +6293,21 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
     80203c8a:	fd043583          	ld	a1,-48(s0)
     80203c8e:	fd843503          	ld	a0,-40(s0)
     80203c92:	00000097          	auipc	ra,0x0
-    80203c96:	2dc080e7          	jalr	732(ra) # 80203f6e <handle_instruction_page_fault>
+    80203c96:	2e4080e7          	jalr	740(ra) # 80203f76 <handle_instruction_page_fault>
             break;
     80203c9a:	a08d                	j	80203cfc <handle_exception+0x2da>
             handle_load_page_fault(tf,info);
     80203c9c:	fd043583          	ld	a1,-48(s0)
     80203ca0:	fd843503          	ld	a0,-40(s0)
     80203ca4:	00000097          	auipc	ra,0x0
-    80203ca8:	32c080e7          	jalr	812(ra) # 80203fd0 <handle_load_page_fault>
+    80203ca8:	334080e7          	jalr	820(ra) # 80203fd8 <handle_load_page_fault>
             break;
     80203cac:	a881                	j	80203cfc <handle_exception+0x2da>
             handle_store_page_fault(tf,info);
     80203cae:	fd043583          	ld	a1,-48(s0)
     80203cb2:	fd843503          	ld	a0,-40(s0)
     80203cb6:	00000097          	auipc	ra,0x0
-    80203cba:	37c080e7          	jalr	892(ra) # 80204032 <handle_store_page_fault>
+    80203cba:	384080e7          	jalr	900(ra) # 8020403a <handle_store_page_fault>
             break;
     80203cbe:	a83d                	j	80203cfc <handle_exception+0x2da>
             printf("Unknown exception: cause=%ld, sepc=0x%lx, stval=0x%lx\n", 
@@ -6432,7 +6405,7 @@ int copyin(char *dst, uint64 srcva, int maxlen) {
     80203d8a:	faf42e23          	sw	a5,-68(s0)
     struct proc *p = myproc();
     80203d8e:	00001097          	auipc	ra,0x1
-    80203d92:	de6080e7          	jalr	-538(ra) # 80204b74 <myproc>
+    80203d92:	a16080e7          	jalr	-1514(ra) # 802047a4 <myproc>
     80203d96:	fea43023          	sd	a0,-32(s0)
     for (int i = 0; i < maxlen; i++) {
     80203d9a:	fe042623          	sw	zero,-20(s0)
@@ -6495,28 +6468,28 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
     80203e22:	1900                	addi	s0,sp,176
     80203e24:	f4a43c23          	sd	a0,-168(s0)
     80203e28:	f4b43823          	sd	a1,-176(s0)
-    switch (tf->a7) {
+	switch (tf->a7) {
     80203e2c:	f5843783          	ld	a5,-168(s0)
     80203e30:	7bdc                	ld	a5,176(a5)
     80203e32:	6705                	lui	a4,0x1
     80203e34:	177d                	addi	a4,a4,-1 # fff <_entry-0x801ff001>
     80203e36:	0ee78263          	beq	a5,a4,80203f1a <handle_syscall+0xfe>
     80203e3a:	6705                	lui	a4,0x1
-    80203e3c:	0ee7f863          	bgeu	a5,a4,80203f2c <handle_syscall+0x110>
+    80203e3c:	0ee7fc63          	bgeu	a5,a4,80203f34 <handle_syscall+0x118>
     80203e40:	0dc00713          	li	a4,220
     80203e44:	0ae78363          	beq	a5,a4,80203eea <handle_syscall+0xce>
     80203e48:	0dc00713          	li	a4,220
-    80203e4c:	0ef76063          	bltu	a4,a5,80203f2c <handle_syscall+0x110>
+    80203e4c:	0ef76463          	bltu	a4,a5,80203f34 <handle_syscall+0x118>
     80203e50:	05d00713          	li	a4,93
     80203e54:	06e78563          	beq	a5,a4,80203ebe <handle_syscall+0xa2>
     80203e58:	05d00713          	li	a4,93
-    80203e5c:	0cf76863          	bltu	a4,a5,80203f2c <handle_syscall+0x110>
+    80203e5c:	0cf76c63          	bltu	a4,a5,80203f34 <handle_syscall+0x118>
     80203e60:	4705                	li	a4,1
     80203e62:	00e78663          	beq	a5,a4,80203e6e <handle_syscall+0x52>
     80203e66:	4709                	li	a4,2
     80203e68:	02e78063          	beq	a5,a4,80203e88 <handle_syscall+0x6c>
-    80203e6c:	a0c1                	j	80203f2c <handle_syscall+0x110>
-            printf("[syscall] print int: %ld\n", tf->a0);
+    80203e6c:	a0e1                	j	80203f34 <handle_syscall+0x118>
+			printf("[syscall] print int: %ld\n", tf->a0);
     80203e6e:	f5843783          	ld	a5,-168(s0)
     80203e72:	7fbc                	ld	a5,120(a5)
     80203e74:	85be                	mv	a1,a5
@@ -6524,9 +6497,9 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
     80203e7a:	8f250513          	addi	a0,a0,-1806 # 80208768 <etext+0x1768>
     80203e7e:	ffffd097          	auipc	ra,0xffffd
     80203e82:	e04080e7          	jalr	-508(ra) # 80200c82 <printf>
-            break;
-    80203e86:	a0e1                	j	80203f4e <handle_syscall+0x132>
-            copyin(buf, tf->a0, sizeof(buf)-1); // 从用户空间拷贝
+			break;
+    80203e86:	a8c1                	j	80203f56 <handle_syscall+0x13a>
+			copyin(buf, tf->a0, sizeof(buf)-1);
     80203e88:	f5843783          	ld	a5,-168(s0)
     80203e8c:	7fb8                	ld	a4,120(a5)
     80203e8e:	f6840793          	addi	a5,s0,-152
@@ -6535,18 +6508,18 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
     80203e98:	853e                	mv	a0,a5
     80203e9a:	00000097          	auipc	ra,0x0
     80203e9e:	ede080e7          	jalr	-290(ra) # 80203d78 <copyin>
-            buf[sizeof(buf)-1] = 0;
+			buf[sizeof(buf)-1] = 0;
     80203ea2:	fe0403a3          	sb	zero,-25(s0)
-            printf("[syscall] print str: %s\n", buf);
+			printf("[syscall] print str: %s\n", buf);
     80203ea6:	f6840793          	addi	a5,s0,-152
     80203eaa:	85be                	mv	a1,a5
     80203eac:	00005517          	auipc	a0,0x5
     80203eb0:	8dc50513          	addi	a0,a0,-1828 # 80208788 <etext+0x1788>
     80203eb4:	ffffd097          	auipc	ra,0xffffd
     80203eb8:	dce080e7          	jalr	-562(ra) # 80200c82 <printf>
-            break;
-    80203ebc:	a849                	j	80203f4e <handle_syscall+0x132>
-            printf("[syscall] exit(%ld)\n", tf->a0);
+			break;
+    80203ebc:	a869                	j	80203f56 <handle_syscall+0x13a>
+			printf("[syscall] exit(%ld)\n", tf->a0);
     80203ebe:	f5843783          	ld	a5,-168(s0)
     80203ec2:	7fbc                	ld	a5,120(a5)
     80203ec4:	85be                	mv	a1,a5
@@ -6554,4114 +6527,4092 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
     80203eca:	8e250513          	addi	a0,a0,-1822 # 802087a8 <etext+0x17a8>
     80203ece:	ffffd097          	auipc	ra,0xffffd
     80203ed2:	db4080e7          	jalr	-588(ra) # 80200c82 <printf>
-            exit_proc((int)tf->a0); // 使用 a0 作为退出码
+			exit_proc((int)tf->a0);
     80203ed6:	f5843783          	ld	a5,-168(s0)
     80203eda:	7fbc                	ld	a5,120(a5)
     80203edc:	2781                	sext.w	a5,a5
     80203ede:	853e                	mv	a0,a5
-    80203ee0:	00002097          	auipc	ra,0x2
-    80203ee4:	884080e7          	jalr	-1916(ra) # 80205764 <exit_proc>
-            break;
-    80203ee8:	a09d                	j	80203f4e <handle_syscall+0x132>
-            int child_pid = fork_proc();
+    80203ee0:	00001097          	auipc	ra,0x1
+    80203ee4:	4b4080e7          	jalr	1204(ra) # 80205394 <exit_proc>
+			break;
+    80203ee8:	a0bd                	j	80203f56 <handle_syscall+0x13a>
+			int child_pid = fork_proc();
     80203eea:	00001097          	auipc	ra,0x1
-    80203eee:	516080e7          	jalr	1302(ra) # 80205400 <fork_proc>
+    80203eee:	146080e7          	jalr	326(ra) # 80205030 <fork_proc>
     80203ef2:	87aa                	mv	a5,a0
     80203ef4:	fef42623          	sw	a5,-20(s0)
-            tf->a0 = child_pid;
+			tf->a0 = child_pid;
     80203ef8:	fec42703          	lw	a4,-20(s0)
     80203efc:	f5843783          	ld	a5,-168(s0)
     80203f00:	ffb8                	sd	a4,120(a5)
-            printf("[syscall] fork -> %d\n", child_pid);
+			printf("[syscall] fork -> %d\n", child_pid);
     80203f02:	fec42783          	lw	a5,-20(s0)
     80203f06:	85be                	mv	a1,a5
     80203f08:	00005517          	auipc	a0,0x5
     80203f0c:	8b850513          	addi	a0,a0,-1864 # 802087c0 <etext+0x17c0>
     80203f10:	ffffd097          	auipc	ra,0xffffd
     80203f14:	d72080e7          	jalr	-654(ra) # 80200c82 <printf>
-            break;
-    80203f18:	a81d                	j	80203f4e <handle_syscall+0x132>
-            printf("[syscall] step enabled but we do not realize it\n");
-    80203f1a:	00005517          	auipc	a0,0x5
-    80203f1e:	8be50513          	addi	a0,a0,-1858 # 802087d8 <etext+0x17d8>
-    80203f22:	ffffd097          	auipc	ra,0xffffd
-    80203f26:	d60080e7          	jalr	-672(ra) # 80200c82 <printf>
-            break;
-    80203f2a:	a015                	j	80203f4e <handle_syscall+0x132>
-            printf("[syscall] unknown syscall: %ld\n", tf->a7);
-    80203f2c:	f5843783          	ld	a5,-168(s0)
-    80203f30:	7bdc                	ld	a5,176(a5)
-    80203f32:	85be                	mv	a1,a5
-    80203f34:	00005517          	auipc	a0,0x5
-    80203f38:	8dc50513          	addi	a0,a0,-1828 # 80208810 <etext+0x1810>
-    80203f3c:	ffffd097          	auipc	ra,0xffffd
-    80203f40:	d46080e7          	jalr	-698(ra) # 80200c82 <printf>
-            tf->a0 = -1; // 返回错误
-    80203f44:	f5843783          	ld	a5,-168(s0)
-    80203f48:	577d                	li	a4,-1
-    80203f4a:	ffb8                	sd	a4,120(a5)
-            break;
-    80203f4c:	0001                	nop
-    set_sepc(tf, info->sepc + 4);
-    80203f4e:	f5043783          	ld	a5,-176(s0)
-    80203f52:	639c                	ld	a5,0(a5)
-    80203f54:	0791                	addi	a5,a5,4
-    80203f56:	85be                	mv	a1,a5
-    80203f58:	f5843503          	ld	a0,-168(s0)
-    80203f5c:	fffff097          	auipc	ra,0xfffff
-    80203f60:	6fc080e7          	jalr	1788(ra) # 80203658 <set_sepc>
+			break;
+    80203f18:	a83d                	j	80203f56 <handle_syscall+0x13a>
+			tf->a0 = 0;
+    80203f1a:	f5843783          	ld	a5,-168(s0)
+    80203f1e:	0607bc23          	sd	zero,120(a5)
+			printf("[syscall] step enabled but do nothing\n");
+    80203f22:	00005517          	auipc	a0,0x5
+    80203f26:	8b650513          	addi	a0,a0,-1866 # 802087d8 <etext+0x17d8>
+    80203f2a:	ffffd097          	auipc	ra,0xffffd
+    80203f2e:	d58080e7          	jalr	-680(ra) # 80200c82 <printf>
+			break;
+    80203f32:	a015                	j	80203f56 <handle_syscall+0x13a>
+			printf("[syscall] unknown syscall: %ld\n", tf->a7);
+    80203f34:	f5843783          	ld	a5,-168(s0)
+    80203f38:	7bdc                	ld	a5,176(a5)
+    80203f3a:	85be                	mv	a1,a5
+    80203f3c:	00005517          	auipc	a0,0x5
+    80203f40:	8c450513          	addi	a0,a0,-1852 # 80208800 <etext+0x1800>
+    80203f44:	ffffd097          	auipc	ra,0xffffd
+    80203f48:	d3e080e7          	jalr	-706(ra) # 80200c82 <printf>
+			tf->a0 = -1;
+    80203f4c:	f5843783          	ld	a5,-168(s0)
+    80203f50:	577d                	li	a4,-1
+    80203f52:	ffb8                	sd	a4,120(a5)
+			break;
+    80203f54:	0001                	nop
+	set_sepc(tf, info->sepc + 4);
+    80203f56:	f5043783          	ld	a5,-176(s0)
+    80203f5a:	639c                	ld	a5,0(a5)
+    80203f5c:	0791                	addi	a5,a5,4
+    80203f5e:	85be                	mv	a1,a5
+    80203f60:	f5843503          	ld	a0,-168(s0)
+    80203f64:	fffff097          	auipc	ra,0xfffff
+    80203f68:	6f4080e7          	jalr	1780(ra) # 80203658 <set_sepc>
 }
-    80203f64:	0001                	nop
-    80203f66:	70aa                	ld	ra,168(sp)
-    80203f68:	740a                	ld	s0,160(sp)
-    80203f6a:	614d                	addi	sp,sp,176
-    80203f6c:	8082                	ret
+    80203f6c:	0001                	nop
+    80203f6e:	70aa                	ld	ra,168(sp)
+    80203f70:	740a                	ld	s0,160(sp)
+    80203f72:	614d                	addi	sp,sp,176
+    80203f74:	8082                	ret
 
-0000000080203f6e <handle_instruction_page_fault>:
+0000000080203f76 <handle_instruction_page_fault>:
 void handle_instruction_page_fault(struct trapframe *tf, struct trap_info *info) {
-    80203f6e:	1101                	addi	sp,sp,-32
-    80203f70:	ec06                	sd	ra,24(sp)
-    80203f72:	e822                	sd	s0,16(sp)
-    80203f74:	1000                	addi	s0,sp,32
-    80203f76:	fea43423          	sd	a0,-24(s0)
-    80203f7a:	feb43023          	sd	a1,-32(s0)
+    80203f76:	1101                	addi	sp,sp,-32
+    80203f78:	ec06                	sd	ra,24(sp)
+    80203f7a:	e822                	sd	s0,16(sp)
+    80203f7c:	1000                	addi	s0,sp,32
+    80203f7e:	fea43423          	sd	a0,-24(s0)
+    80203f82:	feb43023          	sd	a1,-32(s0)
     printf("Instruction page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
-    80203f7e:	fe043783          	ld	a5,-32(s0)
-    80203f82:	6f98                	ld	a4,24(a5)
-    80203f84:	fe043783          	ld	a5,-32(s0)
-    80203f88:	639c                	ld	a5,0(a5)
-    80203f8a:	863e                	mv	a2,a5
-    80203f8c:	85ba                	mv	a1,a4
-    80203f8e:	00005517          	auipc	a0,0x5
-    80203f92:	8a250513          	addi	a0,a0,-1886 # 80208830 <etext+0x1830>
-    80203f96:	ffffd097          	auipc	ra,0xffffd
-    80203f9a:	cec080e7          	jalr	-788(ra) # 80200c82 <printf>
+    80203f86:	fe043783          	ld	a5,-32(s0)
+    80203f8a:	6f98                	ld	a4,24(a5)
+    80203f8c:	fe043783          	ld	a5,-32(s0)
+    80203f90:	639c                	ld	a5,0(a5)
+    80203f92:	863e                	mv	a2,a5
+    80203f94:	85ba                	mv	a1,a4
+    80203f96:	00005517          	auipc	a0,0x5
+    80203f9a:	88a50513          	addi	a0,a0,-1910 # 80208820 <etext+0x1820>
+    80203f9e:	ffffd097          	auipc	ra,0xffffd
+    80203fa2:	ce4080e7          	jalr	-796(ra) # 80200c82 <printf>
     if (handle_page_fault(info->stval, 1)) {  // 1表示指令页
-    80203f9e:	fe043783          	ld	a5,-32(s0)
-    80203fa2:	6f9c                	ld	a5,24(a5)
-    80203fa4:	4585                	li	a1,1
-    80203fa6:	853e                	mv	a0,a5
-    80203fa8:	fffff097          	auipc	ra,0xfffff
-    80203fac:	9b4080e7          	jalr	-1612(ra) # 8020295c <handle_page_fault>
-    80203fb0:	87aa                	mv	a5,a0
-    80203fb2:	eb91                	bnez	a5,80203fc6 <handle_instruction_page_fault+0x58>
+    80203fa6:	fe043783          	ld	a5,-32(s0)
+    80203faa:	6f9c                	ld	a5,24(a5)
+    80203fac:	4585                	li	a1,1
+    80203fae:	853e                	mv	a0,a5
+    80203fb0:	fffff097          	auipc	ra,0xfffff
+    80203fb4:	9ac080e7          	jalr	-1620(ra) # 8020295c <handle_page_fault>
+    80203fb8:	87aa                	mv	a5,a0
+    80203fba:	eb91                	bnez	a5,80203fce <handle_instruction_page_fault+0x58>
     panic("Unhandled instruction page fault");
-    80203fb4:	00005517          	auipc	a0,0x5
-    80203fb8:	8ac50513          	addi	a0,a0,-1876 # 80208860 <etext+0x1860>
-    80203fbc:	ffffd097          	auipc	ra,0xffffd
-    80203fc0:	712080e7          	jalr	1810(ra) # 802016ce <panic>
-    80203fc4:	a011                	j	80203fc8 <handle_instruction_page_fault+0x5a>
+    80203fbc:	00005517          	auipc	a0,0x5
+    80203fc0:	89450513          	addi	a0,a0,-1900 # 80208850 <etext+0x1850>
+    80203fc4:	ffffd097          	auipc	ra,0xffffd
+    80203fc8:	70a080e7          	jalr	1802(ra) # 802016ce <panic>
+    80203fcc:	a011                	j	80203fd0 <handle_instruction_page_fault+0x5a>
         return; // 成功处理页面故障，可以继续执行
-    80203fc6:	0001                	nop
+    80203fce:	0001                	nop
 }
-    80203fc8:	60e2                	ld	ra,24(sp)
-    80203fca:	6442                	ld	s0,16(sp)
-    80203fcc:	6105                	addi	sp,sp,32
-    80203fce:	8082                	ret
+    80203fd0:	60e2                	ld	ra,24(sp)
+    80203fd2:	6442                	ld	s0,16(sp)
+    80203fd4:	6105                	addi	sp,sp,32
+    80203fd6:	8082                	ret
 
-0000000080203fd0 <handle_load_page_fault>:
+0000000080203fd8 <handle_load_page_fault>:
 void handle_load_page_fault(struct trapframe *tf, struct trap_info *info) {
-    80203fd0:	1101                	addi	sp,sp,-32
-    80203fd2:	ec06                	sd	ra,24(sp)
-    80203fd4:	e822                	sd	s0,16(sp)
-    80203fd6:	1000                	addi	s0,sp,32
-    80203fd8:	fea43423          	sd	a0,-24(s0)
-    80203fdc:	feb43023          	sd	a1,-32(s0)
+    80203fd8:	1101                	addi	sp,sp,-32
+    80203fda:	ec06                	sd	ra,24(sp)
+    80203fdc:	e822                	sd	s0,16(sp)
+    80203fde:	1000                	addi	s0,sp,32
+    80203fe0:	fea43423          	sd	a0,-24(s0)
+    80203fe4:	feb43023          	sd	a1,-32(s0)
     printf("Load page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
-    80203fe0:	fe043783          	ld	a5,-32(s0)
-    80203fe4:	6f98                	ld	a4,24(a5)
-    80203fe6:	fe043783          	ld	a5,-32(s0)
-    80203fea:	639c                	ld	a5,0(a5)
-    80203fec:	863e                	mv	a2,a5
-    80203fee:	85ba                	mv	a1,a4
-    80203ff0:	00005517          	auipc	a0,0x5
-    80203ff4:	89850513          	addi	a0,a0,-1896 # 80208888 <etext+0x1888>
-    80203ff8:	ffffd097          	auipc	ra,0xffffd
-    80203ffc:	c8a080e7          	jalr	-886(ra) # 80200c82 <printf>
+    80203fe8:	fe043783          	ld	a5,-32(s0)
+    80203fec:	6f98                	ld	a4,24(a5)
+    80203fee:	fe043783          	ld	a5,-32(s0)
+    80203ff2:	639c                	ld	a5,0(a5)
+    80203ff4:	863e                	mv	a2,a5
+    80203ff6:	85ba                	mv	a1,a4
+    80203ff8:	00005517          	auipc	a0,0x5
+    80203ffc:	88050513          	addi	a0,a0,-1920 # 80208878 <etext+0x1878>
+    80204000:	ffffd097          	auipc	ra,0xffffd
+    80204004:	c82080e7          	jalr	-894(ra) # 80200c82 <printf>
     if (handle_page_fault(info->stval, 2)) {  // 2表示读数据页
-    80204000:	fe043783          	ld	a5,-32(s0)
-    80204004:	6f9c                	ld	a5,24(a5)
-    80204006:	4589                	li	a1,2
-    80204008:	853e                	mv	a0,a5
-    8020400a:	fffff097          	auipc	ra,0xfffff
-    8020400e:	952080e7          	jalr	-1710(ra) # 8020295c <handle_page_fault>
-    80204012:	87aa                	mv	a5,a0
-    80204014:	eb91                	bnez	a5,80204028 <handle_load_page_fault+0x58>
+    80204008:	fe043783          	ld	a5,-32(s0)
+    8020400c:	6f9c                	ld	a5,24(a5)
+    8020400e:	4589                	li	a1,2
+    80204010:	853e                	mv	a0,a5
+    80204012:	fffff097          	auipc	ra,0xfffff
+    80204016:	94a080e7          	jalr	-1718(ra) # 8020295c <handle_page_fault>
+    8020401a:	87aa                	mv	a5,a0
+    8020401c:	eb91                	bnez	a5,80204030 <handle_load_page_fault+0x58>
     panic("Unhandled load page fault");
-    80204016:	00005517          	auipc	a0,0x5
-    8020401a:	8a250513          	addi	a0,a0,-1886 # 802088b8 <etext+0x18b8>
-    8020401e:	ffffd097          	auipc	ra,0xffffd
-    80204022:	6b0080e7          	jalr	1712(ra) # 802016ce <panic>
-    80204026:	a011                	j	8020402a <handle_load_page_fault+0x5a>
+    8020401e:	00005517          	auipc	a0,0x5
+    80204022:	88a50513          	addi	a0,a0,-1910 # 802088a8 <etext+0x18a8>
+    80204026:	ffffd097          	auipc	ra,0xffffd
+    8020402a:	6a8080e7          	jalr	1704(ra) # 802016ce <panic>
+    8020402e:	a011                	j	80204032 <handle_load_page_fault+0x5a>
         return; // 成功处理页面故障，可以继续执行
-    80204028:	0001                	nop
+    80204030:	0001                	nop
 }
-    8020402a:	60e2                	ld	ra,24(sp)
-    8020402c:	6442                	ld	s0,16(sp)
-    8020402e:	6105                	addi	sp,sp,32
-    80204030:	8082                	ret
+    80204032:	60e2                	ld	ra,24(sp)
+    80204034:	6442                	ld	s0,16(sp)
+    80204036:	6105                	addi	sp,sp,32
+    80204038:	8082                	ret
 
-0000000080204032 <handle_store_page_fault>:
+000000008020403a <handle_store_page_fault>:
 void handle_store_page_fault(struct trapframe *tf, struct trap_info *info) {
-    80204032:	1101                	addi	sp,sp,-32
-    80204034:	ec06                	sd	ra,24(sp)
-    80204036:	e822                	sd	s0,16(sp)
-    80204038:	1000                	addi	s0,sp,32
-    8020403a:	fea43423          	sd	a0,-24(s0)
-    8020403e:	feb43023          	sd	a1,-32(s0)
+    8020403a:	1101                	addi	sp,sp,-32
+    8020403c:	ec06                	sd	ra,24(sp)
+    8020403e:	e822                	sd	s0,16(sp)
+    80204040:	1000                	addi	s0,sp,32
+    80204042:	fea43423          	sd	a0,-24(s0)
+    80204046:	feb43023          	sd	a1,-32(s0)
     printf("Store page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
-    80204042:	fe043783          	ld	a5,-32(s0)
-    80204046:	6f98                	ld	a4,24(a5)
-    80204048:	fe043783          	ld	a5,-32(s0)
-    8020404c:	639c                	ld	a5,0(a5)
-    8020404e:	863e                	mv	a2,a5
-    80204050:	85ba                	mv	a1,a4
-    80204052:	00005517          	auipc	a0,0x5
-    80204056:	88650513          	addi	a0,a0,-1914 # 802088d8 <etext+0x18d8>
-    8020405a:	ffffd097          	auipc	ra,0xffffd
-    8020405e:	c28080e7          	jalr	-984(ra) # 80200c82 <printf>
+    8020404a:	fe043783          	ld	a5,-32(s0)
+    8020404e:	6f98                	ld	a4,24(a5)
+    80204050:	fe043783          	ld	a5,-32(s0)
+    80204054:	639c                	ld	a5,0(a5)
+    80204056:	863e                	mv	a2,a5
+    80204058:	85ba                	mv	a1,a4
+    8020405a:	00005517          	auipc	a0,0x5
+    8020405e:	86e50513          	addi	a0,a0,-1938 # 802088c8 <etext+0x18c8>
+    80204062:	ffffd097          	auipc	ra,0xffffd
+    80204066:	c20080e7          	jalr	-992(ra) # 80200c82 <printf>
     if (handle_page_fault(info->stval, 3)) {  // 3表示写数据页
-    80204062:	fe043783          	ld	a5,-32(s0)
-    80204066:	6f9c                	ld	a5,24(a5)
-    80204068:	458d                	li	a1,3
-    8020406a:	853e                	mv	a0,a5
-    8020406c:	fffff097          	auipc	ra,0xfffff
-    80204070:	8f0080e7          	jalr	-1808(ra) # 8020295c <handle_page_fault>
-    80204074:	87aa                	mv	a5,a0
-    80204076:	eb91                	bnez	a5,8020408a <handle_store_page_fault+0x58>
+    8020406a:	fe043783          	ld	a5,-32(s0)
+    8020406e:	6f9c                	ld	a5,24(a5)
+    80204070:	458d                	li	a1,3
+    80204072:	853e                	mv	a0,a5
+    80204074:	fffff097          	auipc	ra,0xfffff
+    80204078:	8e8080e7          	jalr	-1816(ra) # 8020295c <handle_page_fault>
+    8020407c:	87aa                	mv	a5,a0
+    8020407e:	eb91                	bnez	a5,80204092 <handle_store_page_fault+0x58>
     panic("Unhandled store page fault");
-    80204078:	00005517          	auipc	a0,0x5
-    8020407c:	89050513          	addi	a0,a0,-1904 # 80208908 <etext+0x1908>
-    80204080:	ffffd097          	auipc	ra,0xffffd
-    80204084:	64e080e7          	jalr	1614(ra) # 802016ce <panic>
-    80204088:	a011                	j	8020408c <handle_store_page_fault+0x5a>
+    80204080:	00005517          	auipc	a0,0x5
+    80204084:	87850513          	addi	a0,a0,-1928 # 802088f8 <etext+0x18f8>
+    80204088:	ffffd097          	auipc	ra,0xffffd
+    8020408c:	646080e7          	jalr	1606(ra) # 802016ce <panic>
+    80204090:	a011                	j	80204094 <handle_store_page_fault+0x5a>
         return; // 成功处理页面故障，可以继续执行
-    8020408a:	0001                	nop
+    80204092:	0001                	nop
 }
-    8020408c:	60e2                	ld	ra,24(sp)
-    8020408e:	6442                	ld	s0,16(sp)
-    80204090:	6105                	addi	sp,sp,32
-    80204092:	8082                	ret
+    80204094:	60e2                	ld	ra,24(sp)
+    80204096:	6442                	ld	s0,16(sp)
+    80204098:	6105                	addi	sp,sp,32
+    8020409a:	8082                	ret
 
-0000000080204094 <get_time>:
-uint64 get_time(void) {
-    80204094:	1141                	addi	sp,sp,-16
-    80204096:	e406                	sd	ra,8(sp)
-    80204098:	e022                	sd	s0,0(sp)
-    8020409a:	0800                	addi	s0,sp,16
-    return sbi_get_time();
-    8020409c:	fffff097          	auipc	ra,0xfffff
-    802040a0:	404080e7          	jalr	1028(ra) # 802034a0 <sbi_get_time>
-    802040a4:	87aa                	mv	a5,a0
+000000008020409c <usertrap>:
+void usertrap(void) {
+    8020409c:	7159                	addi	sp,sp,-112
+    8020409e:	f486                	sd	ra,104(sp)
+    802040a0:	f0a2                	sd	s0,96(sp)
+    802040a2:	1880                	addi	s0,sp,112
+    struct proc *p = myproc();
+    802040a4:	00000097          	auipc	ra,0x0
+    802040a8:	700080e7          	jalr	1792(ra) # 802047a4 <myproc>
+    802040ac:	fea43423          	sd	a0,-24(s0)
+    struct trapframe *tf = p->trapframe;
+    802040b0:	fe843783          	ld	a5,-24(s0)
+    802040b4:	63fc                	ld	a5,192(a5)
+    802040b6:	fef43023          	sd	a5,-32(s0)
+    uint64 scause = r_scause();
+    802040ba:	fffff097          	auipc	ra,0xfffff
+    802040be:	50c080e7          	jalr	1292(ra) # 802035c6 <r_scause>
+    802040c2:	fca43c23          	sd	a0,-40(s0)
+    uint64 stval  = r_stval();
+    802040c6:	fffff097          	auipc	ra,0xfffff
+    802040ca:	534080e7          	jalr	1332(ra) # 802035fa <r_stval>
+    802040ce:	fca43823          	sd	a0,-48(s0)
+    uint64 sepc   = tf->epc;      // 已由 trampoline 保存
+    802040d2:	fe043783          	ld	a5,-32(s0)
+    802040d6:	739c                	ld	a5,32(a5)
+    802040d8:	fcf43423          	sd	a5,-56(s0)
+    uint64 sstatus= tf->sstatus;  // 已由 trampoline 保存
+    802040dc:	fe043783          	ld	a5,-32(s0)
+    802040e0:	6f9c                	ld	a5,24(a5)
+    802040e2:	fcf43023          	sd	a5,-64(s0)
+    uint64 code = scause & 0xff;
+    802040e6:	fd843783          	ld	a5,-40(s0)
+    802040ea:	0ff7f793          	zext.b	a5,a5
+    802040ee:	faf43c23          	sd	a5,-72(s0)
+    uint64 is_intr = (scause >> 63);
+    802040f2:	fd843783          	ld	a5,-40(s0)
+    802040f6:	93fd                	srli	a5,a5,0x3f
+    802040f8:	faf43823          	sd	a5,-80(s0)
+    if (!is_intr && code == 8) { // 用户态 ecall
+    802040fc:	fb043783          	ld	a5,-80(s0)
+    80204100:	e3a1                	bnez	a5,80204140 <usertrap+0xa4>
+    80204102:	fb843703          	ld	a4,-72(s0)
+    80204106:	47a1                	li	a5,8
+    80204108:	02f71c63          	bne	a4,a5,80204140 <usertrap+0xa4>
+        struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };
+    8020410c:	fc843783          	ld	a5,-56(s0)
+    80204110:	f8f43823          	sd	a5,-112(s0)
+    80204114:	fc043783          	ld	a5,-64(s0)
+    80204118:	f8f43c23          	sd	a5,-104(s0)
+    8020411c:	fd843783          	ld	a5,-40(s0)
+    80204120:	faf43023          	sd	a5,-96(s0)
+    80204124:	fd043783          	ld	a5,-48(s0)
+    80204128:	faf43423          	sd	a5,-88(s0)
+        handle_syscall(tf, &info);
+    8020412c:	f9040793          	addi	a5,s0,-112
+    80204130:	85be                	mv	a1,a5
+    80204132:	fe043503          	ld	a0,-32(s0)
+    80204136:	00000097          	auipc	ra,0x0
+    8020413a:	ce6080e7          	jalr	-794(ra) # 80203e1c <handle_syscall>
+    if (!is_intr && code == 8) { // 用户态 ecall
+    8020413e:	a869                	j	802041d8 <usertrap+0x13c>
+    } else if (is_intr) {
+    80204140:	fb043783          	ld	a5,-80(s0)
+    80204144:	c3ad                	beqz	a5,802041a6 <usertrap+0x10a>
+        if (code == 5) {
+    80204146:	fb843703          	ld	a4,-72(s0)
+    8020414a:	4795                	li	a5,5
+    8020414c:	02f71663          	bne	a4,a5,80204178 <usertrap+0xdc>
+            timeintr();
+    80204150:	fffff097          	auipc	ra,0xfffff
+    80204154:	36a080e7          	jalr	874(ra) # 802034ba <timeintr>
+            sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
+    80204158:	fffff097          	auipc	ra,0xfffff
+    8020415c:	348080e7          	jalr	840(ra) # 802034a0 <sbi_get_time>
+    80204160:	872a                	mv	a4,a0
+    80204162:	000f47b7          	lui	a5,0xf4
+    80204166:	24078793          	addi	a5,a5,576 # f4240 <_entry-0x8010bdc0>
+    8020416a:	97ba                	add	a5,a5,a4
+    8020416c:	853e                	mv	a0,a5
+    8020416e:	fffff097          	auipc	ra,0xfffff
+    80204172:	316080e7          	jalr	790(ra) # 80203484 <sbi_set_time>
+    80204176:	a08d                	j	802041d8 <usertrap+0x13c>
+        } else if (code == 9) {
+    80204178:	fb843703          	ld	a4,-72(s0)
+    8020417c:	47a5                	li	a5,9
+    8020417e:	00f71763          	bne	a4,a5,8020418c <usertrap+0xf0>
+            handle_external_interrupt();
+    80204182:	fffff097          	auipc	ra,0xfffff
+    80204186:	626080e7          	jalr	1574(ra) # 802037a8 <handle_external_interrupt>
+    8020418a:	a0b9                	j	802041d8 <usertrap+0x13c>
+            printf("[usertrap] unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
+    8020418c:	fc843603          	ld	a2,-56(s0)
+    80204190:	fd843583          	ld	a1,-40(s0)
+    80204194:	00004517          	auipc	a0,0x4
+    80204198:	78450513          	addi	a0,a0,1924 # 80208918 <etext+0x1918>
+    8020419c:	ffffd097          	auipc	ra,0xffffd
+    802041a0:	ae6080e7          	jalr	-1306(ra) # 80200c82 <printf>
+    802041a4:	a815                	j	802041d8 <usertrap+0x13c>
+        struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };
+    802041a6:	fc843783          	ld	a5,-56(s0)
+    802041aa:	f8f43823          	sd	a5,-112(s0)
+    802041ae:	fc043783          	ld	a5,-64(s0)
+    802041b2:	f8f43c23          	sd	a5,-104(s0)
+    802041b6:	fd843783          	ld	a5,-40(s0)
+    802041ba:	faf43023          	sd	a5,-96(s0)
+    802041be:	fd043783          	ld	a5,-48(s0)
+    802041c2:	faf43423          	sd	a5,-88(s0)
+        handle_exception(tf, &info);
+    802041c6:	f9040793          	addi	a5,s0,-112
+    802041ca:	85be                	mv	a1,a5
+    802041cc:	fe043503          	ld	a0,-32(s0)
+    802041d0:	00000097          	auipc	ra,0x0
+    802041d4:	852080e7          	jalr	-1966(ra) # 80203a22 <handle_exception>
+    usertrapret();
+    802041d8:	00000097          	auipc	ra,0x0
+    802041dc:	012080e7          	jalr	18(ra) # 802041ea <usertrapret>
 }
-    802040a6:	853e                	mv	a0,a5
-    802040a8:	60a2                	ld	ra,8(sp)
-    802040aa:	6402                	ld	s0,0(sp)
-    802040ac:	0141                	addi	sp,sp,16
-    802040ae:	8082                	ret
+    802041e0:	0001                	nop
+    802041e2:	70a6                	ld	ra,104(sp)
+    802041e4:	7406                	ld	s0,96(sp)
+    802041e6:	6165                	addi	sp,sp,112
+    802041e8:	8082                	ret
 
-00000000802040b0 <test_timer_interrupt>:
-void test_timer_interrupt(void) {
-    802040b0:	7179                	addi	sp,sp,-48
-    802040b2:	f406                	sd	ra,40(sp)
-    802040b4:	f022                	sd	s0,32(sp)
-    802040b6:	1800                	addi	s0,sp,48
-    printf("Testing timer interrupt...\n");
-    802040b8:	00005517          	auipc	a0,0x5
-    802040bc:	87050513          	addi	a0,a0,-1936 # 80208928 <etext+0x1928>
-    802040c0:	ffffd097          	auipc	ra,0xffffd
-    802040c4:	bc2080e7          	jalr	-1086(ra) # 80200c82 <printf>
-    uint64 start_time = get_time();
-    802040c8:	00000097          	auipc	ra,0x0
-    802040cc:	fcc080e7          	jalr	-52(ra) # 80204094 <get_time>
-    802040d0:	fea43023          	sd	a0,-32(s0)
-    int interrupt_count = 0;
-    802040d4:	fc042a23          	sw	zero,-44(s0)
-	int last_count = interrupt_count;
-    802040d8:	fd442783          	lw	a5,-44(s0)
-    802040dc:	fef42623          	sw	a5,-20(s0)
-    interrupt_test_flag = &interrupt_count;
-    802040e0:	00008797          	auipc	a5,0x8
-    802040e4:	fd878793          	addi	a5,a5,-40 # 8020c0b8 <interrupt_test_flag>
-    802040e8:	fd440713          	addi	a4,s0,-44
-    802040ec:	e398                	sd	a4,0(a5)
-    while (interrupt_count < 5) {
-    802040ee:	a899                	j	80204144 <test_timer_interrupt+0x94>
-        if(last_count != interrupt_count) {
-    802040f0:	fd442703          	lw	a4,-44(s0)
-    802040f4:	fec42783          	lw	a5,-20(s0)
-    802040f8:	2781                	sext.w	a5,a5
-    802040fa:	02e78163          	beq	a5,a4,8020411c <test_timer_interrupt+0x6c>
-			last_count = interrupt_count;
-    802040fe:	fd442783          	lw	a5,-44(s0)
-    80204102:	fef42623          	sw	a5,-20(s0)
-			printf("Received interrupt %d\n", interrupt_count);
-    80204106:	fd442783          	lw	a5,-44(s0)
-    8020410a:	85be                	mv	a1,a5
-    8020410c:	00005517          	auipc	a0,0x5
-    80204110:	83c50513          	addi	a0,a0,-1988 # 80208948 <etext+0x1948>
-    80204114:	ffffd097          	auipc	ra,0xffffd
-    80204118:	b6e080e7          	jalr	-1170(ra) # 80200c82 <printf>
-        for (volatile int i = 0; i < 1000000; i++);
-    8020411c:	fc042823          	sw	zero,-48(s0)
-    80204120:	a801                	j	80204130 <test_timer_interrupt+0x80>
-    80204122:	fd042783          	lw	a5,-48(s0)
-    80204126:	2781                	sext.w	a5,a5
-    80204128:	2785                	addiw	a5,a5,1
-    8020412a:	2781                	sext.w	a5,a5
-    8020412c:	fcf42823          	sw	a5,-48(s0)
-    80204130:	fd042783          	lw	a5,-48(s0)
-    80204134:	2781                	sext.w	a5,a5
-    80204136:	873e                	mv	a4,a5
-    80204138:	000f47b7          	lui	a5,0xf4
-    8020413c:	23f78793          	addi	a5,a5,575 # f423f <_entry-0x8010bdc1>
-    80204140:	fee7d1e3          	bge	a5,a4,80204122 <test_timer_interrupt+0x72>
-    while (interrupt_count < 5) {
-    80204144:	fd442783          	lw	a5,-44(s0)
-    80204148:	873e                	mv	a4,a5
-    8020414a:	4791                	li	a5,4
-    8020414c:	fae7d2e3          	bge	a5,a4,802040f0 <test_timer_interrupt+0x40>
-    interrupt_test_flag = 0;
-    80204150:	00008797          	auipc	a5,0x8
-    80204154:	f6878793          	addi	a5,a5,-152 # 8020c0b8 <interrupt_test_flag>
-    80204158:	0007b023          	sd	zero,0(a5)
-    uint64 end_time = get_time();
-    8020415c:	00000097          	auipc	ra,0x0
-    80204160:	f38080e7          	jalr	-200(ra) # 80204094 <get_time>
-    80204164:	fca43c23          	sd	a0,-40(s0)
-    printf("Timer test completed: %d interrupts in %lu cycles\n", 
-    80204168:	fd442683          	lw	a3,-44(s0)
-    8020416c:	fd843703          	ld	a4,-40(s0)
-    80204170:	fe043783          	ld	a5,-32(s0)
-    80204174:	40f707b3          	sub	a5,a4,a5
-    80204178:	863e                	mv	a2,a5
-    8020417a:	85b6                	mv	a1,a3
-    8020417c:	00004517          	auipc	a0,0x4
-    80204180:	7e450513          	addi	a0,a0,2020 # 80208960 <etext+0x1960>
-    80204184:	ffffd097          	auipc	ra,0xffffd
-    80204188:	afe080e7          	jalr	-1282(ra) # 80200c82 <printf>
+00000000802041ea <usertrapret>:
+void usertrapret(void) {
+    802041ea:	7179                	addi	sp,sp,-48
+    802041ec:	f406                	sd	ra,40(sp)
+    802041ee:	f022                	sd	s0,32(sp)
+    802041f0:	1800                	addi	s0,sp,48
+    struct proc *p = myproc();
+    802041f2:	00000097          	auipc	ra,0x0
+    802041f6:	5b2080e7          	jalr	1458(ra) # 802047a4 <myproc>
+    802041fa:	fea43423          	sd	a0,-24(s0)
+    uint64 uservec_va = (uint64)TRAMPOLINE + ((uint64)uservec - (uint64)trampoline);
+    802041fe:	00000717          	auipc	a4,0x0
+    80204202:	35270713          	addi	a4,a4,850 # 80204550 <trampoline>
+    80204206:	77fd                	lui	a5,0xfffff
+    80204208:	973e                	add	a4,a4,a5
+    8020420a:	00000797          	auipc	a5,0x0
+    8020420e:	34678793          	addi	a5,a5,838 # 80204550 <trampoline>
+    80204212:	40f707b3          	sub	a5,a4,a5
+    80204216:	fef43023          	sd	a5,-32(s0)
+    w_stvec(uservec_va);
+    8020421a:	fe043503          	ld	a0,-32(s0)
+    8020421e:	fffff097          	auipc	ra,0xfffff
+    80204222:	38e080e7          	jalr	910(ra) # 802035ac <w_stvec>
+    w_sscratch((uint64)TRAPFRAME);
+    80204226:	7579                	lui	a0,0xffffe
+    80204228:	fffff097          	auipc	ra,0xfffff
+    8020422c:	328080e7          	jalr	808(ra) # 80203550 <w_sscratch>
+    uint64 user_satp = MAKE_SATP(p->pagetable);
+    80204230:	fe843783          	ld	a5,-24(s0)
+    80204234:	7fdc                	ld	a5,184(a5)
+    80204236:	00c7d713          	srli	a4,a5,0xc
+    8020423a:	57fd                	li	a5,-1
+    8020423c:	17fe                	slli	a5,a5,0x3f
+    8020423e:	8fd9                	or	a5,a5,a4
+    80204240:	fcf43c23          	sd	a5,-40(s0)
+    uint64 userret_va = (uint64)TRAMPOLINE + ((uint64)userret - (uint64)trampoline);
+    80204244:	00000717          	auipc	a4,0x0
+    80204248:	3a270713          	addi	a4,a4,930 # 802045e6 <userret>
+    8020424c:	77fd                	lui	a5,0xfffff
+    8020424e:	973e                	add	a4,a4,a5
+    80204250:	00000797          	auipc	a5,0x0
+    80204254:	30078793          	addi	a5,a5,768 # 80204550 <trampoline>
+    80204258:	40f707b3          	sub	a5,a4,a5
+    8020425c:	fcf43823          	sd	a5,-48(s0)
+    register uint64 a0 asm("a0") = (uint64)TRAPFRAME;
+    80204260:	7579                	lui	a0,0xffffe
+    register uint64 a1 asm("a1") = user_satp;
+    80204262:	fd843583          	ld	a1,-40(s0)
+    register void (*tgt)(uint64, uint64) asm("t0") = (void *)userret_va;
+    80204266:	fd043783          	ld	a5,-48(s0)
+    8020426a:	82be                	mv	t0,a5
+    asm volatile("jr t0" :: "r"(a0), "r"(a1), "r"(tgt) : "memory");
+    8020426c:	8282                	jr	t0
 }
-    8020418c:	0001                	nop
-    8020418e:	70a2                	ld	ra,40(sp)
-    80204190:	7402                	ld	s0,32(sp)
-    80204192:	6145                	addi	sp,sp,48
-    80204194:	8082                	ret
+    8020426e:	0001                	nop
+    80204270:	70a2                	ld	ra,40(sp)
+    80204272:	7402                	ld	s0,32(sp)
+    80204274:	6145                	addi	sp,sp,48
+    80204276:	8082                	ret
 
-0000000080204196 <test_exception>:
-void test_exception(void) {
-    80204196:	715d                	addi	sp,sp,-80
-    80204198:	e486                	sd	ra,72(sp)
-    8020419a:	e0a2                	sd	s0,64(sp)
-    8020419c:	0880                	addi	s0,sp,80
-    printf("\n===== 开始全面异常处理测试 =====\n\n");
-    8020419e:	00004517          	auipc	a0,0x4
-    802041a2:	7fa50513          	addi	a0,a0,2042 # 80208998 <etext+0x1998>
-    802041a6:	ffffd097          	auipc	ra,0xffffd
-    802041aa:	adc080e7          	jalr	-1316(ra) # 80200c82 <printf>
-    printf("1. 测试非法指令异常...\n");
-    802041ae:	00005517          	auipc	a0,0x5
-    802041b2:	81a50513          	addi	a0,a0,-2022 # 802089c8 <etext+0x19c8>
-    802041b6:	ffffd097          	auipc	ra,0xffffd
-    802041ba:	acc080e7          	jalr	-1332(ra) # 80200c82 <printf>
-    802041be:	ffffffff          	.word	0xffffffff
-    printf("✓ 非法指令异常处理成功\n\n");
-    802041c2:	00005517          	auipc	a0,0x5
-    802041c6:	82650513          	addi	a0,a0,-2010 # 802089e8 <etext+0x19e8>
-    802041ca:	ffffd097          	auipc	ra,0xffffd
-    802041ce:	ab8080e7          	jalr	-1352(ra) # 80200c82 <printf>
-    printf("2. 测试存储页故障异常...\n");
-    802041d2:	00005517          	auipc	a0,0x5
-    802041d6:	83e50513          	addi	a0,a0,-1986 # 80208a10 <etext+0x1a10>
-    802041da:	ffffd097          	auipc	ra,0xffffd
-    802041de:	aa8080e7          	jalr	-1368(ra) # 80200c82 <printf>
-    volatile uint64 *invalid_ptr = 0;
-    802041e2:	fe043423          	sd	zero,-24(s0)
-    for (uint64 addr = 0x90000000; addr < 0x98000000; addr += 0x1000) {
-    802041e6:	47a5                	li	a5,9
-    802041e8:	07f2                	slli	a5,a5,0x1c
-    802041ea:	fef43023          	sd	a5,-32(s0)
-    802041ee:	a835                	j	8020422a <test_exception+0x94>
-        if (check_is_mapped(addr) == 0) {
-    802041f0:	fe043503          	ld	a0,-32(s0)
-    802041f4:	fffff097          	auipc	ra,0xfffff
-    802041f8:	dc4080e7          	jalr	-572(ra) # 80202fb8 <check_is_mapped>
-    802041fc:	87aa                	mv	a5,a0
-    802041fe:	e385                	bnez	a5,8020421e <test_exception+0x88>
-            invalid_ptr = (uint64*)addr;
-    80204200:	fe043783          	ld	a5,-32(s0)
-    80204204:	fef43423          	sd	a5,-24(s0)
-            printf("找到未映射地址: 0x%lx\n", addr);
-    80204208:	fe043583          	ld	a1,-32(s0)
-    8020420c:	00005517          	auipc	a0,0x5
-    80204210:	82c50513          	addi	a0,a0,-2004 # 80208a38 <etext+0x1a38>
-    80204214:	ffffd097          	auipc	ra,0xffffd
-    80204218:	a6e080e7          	jalr	-1426(ra) # 80200c82 <printf>
-            break;
-    8020421c:	a829                	j	80204236 <test_exception+0xa0>
-    for (uint64 addr = 0x90000000; addr < 0x98000000; addr += 0x1000) {
-    8020421e:	fe043703          	ld	a4,-32(s0)
-    80204222:	6785                	lui	a5,0x1
-    80204224:	97ba                	add	a5,a5,a4
-    80204226:	fef43023          	sd	a5,-32(s0)
-    8020422a:	fe043703          	ld	a4,-32(s0)
-    8020422e:	47cd                	li	a5,19
-    80204230:	07ee                	slli	a5,a5,0x1b
-    80204232:	faf76fe3          	bltu	a4,a5,802041f0 <test_exception+0x5a>
-    if (invalid_ptr != 0) {
-    80204236:	fe843783          	ld	a5,-24(s0)
-    8020423a:	cb95                	beqz	a5,8020426e <test_exception+0xd8>
-        printf("尝试写入未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
-    8020423c:	fe843783          	ld	a5,-24(s0)
-    80204240:	85be                	mv	a1,a5
-    80204242:	00005517          	auipc	a0,0x5
-    80204246:	81650513          	addi	a0,a0,-2026 # 80208a58 <etext+0x1a58>
-    8020424a:	ffffd097          	auipc	ra,0xffffd
-    8020424e:	a38080e7          	jalr	-1480(ra) # 80200c82 <printf>
-        *invalid_ptr = 42;  // 触发存储页故障
-    80204252:	fe843783          	ld	a5,-24(s0)
-    80204256:	02a00713          	li	a4,42
-    8020425a:	e398                	sd	a4,0(a5)
-        printf("✓ 存储页故障异常处理成功\n\n");
-    8020425c:	00005517          	auipc	a0,0x5
-    80204260:	82c50513          	addi	a0,a0,-2004 # 80208a88 <etext+0x1a88>
-    80204264:	ffffd097          	auipc	ra,0xffffd
-    80204268:	a1e080e7          	jalr	-1506(ra) # 80200c82 <printf>
-    8020426c:	a809                	j	8020427e <test_exception+0xe8>
-        printf("警告: 无法找到未映射地址进行测试!\n\n");
-    8020426e:	00005517          	auipc	a0,0x5
-    80204272:	84250513          	addi	a0,a0,-1982 # 80208ab0 <etext+0x1ab0>
-    80204276:	ffffd097          	auipc	ra,0xffffd
-    8020427a:	a0c080e7          	jalr	-1524(ra) # 80200c82 <printf>
-    printf("3. 测试加载页故障异常...\n");
-    8020427e:	00005517          	auipc	a0,0x5
-    80204282:	86a50513          	addi	a0,a0,-1942 # 80208ae8 <etext+0x1ae8>
-    80204286:	ffffd097          	auipc	ra,0xffffd
-    8020428a:	9fc080e7          	jalr	-1540(ra) # 80200c82 <printf>
-    invalid_ptr = 0;
-    8020428e:	fe043423          	sd	zero,-24(s0)
-    for (uint64 addr = 0xA0000000; addr < 0xA8000000; addr += 0x1000) {
-    80204292:	4795                	li	a5,5
-    80204294:	07f6                	slli	a5,a5,0x1d
-    80204296:	fcf43c23          	sd	a5,-40(s0)
-    8020429a:	a835                	j	802042d6 <test_exception+0x140>
-        if (check_is_mapped(addr) == 0) {
-    8020429c:	fd843503          	ld	a0,-40(s0)
-    802042a0:	fffff097          	auipc	ra,0xfffff
-    802042a4:	d18080e7          	jalr	-744(ra) # 80202fb8 <check_is_mapped>
-    802042a8:	87aa                	mv	a5,a0
-    802042aa:	e385                	bnez	a5,802042ca <test_exception+0x134>
-            invalid_ptr = (uint64*)addr;
-    802042ac:	fd843783          	ld	a5,-40(s0)
-    802042b0:	fef43423          	sd	a5,-24(s0)
-            printf("找到未映射地址: 0x%lx\n", addr);
-    802042b4:	fd843583          	ld	a1,-40(s0)
-    802042b8:	00004517          	auipc	a0,0x4
-    802042bc:	78050513          	addi	a0,a0,1920 # 80208a38 <etext+0x1a38>
-    802042c0:	ffffd097          	auipc	ra,0xffffd
-    802042c4:	9c2080e7          	jalr	-1598(ra) # 80200c82 <printf>
-            break;
-    802042c8:	a829                	j	802042e2 <test_exception+0x14c>
-    for (uint64 addr = 0xA0000000; addr < 0xA8000000; addr += 0x1000) {
-    802042ca:	fd843703          	ld	a4,-40(s0)
-    802042ce:	6785                	lui	a5,0x1
-    802042d0:	97ba                	add	a5,a5,a4
-    802042d2:	fcf43c23          	sd	a5,-40(s0)
-    802042d6:	fd843703          	ld	a4,-40(s0)
-    802042da:	47d5                	li	a5,21
-    802042dc:	07ee                	slli	a5,a5,0x1b
-    802042de:	faf76fe3          	bltu	a4,a5,8020429c <test_exception+0x106>
-    if (invalid_ptr != 0) {
-    802042e2:	fe843783          	ld	a5,-24(s0)
-    802042e6:	c7a9                	beqz	a5,80204330 <test_exception+0x19a>
-        printf("尝试读取未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
-    802042e8:	fe843783          	ld	a5,-24(s0)
-    802042ec:	85be                	mv	a1,a5
-    802042ee:	00005517          	auipc	a0,0x5
-    802042f2:	82250513          	addi	a0,a0,-2014 # 80208b10 <etext+0x1b10>
+0000000080204278 <write32>:
+    80204278:	7179                	addi	sp,sp,-48
+    8020427a:	f406                	sd	ra,40(sp)
+    8020427c:	f022                	sd	s0,32(sp)
+    8020427e:	1800                	addi	s0,sp,48
+    80204280:	fca43c23          	sd	a0,-40(s0)
+    80204284:	87ae                	mv	a5,a1
+    80204286:	fcf42a23          	sw	a5,-44(s0)
+    8020428a:	fd843783          	ld	a5,-40(s0)
+    8020428e:	8b8d                	andi	a5,a5,3
+    80204290:	eb99                	bnez	a5,802042a6 <write32+0x2e>
+    80204292:	fd843783          	ld	a5,-40(s0)
+    80204296:	fef43423          	sd	a5,-24(s0)
+    8020429a:	fe843783          	ld	a5,-24(s0)
+    8020429e:	fd442703          	lw	a4,-44(s0)
+    802042a2:	c398                	sw	a4,0(a5)
+    802042a4:	a819                	j	802042ba <write32+0x42>
+    802042a6:	fd843583          	ld	a1,-40(s0)
+    802042aa:	00004517          	auipc	a0,0x4
+    802042ae:	6a650513          	addi	a0,a0,1702 # 80208950 <etext+0x1950>
+    802042b2:	ffffd097          	auipc	ra,0xffffd
+    802042b6:	9d0080e7          	jalr	-1584(ra) # 80200c82 <printf>
+    802042ba:	0001                	nop
+    802042bc:	70a2                	ld	ra,40(sp)
+    802042be:	7402                	ld	s0,32(sp)
+    802042c0:	6145                	addi	sp,sp,48
+    802042c2:	8082                	ret
+
+00000000802042c4 <read32>:
+    802042c4:	7179                	addi	sp,sp,-48
+    802042c6:	f406                	sd	ra,40(sp)
+    802042c8:	f022                	sd	s0,32(sp)
+    802042ca:	1800                	addi	s0,sp,48
+    802042cc:	fca43c23          	sd	a0,-40(s0)
+    802042d0:	fd843783          	ld	a5,-40(s0)
+    802042d4:	8b8d                	andi	a5,a5,3
+    802042d6:	eb91                	bnez	a5,802042ea <read32+0x26>
+    802042d8:	fd843783          	ld	a5,-40(s0)
+    802042dc:	fef43423          	sd	a5,-24(s0)
+    802042e0:	fe843783          	ld	a5,-24(s0)
+    802042e4:	439c                	lw	a5,0(a5)
+    802042e6:	2781                	sext.w	a5,a5
+    802042e8:	a821                	j	80204300 <read32+0x3c>
+    802042ea:	fd843583          	ld	a1,-40(s0)
+    802042ee:	00004517          	auipc	a0,0x4
+    802042f2:	69250513          	addi	a0,a0,1682 # 80208980 <etext+0x1980>
     802042f6:	ffffd097          	auipc	ra,0xffffd
     802042fa:	98c080e7          	jalr	-1652(ra) # 80200c82 <printf>
-        volatile uint64 value = *invalid_ptr;  // 触发加载页故障
-    802042fe:	fe843783          	ld	a5,-24(s0)
-    80204302:	639c                	ld	a5,0(a5)
-    80204304:	faf43823          	sd	a5,-80(s0)
-        printf("读取的值: %lu\n", value);  // 不太可能执行到这里，除非故障被处理
-    80204308:	fb043783          	ld	a5,-80(s0)
-    8020430c:	85be                	mv	a1,a5
-    8020430e:	00005517          	auipc	a0,0x5
-    80204312:	83250513          	addi	a0,a0,-1998 # 80208b40 <etext+0x1b40>
-    80204316:	ffffd097          	auipc	ra,0xffffd
-    8020431a:	96c080e7          	jalr	-1684(ra) # 80200c82 <printf>
-        printf("✓ 加载页故障异常处理成功\n\n");
-    8020431e:	00005517          	auipc	a0,0x5
-    80204322:	83a50513          	addi	a0,a0,-1990 # 80208b58 <etext+0x1b58>
-    80204326:	ffffd097          	auipc	ra,0xffffd
-    8020432a:	95c080e7          	jalr	-1700(ra) # 80200c82 <printf>
-    8020432e:	a809                	j	80204340 <test_exception+0x1aa>
-        printf("警告: 无法找到未映射地址进行测试!\n\n");
-    80204330:	00004517          	auipc	a0,0x4
-    80204334:	78050513          	addi	a0,a0,1920 # 80208ab0 <etext+0x1ab0>
-    80204338:	ffffd097          	auipc	ra,0xffffd
-    8020433c:	94a080e7          	jalr	-1718(ra) # 80200c82 <printf>
-    printf("4. 测试存储地址未对齐异常...\n");
-    80204340:	00005517          	auipc	a0,0x5
-    80204344:	84050513          	addi	a0,a0,-1984 # 80208b80 <etext+0x1b80>
-    80204348:	ffffd097          	auipc	ra,0xffffd
-    8020434c:	93a080e7          	jalr	-1734(ra) # 80200c82 <printf>
-    uint64 aligned_addr = (uint64)alloc_page();
-    80204350:	fffff097          	auipc	ra,0xfffff
-    80204354:	eb0080e7          	jalr	-336(ra) # 80203200 <alloc_page>
-    80204358:	87aa                	mv	a5,a0
-    8020435a:	fcf43823          	sd	a5,-48(s0)
-    if (aligned_addr != 0) {
-    8020435e:	fd043783          	ld	a5,-48(s0)
-    80204362:	c3a1                	beqz	a5,802043a2 <test_exception+0x20c>
-        uint64 misaligned_addr = aligned_addr + 1;  // 制造未对齐地址
-    80204364:	fd043783          	ld	a5,-48(s0)
-    80204368:	0785                	addi	a5,a5,1 # 1001 <_entry-0x801fefff>
-    8020436a:	fcf43423          	sd	a5,-56(s0)
-        printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
-    8020436e:	fc843583          	ld	a1,-56(s0)
-    80204372:	00005517          	auipc	a0,0x5
-    80204376:	83e50513          	addi	a0,a0,-1986 # 80208bb0 <etext+0x1bb0>
-    8020437a:	ffffd097          	auipc	ra,0xffffd
-    8020437e:	908080e7          	jalr	-1784(ra) # 80200c82 <printf>
-        asm volatile (
-    80204382:	deadc7b7          	lui	a5,0xdeadc
-    80204386:	eef7879b          	addiw	a5,a5,-273 # ffffffffdeadbeef <_bss_end+0xffffffff5e8cf5df>
-    8020438a:	fc843703          	ld	a4,-56(s0)
-    8020438e:	e31c                	sd	a5,0(a4)
-        printf("✓ 存储地址未对齐异常处理成功\n\n");
-    80204390:	00005517          	auipc	a0,0x5
-    80204394:	84050513          	addi	a0,a0,-1984 # 80208bd0 <etext+0x1bd0>
-    80204398:	ffffd097          	auipc	ra,0xffffd
-    8020439c:	8ea080e7          	jalr	-1814(ra) # 80200c82 <printf>
-    802043a0:	a809                	j	802043b2 <test_exception+0x21c>
-    } else {
-        printf("警告: 无法分配内存进行未对齐访问测试!\n\n");
-    802043a2:	00005517          	auipc	a0,0x5
-    802043a6:	85e50513          	addi	a0,a0,-1954 # 80208c00 <etext+0x1c00>
-    802043aa:	ffffd097          	auipc	ra,0xffffd
-    802043ae:	8d8080e7          	jalr	-1832(ra) # 80200c82 <printf>
-    }
-    
-    // 5. 测试加载地址未对齐异常
-    printf("5. 测试加载地址未对齐异常...\n");
-    802043b2:	00005517          	auipc	a0,0x5
-    802043b6:	88e50513          	addi	a0,a0,-1906 # 80208c40 <etext+0x1c40>
-    802043ba:	ffffd097          	auipc	ra,0xffffd
-    802043be:	8c8080e7          	jalr	-1848(ra) # 80200c82 <printf>
-    if (aligned_addr != 0) {
-    802043c2:	fd043783          	ld	a5,-48(s0)
-    802043c6:	cbb1                	beqz	a5,8020441a <test_exception+0x284>
-        uint64 misaligned_addr = aligned_addr + 1;
-    802043c8:	fd043783          	ld	a5,-48(s0)
-    802043cc:	0785                	addi	a5,a5,1
-    802043ce:	fcf43023          	sd	a5,-64(s0)
-        printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
-    802043d2:	fc043583          	ld	a1,-64(s0)
-    802043d6:	00004517          	auipc	a0,0x4
-    802043da:	7da50513          	addi	a0,a0,2010 # 80208bb0 <etext+0x1bb0>
-    802043de:	ffffd097          	auipc	ra,0xffffd
-    802043e2:	8a4080e7          	jalr	-1884(ra) # 80200c82 <printf>
-        
-        uint64 value = 0;
-    802043e6:	fa043c23          	sd	zero,-72(s0)
-        asm volatile (
-    802043ea:	fc043783          	ld	a5,-64(s0)
-    802043ee:	639c                	ld	a5,0(a5)
-    802043f0:	faf43c23          	sd	a5,-72(s0)
-            "ld %0, 0(%1)"
-            : "=r" (value)
-            : "r" (misaligned_addr)
-            : "memory"
-        );
-        printf("读取的值: 0x%lx\n", value);
-    802043f4:	fb843583          	ld	a1,-72(s0)
-    802043f8:	00005517          	auipc	a0,0x5
-    802043fc:	87850513          	addi	a0,a0,-1928 # 80208c70 <etext+0x1c70>
-    80204400:	ffffd097          	auipc	ra,0xffffd
-    80204404:	882080e7          	jalr	-1918(ra) # 80200c82 <printf>
-        printf("✓ 加载地址未对齐异常处理成功\n\n");
-    80204408:	00005517          	auipc	a0,0x5
-    8020440c:	88050513          	addi	a0,a0,-1920 # 80208c88 <etext+0x1c88>
-    80204410:	ffffd097          	auipc	ra,0xffffd
-    80204414:	872080e7          	jalr	-1934(ra) # 80200c82 <printf>
-    80204418:	a809                	j	8020442a <test_exception+0x294>
-    } else {
-        printf("警告: 无法分配内存进行未对齐访问测试!\n\n");
-    8020441a:	00004517          	auipc	a0,0x4
-    8020441e:	7e650513          	addi	a0,a0,2022 # 80208c00 <etext+0x1c00>
-    80204422:	ffffd097          	auipc	ra,0xffffd
-    80204426:	860080e7          	jalr	-1952(ra) # 80200c82 <printf>
-    }
+    802042fe:	4781                	li	a5,0
+    80204300:	853e                	mv	a0,a5
+    80204302:	70a2                	ld	ra,40(sp)
+    80204304:	7402                	ld	s0,32(sp)
+    80204306:	6145                	addi	sp,sp,48
+    80204308:	8082                	ret
 
-	// 6. 测试断点异常
-	printf("6. 测试断点异常...\n");
-    8020442a:	00005517          	auipc	a0,0x5
-    8020442e:	88e50513          	addi	a0,a0,-1906 # 80208cb8 <etext+0x1cb8>
-    80204432:	ffffd097          	auipc	ra,0xffffd
-    80204436:	850080e7          	jalr	-1968(ra) # 80200c82 <printf>
-	asm volatile (
-    8020443a:	0001                	nop
-    8020443c:	9002                	ebreak
-    8020443e:	0001                	nop
-		"nop\n\t"      // 确保ebreak前有有效指令
-		"ebreak\n\t"   // 断点指令
-		"nop\n\t"      // 确保ebreak后有有效指令
-	);
-	printf("✓ 断点异常处理成功\n\n");
-    80204440:	00005517          	auipc	a0,0x5
-    80204444:	89850513          	addi	a0,a0,-1896 # 80208cd8 <etext+0x1cd8>
-    80204448:	ffffd097          	auipc	ra,0xffffd
-    8020444c:	83a080e7          	jalr	-1990(ra) # 80200c82 <printf>
-    // 7. 测试环境调用异常
-    printf("7. 测试环境调用异常...\n");
-    80204450:	00005517          	auipc	a0,0x5
-    80204454:	8a850513          	addi	a0,a0,-1880 # 80208cf8 <etext+0x1cf8>
-    80204458:	ffffd097          	auipc	ra,0xffffd
-    8020445c:	82a080e7          	jalr	-2006(ra) # 80200c82 <printf>
-    asm volatile ("ecall");  // 从S模式生成环境调用
-    80204460:	00000073          	ecall
-    printf("✓ 环境调用异常处理成功\n\n");
-    80204464:	00005517          	auipc	a0,0x5
-    80204468:	8b450513          	addi	a0,a0,-1868 # 80208d18 <etext+0x1d18>
-    8020446c:	ffffd097          	auipc	ra,0xffffd
-    80204470:	816080e7          	jalr	-2026(ra) # 80200c82 <printf>
-    
-    printf("===== 异常处理测试完成 =====\n\n");
-    80204474:	00005517          	auipc	a0,0x5
-    80204478:	8cc50513          	addi	a0,a0,-1844 # 80208d40 <etext+0x1d40>
-    8020447c:	ffffd097          	auipc	ra,0xffffd
-    80204480:	806080e7          	jalr	-2042(ra) # 80200c82 <printf>
-}
-    80204484:	0001                	nop
-    80204486:	60a6                	ld	ra,72(sp)
-    80204488:	6406                	ld	s0,64(sp)
-    8020448a:	6161                	addi	sp,sp,80
-    8020448c:	8082                	ret
-
-000000008020448e <usertrap>:
-
-
-void usertrap(void) {
-    8020448e:	7159                	addi	sp,sp,-112
-    80204490:	f486                	sd	ra,104(sp)
-    80204492:	f0a2                	sd	s0,96(sp)
-    80204494:	1880                	addi	s0,sp,112
-    struct proc *p = myproc();
-    80204496:	00000097          	auipc	ra,0x0
-    8020449a:	6de080e7          	jalr	1758(ra) # 80204b74 <myproc>
-    8020449e:	fea43423          	sd	a0,-24(s0)
-    struct trapframe *tf = p->trapframe;
-    802044a2:	fe843783          	ld	a5,-24(s0)
-    802044a6:	63fc                	ld	a5,192(a5)
-    802044a8:	fef43023          	sd	a5,-32(s0)
-
-    uint64 scause = r_scause();
-    802044ac:	fffff097          	auipc	ra,0xfffff
-    802044b0:	11a080e7          	jalr	282(ra) # 802035c6 <r_scause>
-    802044b4:	fca43c23          	sd	a0,-40(s0)
-    uint64 stval  = r_stval();
-    802044b8:	fffff097          	auipc	ra,0xfffff
-    802044bc:	142080e7          	jalr	322(ra) # 802035fa <r_stval>
-    802044c0:	fca43823          	sd	a0,-48(s0)
-    uint64 sepc   = tf->epc;      // 已由 trampoline 保存
-    802044c4:	fe043783          	ld	a5,-32(s0)
-    802044c8:	739c                	ld	a5,32(a5)
-    802044ca:	fcf43423          	sd	a5,-56(s0)
-    uint64 sstatus= tf->sstatus;  // 已由 trampoline 保存
-    802044ce:	fe043783          	ld	a5,-32(s0)
-    802044d2:	6f9c                	ld	a5,24(a5)
-    802044d4:	fcf43023          	sd	a5,-64(s0)
-
-    uint64 code = scause & 0xff;
-    802044d8:	fd843783          	ld	a5,-40(s0)
-    802044dc:	0ff7f793          	zext.b	a5,a5
-    802044e0:	faf43c23          	sd	a5,-72(s0)
-    uint64 is_intr = (scause >> 63);
-    802044e4:	fd843783          	ld	a5,-40(s0)
-    802044e8:	93fd                	srli	a5,a5,0x3f
-    802044ea:	faf43823          	sd	a5,-80(s0)
-
-    if (!is_intr && code == 8) { // 用户态 ecall
-    802044ee:	fb043783          	ld	a5,-80(s0)
-    802044f2:	e3a1                	bnez	a5,80204532 <usertrap+0xa4>
-    802044f4:	fb843703          	ld	a4,-72(s0)
-    802044f8:	47a1                	li	a5,8
-    802044fa:	02f71c63          	bne	a4,a5,80204532 <usertrap+0xa4>
-        struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };
-    802044fe:	fc843783          	ld	a5,-56(s0)
-    80204502:	f8f43823          	sd	a5,-112(s0)
-    80204506:	fc043783          	ld	a5,-64(s0)
-    8020450a:	f8f43c23          	sd	a5,-104(s0)
-    8020450e:	fd843783          	ld	a5,-40(s0)
-    80204512:	faf43023          	sd	a5,-96(s0)
-    80204516:	fd043783          	ld	a5,-48(s0)
-    8020451a:	faf43423          	sd	a5,-88(s0)
-        handle_syscall(tf, &info);
-    8020451e:	f9040793          	addi	a5,s0,-112
-    80204522:	85be                	mv	a1,a5
-    80204524:	fe043503          	ld	a0,-32(s0)
-    80204528:	00000097          	auipc	ra,0x0
-    8020452c:	8f4080e7          	jalr	-1804(ra) # 80203e1c <handle_syscall>
-    if (!is_intr && code == 8) { // 用户态 ecall
-    80204530:	a869                	j	802045ca <usertrap+0x13c>
-        // handle_syscall 应该已 set_sepc(tf, sepc+4)
-    } else if (is_intr) {
-    80204532:	fb043783          	ld	a5,-80(s0)
-    80204536:	c3ad                	beqz	a5,80204598 <usertrap+0x10a>
-        if (code == 5) {
-    80204538:	fb843703          	ld	a4,-72(s0)
-    8020453c:	4795                	li	a5,5
-    8020453e:	02f71663          	bne	a4,a5,8020456a <usertrap+0xdc>
-            timeintr();
-    80204542:	fffff097          	auipc	ra,0xfffff
-    80204546:	f78080e7          	jalr	-136(ra) # 802034ba <timeintr>
-            sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
-    8020454a:	fffff097          	auipc	ra,0xfffff
-    8020454e:	f56080e7          	jalr	-170(ra) # 802034a0 <sbi_get_time>
-    80204552:	872a                	mv	a4,a0
-    80204554:	000f47b7          	lui	a5,0xf4
-    80204558:	24078793          	addi	a5,a5,576 # f4240 <_entry-0x8010bdc0>
-    8020455c:	97ba                	add	a5,a5,a4
-    8020455e:	853e                	mv	a0,a5
-    80204560:	fffff097          	auipc	ra,0xfffff
-    80204564:	f24080e7          	jalr	-220(ra) # 80203484 <sbi_set_time>
-    80204568:	a08d                	j	802045ca <usertrap+0x13c>
-        } else if (code == 9) {
-    8020456a:	fb843703          	ld	a4,-72(s0)
-    8020456e:	47a5                	li	a5,9
-    80204570:	00f71763          	bne	a4,a5,8020457e <usertrap+0xf0>
-            handle_external_interrupt();
-    80204574:	fffff097          	auipc	ra,0xfffff
-    80204578:	234080e7          	jalr	564(ra) # 802037a8 <handle_external_interrupt>
-    8020457c:	a0b9                	j	802045ca <usertrap+0x13c>
-        } else {
-            printf("[usertrap] unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
-    8020457e:	fc843603          	ld	a2,-56(s0)
-    80204582:	fd843583          	ld	a1,-40(s0)
-    80204586:	00004517          	auipc	a0,0x4
-    8020458a:	7e250513          	addi	a0,a0,2018 # 80208d68 <etext+0x1d68>
-    8020458e:	ffffc097          	auipc	ra,0xffffc
-    80204592:	6f4080e7          	jalr	1780(ra) # 80200c82 <printf>
-    80204596:	a815                	j	802045ca <usertrap+0x13c>
-        }
-    } else {
-        struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };
-    80204598:	fc843783          	ld	a5,-56(s0)
-    8020459c:	f8f43823          	sd	a5,-112(s0)
-    802045a0:	fc043783          	ld	a5,-64(s0)
-    802045a4:	f8f43c23          	sd	a5,-104(s0)
-    802045a8:	fd843783          	ld	a5,-40(s0)
-    802045ac:	faf43023          	sd	a5,-96(s0)
-    802045b0:	fd043783          	ld	a5,-48(s0)
-    802045b4:	faf43423          	sd	a5,-88(s0)
-        handle_exception(tf, &info);
-    802045b8:	f9040793          	addi	a5,s0,-112
-    802045bc:	85be                	mv	a1,a5
-    802045be:	fe043503          	ld	a0,-32(s0)
-    802045c2:	fffff097          	auipc	ra,0xfffff
-    802045c6:	460080e7          	jalr	1120(ra) # 80203a22 <handle_exception>
-    }
-
-    usertrapret();
-    802045ca:	00000097          	auipc	ra,0x0
-    802045ce:	012080e7          	jalr	18(ra) # 802045dc <usertrapret>
-}
-    802045d2:	0001                	nop
-    802045d4:	70a6                	ld	ra,104(sp)
-    802045d6:	7406                	ld	s0,96(sp)
-    802045d8:	6165                	addi	sp,sp,112
-    802045da:	8082                	ret
-
-00000000802045dc <usertrapret>:
-
-void usertrapret(void) {
-    802045dc:	7179                	addi	sp,sp,-48
-    802045de:	f406                	sd	ra,40(sp)
-    802045e0:	f022                	sd	s0,32(sp)
-    802045e2:	1800                	addi	s0,sp,48
-    struct proc *p = myproc();
-    802045e4:	00000097          	auipc	ra,0x0
-    802045e8:	590080e7          	jalr	1424(ra) # 80204b74 <myproc>
-    802045ec:	fea43423          	sd	a0,-24(s0)
-	
-    // stvec 指向 trampoline.uservec
-    uint64 uservec_va = (uint64)TRAMPOLINE + ((uint64)uservec - (uint64)trampoline);
-    802045f0:	00000717          	auipc	a4,0x0
-    802045f4:	33070713          	addi	a4,a4,816 # 80204920 <trampoline>
-    802045f8:	77fd                	lui	a5,0xfffff
-    802045fa:	973e                	add	a4,a4,a5
-    802045fc:	00000797          	auipc	a5,0x0
-    80204600:	32478793          	addi	a5,a5,804 # 80204920 <trampoline>
-    80204604:	40f707b3          	sub	a5,a4,a5
-    80204608:	fef43023          	sd	a5,-32(s0)
-    w_stvec(uservec_va);
-    8020460c:	fe043503          	ld	a0,-32(s0)
-    80204610:	fffff097          	auipc	ra,0xfffff
-    80204614:	f9c080e7          	jalr	-100(ra) # 802035ac <w_stvec>
-
-    w_sscratch((uint64)TRAPFRAME);
-    80204618:	7579                	lui	a0,0xffffe
-    8020461a:	fffff097          	auipc	ra,0xfffff
-    8020461e:	f36080e7          	jalr	-202(ra) # 80203550 <w_sscratch>
-
-    // 用户页表 satp
-    uint64 user_satp = MAKE_SATP(p->pagetable);
-    80204622:	fe843783          	ld	a5,-24(s0)
-    80204626:	7fdc                	ld	a5,184(a5)
-    80204628:	00c7d713          	srli	a4,a5,0xc
-    8020462c:	57fd                	li	a5,-1
-    8020462e:	17fe                	slli	a5,a5,0x3f
-    80204630:	8fd9                	or	a5,a5,a4
-    80204632:	fcf43c23          	sd	a5,-40(s0)
-
-    // a0 = trapframe 的高地址映射
-    register uint64 a0 asm("a0") = TRAPFRAME;
-    80204636:	7579                	lui	a0,0xffffe
-    register uint64 a1 asm("a1") = user_satp;
-    80204638:	fd843583          	ld	a1,-40(s0)
-    register void (*userret_fn)(uint64, uint64) asm("t0") = (void*)userret;
-    8020463c:	00000797          	auipc	a5,0x0
-    80204640:	37a78793          	addi	a5,a5,890 # 802049b6 <userret>
-    80204644:	82be                	mv	t0,a5
-    asm volatile("jr t0" :: "r"(a0), "r"(a1), "r"(userret_fn) : "memory");
-    80204646:	8282                	jr	t0
-}
-    80204648:	0001                	nop
-    8020464a:	70a2                	ld	ra,40(sp)
-    8020464c:	7402                	ld	s0,32(sp)
-    8020464e:	6145                	addi	sp,sp,48
-    80204650:	8082                	ret
-
-0000000080204652 <write32>:
-    80204652:	7179                	addi	sp,sp,-48
-    80204654:	f406                	sd	ra,40(sp)
-    80204656:	f022                	sd	s0,32(sp)
-    80204658:	1800                	addi	s0,sp,48
-    8020465a:	fca43c23          	sd	a0,-40(s0)
-    8020465e:	87ae                	mv	a5,a1
-    80204660:	fcf42a23          	sw	a5,-44(s0)
-    80204664:	fd843783          	ld	a5,-40(s0)
-    80204668:	8b8d                	andi	a5,a5,3
-    8020466a:	eb99                	bnez	a5,80204680 <write32+0x2e>
-    8020466c:	fd843783          	ld	a5,-40(s0)
-    80204670:	fef43423          	sd	a5,-24(s0)
-    80204674:	fe843783          	ld	a5,-24(s0)
-    80204678:	fd442703          	lw	a4,-44(s0)
-    8020467c:	c398                	sw	a4,0(a5)
-    8020467e:	a819                	j	80204694 <write32+0x42>
-    80204680:	fd843583          	ld	a1,-40(s0)
-    80204684:	00004517          	auipc	a0,0x4
-    80204688:	71c50513          	addi	a0,a0,1820 # 80208da0 <etext+0x1da0>
-    8020468c:	ffffc097          	auipc	ra,0xffffc
-    80204690:	5f6080e7          	jalr	1526(ra) # 80200c82 <printf>
-    80204694:	0001                	nop
-    80204696:	70a2                	ld	ra,40(sp)
-    80204698:	7402                	ld	s0,32(sp)
-    8020469a:	6145                	addi	sp,sp,48
-    8020469c:	8082                	ret
-
-000000008020469e <read32>:
-    8020469e:	7179                	addi	sp,sp,-48
-    802046a0:	f406                	sd	ra,40(sp)
-    802046a2:	f022                	sd	s0,32(sp)
-    802046a4:	1800                	addi	s0,sp,48
-    802046a6:	fca43c23          	sd	a0,-40(s0)
-    802046aa:	fd843783          	ld	a5,-40(s0)
-    802046ae:	8b8d                	andi	a5,a5,3
-    802046b0:	eb91                	bnez	a5,802046c4 <read32+0x26>
-    802046b2:	fd843783          	ld	a5,-40(s0)
-    802046b6:	fef43423          	sd	a5,-24(s0)
-    802046ba:	fe843783          	ld	a5,-24(s0)
-    802046be:	439c                	lw	a5,0(a5)
-    802046c0:	2781                	sext.w	a5,a5
-    802046c2:	a821                	j	802046da <read32+0x3c>
-    802046c4:	fd843583          	ld	a1,-40(s0)
-    802046c8:	00004517          	auipc	a0,0x4
-    802046cc:	70850513          	addi	a0,a0,1800 # 80208dd0 <etext+0x1dd0>
-    802046d0:	ffffc097          	auipc	ra,0xffffc
-    802046d4:	5b2080e7          	jalr	1458(ra) # 80200c82 <printf>
-    802046d8:	4781                	li	a5,0
-    802046da:	853e                	mv	a0,a5
-    802046dc:	70a2                	ld	ra,40(sp)
-    802046de:	7402                	ld	s0,32(sp)
-    802046e0:	6145                	addi	sp,sp,48
-    802046e2:	8082                	ret
-
-00000000802046e4 <plic_init>:
+000000008020430a <plic_init>:
 void plic_init(void) {
-    802046e4:	1101                	addi	sp,sp,-32
-    802046e6:	ec06                	sd	ra,24(sp)
-    802046e8:	e822                	sd	s0,16(sp)
-    802046ea:	1000                	addi	s0,sp,32
+    8020430a:	1101                	addi	sp,sp,-32
+    8020430c:	ec06                	sd	ra,24(sp)
+    8020430e:	e822                	sd	s0,16(sp)
+    80204310:	1000                	addi	s0,sp,32
     for (int i = 1; i <= 32; i++) {
-    802046ec:	4785                	li	a5,1
-    802046ee:	fef42623          	sw	a5,-20(s0)
-    802046f2:	a805                	j	80204722 <plic_init+0x3e>
+    80204312:	4785                	li	a5,1
+    80204314:	fef42623          	sw	a5,-20(s0)
+    80204318:	a805                	j	80204348 <plic_init+0x3e>
         uint64 addr = PLIC + i * 4;
-    802046f4:	fec42783          	lw	a5,-20(s0)
-    802046f8:	0027979b          	slliw	a5,a5,0x2
-    802046fc:	2781                	sext.w	a5,a5
-    802046fe:	873e                	mv	a4,a5
-    80204700:	0c0007b7          	lui	a5,0xc000
-    80204704:	97ba                	add	a5,a5,a4
-    80204706:	fef43023          	sd	a5,-32(s0)
+    8020431a:	fec42783          	lw	a5,-20(s0)
+    8020431e:	0027979b          	slliw	a5,a5,0x2
+    80204322:	2781                	sext.w	a5,a5
+    80204324:	873e                	mv	a4,a5
+    80204326:	0c0007b7          	lui	a5,0xc000
+    8020432a:	97ba                	add	a5,a5,a4
+    8020432c:	fef43023          	sd	a5,-32(s0)
         write32(addr, 0);
-    8020470a:	4581                	li	a1,0
-    8020470c:	fe043503          	ld	a0,-32(s0)
-    80204710:	00000097          	auipc	ra,0x0
-    80204714:	f42080e7          	jalr	-190(ra) # 80204652 <write32>
+    80204330:	4581                	li	a1,0
+    80204332:	fe043503          	ld	a0,-32(s0)
+    80204336:	00000097          	auipc	ra,0x0
+    8020433a:	f42080e7          	jalr	-190(ra) # 80204278 <write32>
     for (int i = 1; i <= 32; i++) {
-    80204718:	fec42783          	lw	a5,-20(s0)
-    8020471c:	2785                	addiw	a5,a5,1 # c000001 <_entry-0x741fffff>
-    8020471e:	fef42623          	sw	a5,-20(s0)
-    80204722:	fec42783          	lw	a5,-20(s0)
-    80204726:	0007871b          	sext.w	a4,a5
-    8020472a:	02000793          	li	a5,32
-    8020472e:	fce7d3e3          	bge	a5,a4,802046f4 <plic_init+0x10>
+    8020433e:	fec42783          	lw	a5,-20(s0)
+    80204342:	2785                	addiw	a5,a5,1 # c000001 <_entry-0x741fffff>
+    80204344:	fef42623          	sw	a5,-20(s0)
+    80204348:	fec42783          	lw	a5,-20(s0)
+    8020434c:	0007871b          	sext.w	a4,a5
+    80204350:	02000793          	li	a5,32
+    80204354:	fce7d3e3          	bge	a5,a4,8020431a <plic_init+0x10>
     write32(PLIC + UART0_IRQ * 4, 1);
-    80204732:	4585                	li	a1,1
-    80204734:	0c0007b7          	lui	a5,0xc000
-    80204738:	02878513          	addi	a0,a5,40 # c000028 <_entry-0x741fffd8>
-    8020473c:	00000097          	auipc	ra,0x0
-    80204740:	f16080e7          	jalr	-234(ra) # 80204652 <write32>
+    80204358:	4585                	li	a1,1
+    8020435a:	0c0007b7          	lui	a5,0xc000
+    8020435e:	02878513          	addi	a0,a5,40 # c000028 <_entry-0x741fffd8>
+    80204362:	00000097          	auipc	ra,0x0
+    80204366:	f16080e7          	jalr	-234(ra) # 80204278 <write32>
     write32(PLIC + VIRTIO0_IRQ * 4, 1);
-    80204744:	4585                	li	a1,1
-    80204746:	0c0007b7          	lui	a5,0xc000
-    8020474a:	00478513          	addi	a0,a5,4 # c000004 <_entry-0x741ffffc>
-    8020474e:	00000097          	auipc	ra,0x0
-    80204752:	f04080e7          	jalr	-252(ra) # 80204652 <write32>
+    8020436a:	4585                	li	a1,1
+    8020436c:	0c0007b7          	lui	a5,0xc000
+    80204370:	00478513          	addi	a0,a5,4 # c000004 <_entry-0x741ffffc>
+    80204374:	00000097          	auipc	ra,0x0
+    80204378:	f04080e7          	jalr	-252(ra) # 80204278 <write32>
     write32(PLIC_ENABLE, (1 << UART0_IRQ) | (1 << VIRTIO0_IRQ));
-    80204756:	40200593          	li	a1,1026
-    8020475a:	0c0027b7          	lui	a5,0xc002
-    8020475e:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
-    80204762:	00000097          	auipc	ra,0x0
-    80204766:	ef0080e7          	jalr	-272(ra) # 80204652 <write32>
+    8020437c:	40200593          	li	a1,1026
+    80204380:	0c0027b7          	lui	a5,0xc002
+    80204384:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
+    80204388:	00000097          	auipc	ra,0x0
+    8020438c:	ef0080e7          	jalr	-272(ra) # 80204278 <write32>
     write32(PLIC_THRESHOLD, 0);
-    8020476a:	4581                	li	a1,0
-    8020476c:	0c201537          	lui	a0,0xc201
-    80204770:	00000097          	auipc	ra,0x0
-    80204774:	ee2080e7          	jalr	-286(ra) # 80204652 <write32>
+    80204390:	4581                	li	a1,0
+    80204392:	0c201537          	lui	a0,0xc201
+    80204396:	00000097          	auipc	ra,0x0
+    8020439a:	ee2080e7          	jalr	-286(ra) # 80204278 <write32>
 }
-    80204778:	0001                	nop
-    8020477a:	60e2                	ld	ra,24(sp)
-    8020477c:	6442                	ld	s0,16(sp)
-    8020477e:	6105                	addi	sp,sp,32
-    80204780:	8082                	ret
+    8020439e:	0001                	nop
+    802043a0:	60e2                	ld	ra,24(sp)
+    802043a2:	6442                	ld	s0,16(sp)
+    802043a4:	6105                	addi	sp,sp,32
+    802043a6:	8082                	ret
 
-0000000080204782 <plic_enable>:
+00000000802043a8 <plic_enable>:
 void plic_enable(int irq) {
-    80204782:	7179                	addi	sp,sp,-48
-    80204784:	f406                	sd	ra,40(sp)
-    80204786:	f022                	sd	s0,32(sp)
-    80204788:	1800                	addi	s0,sp,48
-    8020478a:	87aa                	mv	a5,a0
-    8020478c:	fcf42e23          	sw	a5,-36(s0)
+    802043a8:	7179                	addi	sp,sp,-48
+    802043aa:	f406                	sd	ra,40(sp)
+    802043ac:	f022                	sd	s0,32(sp)
+    802043ae:	1800                	addi	s0,sp,48
+    802043b0:	87aa                	mv	a5,a0
+    802043b2:	fcf42e23          	sw	a5,-36(s0)
     uint32 old = read32(PLIC_ENABLE);
-    80204790:	0c0027b7          	lui	a5,0xc002
-    80204794:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
-    80204798:	00000097          	auipc	ra,0x0
-    8020479c:	f06080e7          	jalr	-250(ra) # 8020469e <read32>
-    802047a0:	87aa                	mv	a5,a0
-    802047a2:	fef42623          	sw	a5,-20(s0)
+    802043b6:	0c0027b7          	lui	a5,0xc002
+    802043ba:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
+    802043be:	00000097          	auipc	ra,0x0
+    802043c2:	f06080e7          	jalr	-250(ra) # 802042c4 <read32>
+    802043c6:	87aa                	mv	a5,a0
+    802043c8:	fef42623          	sw	a5,-20(s0)
     write32(PLIC_ENABLE, old | (1 << irq));
-    802047a6:	fdc42783          	lw	a5,-36(s0)
-    802047aa:	873e                	mv	a4,a5
-    802047ac:	4785                	li	a5,1
-    802047ae:	00e797bb          	sllw	a5,a5,a4
-    802047b2:	2781                	sext.w	a5,a5
-    802047b4:	2781                	sext.w	a5,a5
-    802047b6:	fec42703          	lw	a4,-20(s0)
-    802047ba:	8fd9                	or	a5,a5,a4
-    802047bc:	2781                	sext.w	a5,a5
-    802047be:	85be                	mv	a1,a5
-    802047c0:	0c0027b7          	lui	a5,0xc002
-    802047c4:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
-    802047c8:	00000097          	auipc	ra,0x0
-    802047cc:	e8a080e7          	jalr	-374(ra) # 80204652 <write32>
+    802043cc:	fdc42783          	lw	a5,-36(s0)
+    802043d0:	873e                	mv	a4,a5
+    802043d2:	4785                	li	a5,1
+    802043d4:	00e797bb          	sllw	a5,a5,a4
+    802043d8:	2781                	sext.w	a5,a5
+    802043da:	2781                	sext.w	a5,a5
+    802043dc:	fec42703          	lw	a4,-20(s0)
+    802043e0:	8fd9                	or	a5,a5,a4
+    802043e2:	2781                	sext.w	a5,a5
+    802043e4:	85be                	mv	a1,a5
+    802043e6:	0c0027b7          	lui	a5,0xc002
+    802043ea:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
+    802043ee:	00000097          	auipc	ra,0x0
+    802043f2:	e8a080e7          	jalr	-374(ra) # 80204278 <write32>
 }
-    802047d0:	0001                	nop
-    802047d2:	70a2                	ld	ra,40(sp)
-    802047d4:	7402                	ld	s0,32(sp)
-    802047d6:	6145                	addi	sp,sp,48
-    802047d8:	8082                	ret
+    802043f6:	0001                	nop
+    802043f8:	70a2                	ld	ra,40(sp)
+    802043fa:	7402                	ld	s0,32(sp)
+    802043fc:	6145                	addi	sp,sp,48
+    802043fe:	8082                	ret
 
-00000000802047da <plic_disable>:
+0000000080204400 <plic_disable>:
 void plic_disable(int irq) {
-    802047da:	7179                	addi	sp,sp,-48
-    802047dc:	f406                	sd	ra,40(sp)
-    802047de:	f022                	sd	s0,32(sp)
-    802047e0:	1800                	addi	s0,sp,48
-    802047e2:	87aa                	mv	a5,a0
-    802047e4:	fcf42e23          	sw	a5,-36(s0)
+    80204400:	7179                	addi	sp,sp,-48
+    80204402:	f406                	sd	ra,40(sp)
+    80204404:	f022                	sd	s0,32(sp)
+    80204406:	1800                	addi	s0,sp,48
+    80204408:	87aa                	mv	a5,a0
+    8020440a:	fcf42e23          	sw	a5,-36(s0)
     uint32 old = read32(PLIC_ENABLE);
-    802047e8:	0c0027b7          	lui	a5,0xc002
-    802047ec:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
-    802047f0:	00000097          	auipc	ra,0x0
-    802047f4:	eae080e7          	jalr	-338(ra) # 8020469e <read32>
-    802047f8:	87aa                	mv	a5,a0
-    802047fa:	fef42623          	sw	a5,-20(s0)
+    8020440e:	0c0027b7          	lui	a5,0xc002
+    80204412:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
+    80204416:	00000097          	auipc	ra,0x0
+    8020441a:	eae080e7          	jalr	-338(ra) # 802042c4 <read32>
+    8020441e:	87aa                	mv	a5,a0
+    80204420:	fef42623          	sw	a5,-20(s0)
     write32(PLIC_ENABLE, old & ~(1 << irq));
-    802047fe:	fdc42783          	lw	a5,-36(s0)
-    80204802:	873e                	mv	a4,a5
-    80204804:	4785                	li	a5,1
-    80204806:	00e797bb          	sllw	a5,a5,a4
-    8020480a:	2781                	sext.w	a5,a5
-    8020480c:	fff7c793          	not	a5,a5
-    80204810:	2781                	sext.w	a5,a5
-    80204812:	2781                	sext.w	a5,a5
-    80204814:	fec42703          	lw	a4,-20(s0)
-    80204818:	8ff9                	and	a5,a5,a4
-    8020481a:	2781                	sext.w	a5,a5
-    8020481c:	85be                	mv	a1,a5
-    8020481e:	0c0027b7          	lui	a5,0xc002
-    80204822:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
-    80204826:	00000097          	auipc	ra,0x0
-    8020482a:	e2c080e7          	jalr	-468(ra) # 80204652 <write32>
+    80204424:	fdc42783          	lw	a5,-36(s0)
+    80204428:	873e                	mv	a4,a5
+    8020442a:	4785                	li	a5,1
+    8020442c:	00e797bb          	sllw	a5,a5,a4
+    80204430:	2781                	sext.w	a5,a5
+    80204432:	fff7c793          	not	a5,a5
+    80204436:	2781                	sext.w	a5,a5
+    80204438:	2781                	sext.w	a5,a5
+    8020443a:	fec42703          	lw	a4,-20(s0)
+    8020443e:	8ff9                	and	a5,a5,a4
+    80204440:	2781                	sext.w	a5,a5
+    80204442:	85be                	mv	a1,a5
+    80204444:	0c0027b7          	lui	a5,0xc002
+    80204448:	08078513          	addi	a0,a5,128 # c002080 <_entry-0x741fdf80>
+    8020444c:	00000097          	auipc	ra,0x0
+    80204450:	e2c080e7          	jalr	-468(ra) # 80204278 <write32>
 }
-    8020482e:	0001                	nop
-    80204830:	70a2                	ld	ra,40(sp)
-    80204832:	7402                	ld	s0,32(sp)
-    80204834:	6145                	addi	sp,sp,48
-    80204836:	8082                	ret
+    80204454:	0001                	nop
+    80204456:	70a2                	ld	ra,40(sp)
+    80204458:	7402                	ld	s0,32(sp)
+    8020445a:	6145                	addi	sp,sp,48
+    8020445c:	8082                	ret
 
-0000000080204838 <plic_claim>:
+000000008020445e <plic_claim>:
 int plic_claim(void) {
-    80204838:	1141                	addi	sp,sp,-16
-    8020483a:	e406                	sd	ra,8(sp)
-    8020483c:	e022                	sd	s0,0(sp)
-    8020483e:	0800                	addi	s0,sp,16
+    8020445e:	1141                	addi	sp,sp,-16
+    80204460:	e406                	sd	ra,8(sp)
+    80204462:	e022                	sd	s0,0(sp)
+    80204464:	0800                	addi	s0,sp,16
     return read32(PLIC_CLAIM);
-    80204840:	0c2017b7          	lui	a5,0xc201
-    80204844:	00478513          	addi	a0,a5,4 # c201004 <_entry-0x73ffeffc>
-    80204848:	00000097          	auipc	ra,0x0
-    8020484c:	e56080e7          	jalr	-426(ra) # 8020469e <read32>
-    80204850:	87aa                	mv	a5,a0
-    80204852:	2781                	sext.w	a5,a5
-    80204854:	2781                	sext.w	a5,a5
+    80204466:	0c2017b7          	lui	a5,0xc201
+    8020446a:	00478513          	addi	a0,a5,4 # c201004 <_entry-0x73ffeffc>
+    8020446e:	00000097          	auipc	ra,0x0
+    80204472:	e56080e7          	jalr	-426(ra) # 802042c4 <read32>
+    80204476:	87aa                	mv	a5,a0
+    80204478:	2781                	sext.w	a5,a5
+    8020447a:	2781                	sext.w	a5,a5
 }
-    80204856:	853e                	mv	a0,a5
-    80204858:	60a2                	ld	ra,8(sp)
-    8020485a:	6402                	ld	s0,0(sp)
-    8020485c:	0141                	addi	sp,sp,16
-    8020485e:	8082                	ret
+    8020447c:	853e                	mv	a0,a5
+    8020447e:	60a2                	ld	ra,8(sp)
+    80204480:	6402                	ld	s0,0(sp)
+    80204482:	0141                	addi	sp,sp,16
+    80204484:	8082                	ret
 
-0000000080204860 <plic_complete>:
+0000000080204486 <plic_complete>:
 void plic_complete(int irq) {
-    80204860:	1101                	addi	sp,sp,-32
-    80204862:	ec06                	sd	ra,24(sp)
-    80204864:	e822                	sd	s0,16(sp)
-    80204866:	1000                	addi	s0,sp,32
-    80204868:	87aa                	mv	a5,a0
-    8020486a:	fef42623          	sw	a5,-20(s0)
+    80204486:	1101                	addi	sp,sp,-32
+    80204488:	ec06                	sd	ra,24(sp)
+    8020448a:	e822                	sd	s0,16(sp)
+    8020448c:	1000                	addi	s0,sp,32
+    8020448e:	87aa                	mv	a5,a0
+    80204490:	fef42623          	sw	a5,-20(s0)
     write32(PLIC_CLAIM, irq);
-    8020486e:	fec42783          	lw	a5,-20(s0)
-    80204872:	85be                	mv	a1,a5
-    80204874:	0c2017b7          	lui	a5,0xc201
-    80204878:	00478513          	addi	a0,a5,4 # c201004 <_entry-0x73ffeffc>
-    8020487c:	00000097          	auipc	ra,0x0
-    80204880:	dd6080e7          	jalr	-554(ra) # 80204652 <write32>
-    80204884:	0001                	nop
-    80204886:	60e2                	ld	ra,24(sp)
-    80204888:	6442                	ld	s0,16(sp)
-    8020488a:	6105                	addi	sp,sp,32
-    8020488c:	8082                	ret
+    80204494:	fec42783          	lw	a5,-20(s0)
+    80204498:	85be                	mv	a1,a5
+    8020449a:	0c2017b7          	lui	a5,0xc201
+    8020449e:	00478513          	addi	a0,a5,4 # c201004 <_entry-0x73ffeffc>
+    802044a2:	00000097          	auipc	ra,0x0
+    802044a6:	dd6080e7          	jalr	-554(ra) # 80204278 <write32>
+    802044aa:	0001                	nop
+    802044ac:	60e2                	ld	ra,24(sp)
+    802044ae:	6442                	ld	s0,16(sp)
+    802044b0:	6105                	addi	sp,sp,32
+    802044b2:	8082                	ret
 	...
 
-0000000080204890 <kernelvec>:
+00000000802044c0 <kernelvec>:
 .globl kerneltrap
 .globl kernelvec
 .align 4
 kernelvec:
         # make room to save registers.
         addi sp, sp, -256
-    80204890:	7111                	addi	sp,sp,-256
+    802044c0:	7111                	addi	sp,sp,-256
 
         # save ALL registers (caller-saved and callee-saved)
         sd ra, 0(sp)
-    80204892:	e006                	sd	ra,0(sp)
+    802044c2:	e006                	sd	ra,0(sp)
         sd gp, 16(sp)
-    80204894:	e80e                	sd	gp,16(sp)
+    802044c4:	e80e                	sd	gp,16(sp)
         sd tp, 24(sp)
-    80204896:	ec12                	sd	tp,24(sp)
+    802044c6:	ec12                	sd	tp,24(sp)
         sd t0, 32(sp)
-    80204898:	f016                	sd	t0,32(sp)
+    802044c8:	f016                	sd	t0,32(sp)
         sd t1, 40(sp)
-    8020489a:	f41a                	sd	t1,40(sp)
+    802044ca:	f41a                	sd	t1,40(sp)
         sd t2, 48(sp)
-    8020489c:	f81e                	sd	t2,48(sp)
+    802044cc:	f81e                	sd	t2,48(sp)
         sd s0, 56(sp)    # 保存s0/fp
-    8020489e:	fc22                	sd	s0,56(sp)
+    802044ce:	fc22                	sd	s0,56(sp)
         sd s1, 64(sp)    # 保存s1
-    802048a0:	e0a6                	sd	s1,64(sp)
+    802044d0:	e0a6                	sd	s1,64(sp)
         sd a0, 72(sp)
-    802048a2:	e4aa                	sd	a0,72(sp)
+    802044d2:	e4aa                	sd	a0,72(sp)
         sd a1, 80(sp)
-    802048a4:	e8ae                	sd	a1,80(sp)
+    802044d4:	e8ae                	sd	a1,80(sp)
         sd a2, 88(sp)
-    802048a6:	ecb2                	sd	a2,88(sp)
+    802044d6:	ecb2                	sd	a2,88(sp)
         sd a3, 96(sp)
-    802048a8:	f0b6                	sd	a3,96(sp)
+    802044d8:	f0b6                	sd	a3,96(sp)
         sd a4, 104(sp)
-    802048aa:	f4ba                	sd	a4,104(sp)
+    802044da:	f4ba                	sd	a4,104(sp)
         sd a5, 112(sp)
-    802048ac:	f8be                	sd	a5,112(sp)
+    802044dc:	f8be                	sd	a5,112(sp)
         sd a6, 120(sp)
-    802048ae:	fcc2                	sd	a6,120(sp)
+    802044de:	fcc2                	sd	a6,120(sp)
         sd a7, 128(sp)
-    802048b0:	e146                	sd	a7,128(sp)
+    802044e0:	e146                	sd	a7,128(sp)
         sd s2, 136(sp)   # 保存s2
-    802048b2:	e54a                	sd	s2,136(sp)
+    802044e2:	e54a                	sd	s2,136(sp)
         sd s3, 144(sp)   # 保存s3
-    802048b4:	e94e                	sd	s3,144(sp)
+    802044e4:	e94e                	sd	s3,144(sp)
         sd s4, 152(sp)   # 保存s4
-    802048b6:	ed52                	sd	s4,152(sp)
+    802044e6:	ed52                	sd	s4,152(sp)
         sd s5, 160(sp)   # 保存s5
-    802048b8:	f156                	sd	s5,160(sp)
+    802044e8:	f156                	sd	s5,160(sp)
         sd s6, 168(sp)   # 保存s6
-    802048ba:	f55a                	sd	s6,168(sp)
+    802044ea:	f55a                	sd	s6,168(sp)
         sd s7, 176(sp)   # 保存s7
-    802048bc:	f95e                	sd	s7,176(sp)
+    802044ec:	f95e                	sd	s7,176(sp)
         sd s8, 184(sp)   # 保存s8
-    802048be:	fd62                	sd	s8,184(sp)
+    802044ee:	fd62                	sd	s8,184(sp)
         sd s9, 192(sp)   # 保存s9
-    802048c0:	e1e6                	sd	s9,192(sp)
+    802044f0:	e1e6                	sd	s9,192(sp)
         sd s10, 200(sp)  # 保存s10
-    802048c2:	e5ea                	sd	s10,200(sp)
+    802044f2:	e5ea                	sd	s10,200(sp)
         sd s11, 208(sp)  # 保存s11
-    802048c4:	e9ee                	sd	s11,208(sp)
+    802044f4:	e9ee                	sd	s11,208(sp)
         sd t3, 216(sp)
-    802048c6:	edf2                	sd	t3,216(sp)
+    802044f6:	edf2                	sd	t3,216(sp)
         sd t4, 224(sp)
-    802048c8:	f1f6                	sd	t4,224(sp)
+    802044f8:	f1f6                	sd	t4,224(sp)
         sd t5, 232(sp)
-    802048ca:	f5fa                	sd	t5,232(sp)
+    802044fa:	f5fa                	sd	t5,232(sp)
         sd t6, 240(sp)
-    802048cc:	f9fe                	sd	t6,240(sp)
+    802044fc:	f9fe                	sd	t6,240(sp)
 
         # call the C trap handler in trap.c
         call kerneltrap
-    802048ce:	fffff097          	auipc	ra,0xfffff
-    802048d2:	00a080e7          	jalr	10(ra) # 802038d8 <kerneltrap>
+    802044fe:	fffff097          	auipc	ra,0xfffff
+    80204502:	3da080e7          	jalr	986(ra) # 802038d8 <kerneltrap>
 
         # restore ALL registers
         ld ra, 0(sp)
-    802048d6:	6082                	ld	ra,0(sp)
+    80204506:	6082                	ld	ra,0(sp)
         # 不恢复sp
         ld gp, 16(sp)
-    802048d8:	61c2                	ld	gp,16(sp)
+    80204508:	61c2                	ld	gp,16(sp)
         # not tp (contains hartid), in case we moved CPUs
         ld t0, 32(sp)
-    802048da:	7282                	ld	t0,32(sp)
+    8020450a:	7282                	ld	t0,32(sp)
         ld t1, 40(sp)
-    802048dc:	7322                	ld	t1,40(sp)
+    8020450c:	7322                	ld	t1,40(sp)
         ld t2, 48(sp)
-    802048de:	73c2                	ld	t2,48(sp)
+    8020450e:	73c2                	ld	t2,48(sp)
         ld s0, 56(sp)    # 恢复s0/fp
-    802048e0:	7462                	ld	s0,56(sp)
+    80204510:	7462                	ld	s0,56(sp)
         ld s1, 64(sp)    # 恢复s1
-    802048e2:	6486                	ld	s1,64(sp)
+    80204512:	6486                	ld	s1,64(sp)
         ld a0, 72(sp)
-    802048e4:	6526                	ld	a0,72(sp)
+    80204514:	6526                	ld	a0,72(sp)
         ld a1, 80(sp)
-    802048e6:	65c6                	ld	a1,80(sp)
+    80204516:	65c6                	ld	a1,80(sp)
         ld a2, 88(sp)
-    802048e8:	6666                	ld	a2,88(sp)
+    80204518:	6666                	ld	a2,88(sp)
         ld a3, 96(sp)
-    802048ea:	7686                	ld	a3,96(sp)
+    8020451a:	7686                	ld	a3,96(sp)
         ld a4, 104(sp)
-    802048ec:	7726                	ld	a4,104(sp)
+    8020451c:	7726                	ld	a4,104(sp)
         ld a5, 112(sp)
-    802048ee:	77c6                	ld	a5,112(sp)
+    8020451e:	77c6                	ld	a5,112(sp)
         ld a6, 120(sp)
-    802048f0:	7866                	ld	a6,120(sp)
+    80204520:	7866                	ld	a6,120(sp)
         ld a7, 128(sp)
-    802048f2:	688a                	ld	a7,128(sp)
+    80204522:	688a                	ld	a7,128(sp)
         ld s2, 136(sp)   # 恢复s2
-    802048f4:	692a                	ld	s2,136(sp)
+    80204524:	692a                	ld	s2,136(sp)
         ld s3, 144(sp)   # 恢复s3
-    802048f6:	69ca                	ld	s3,144(sp)
+    80204526:	69ca                	ld	s3,144(sp)
         ld s4, 152(sp)   # 恢复s4
-    802048f8:	6a6a                	ld	s4,152(sp)
+    80204528:	6a6a                	ld	s4,152(sp)
         ld s5, 160(sp)   # 恢复s5
-    802048fa:	7a8a                	ld	s5,160(sp)
+    8020452a:	7a8a                	ld	s5,160(sp)
         ld s6, 168(sp)   # 恢复s6
-    802048fc:	7b2a                	ld	s6,168(sp)
+    8020452c:	7b2a                	ld	s6,168(sp)
         ld s7, 176(sp)   # 恢复s7
-    802048fe:	7bca                	ld	s7,176(sp)
+    8020452e:	7bca                	ld	s7,176(sp)
         ld s8, 184(sp)   # 恢复s8
-    80204900:	7c6a                	ld	s8,184(sp)
+    80204530:	7c6a                	ld	s8,184(sp)
         ld s9, 192(sp)   # 恢复s9
-    80204902:	6c8e                	ld	s9,192(sp)
+    80204532:	6c8e                	ld	s9,192(sp)
         ld s10, 200(sp)  # 恢复s10
-    80204904:	6d2e                	ld	s10,200(sp)
+    80204534:	6d2e                	ld	s10,200(sp)
         ld s11, 208(sp)  # 恢复s11
-    80204906:	6dce                	ld	s11,208(sp)
+    80204536:	6dce                	ld	s11,208(sp)
         ld t3, 216(sp)
-    80204908:	6e6e                	ld	t3,216(sp)
+    80204538:	6e6e                	ld	t3,216(sp)
         ld t4, 224(sp)
-    8020490a:	7e8e                	ld	t4,224(sp)
+    8020453a:	7e8e                	ld	t4,224(sp)
         ld t5, 232(sp)
-    8020490c:	7f2e                	ld	t5,232(sp)
+    8020453c:	7f2e                	ld	t5,232(sp)
         ld t6, 240(sp)
-    8020490e:	7fce                	ld	t6,240(sp)
+    8020453e:	7fce                	ld	t6,240(sp)
 
         addi sp, sp, 256
-    80204910:	6111                	addi	sp,sp,256
+    80204540:	6111                	addi	sp,sp,256
 
         # return to whatever we were doing in the kernel.
-    80204912:	10200073          	sret
-    80204916:	0001                	nop
-    80204918:	00000013          	nop
-    8020491c:	00000013          	nop
+    80204542:	10200073          	sret
+    80204546:	0001                	nop
+    80204548:	00000013          	nop
+    8020454c:	00000013          	nop
 
-0000000080204920 <trampoline>:
+0000000080204550 <trampoline>:
 trampoline:
 .align 4
 
 uservec:
     # 1. 取 trapframe 指针
     csrrw a0, sscratch, a0      # a0 = TRAPFRAME (用户页表下可访问), sscratch = user a0
-    80204920:	14051573          	csrrw	a0,sscratch,a0
+    80204550:	14051573          	csrrw	a0,sscratch,a0
 
     # 2. 在切换页表前，先读出关键字段到 t3–t6
     ld   t3, 0(a0)              # t3 = kernel_satp
-    80204924:	00053e03          	ld	t3,0(a0) # c201000 <_entry-0x73fff000>
+    80204554:	00053e03          	ld	t3,0(a0) # c201000 <_entry-0x73fff000>
     ld   t4, 8(a0)              # t4 = kernel_sp
-    80204928:	00853e83          	ld	t4,8(a0)
+    80204558:	00853e83          	ld	t4,8(a0)
     ld   t5, 264(a0)            # t5 = usertrap
-    8020492c:	10853f03          	ld	t5,264(a0)
+    8020455c:	10853f03          	ld	t5,264(a0)
 	ld   t6, 272(a0)			# t6 = kernel_vec
-    80204930:	11053f83          	ld	t6,272(a0)
+    80204560:	11053f83          	ld	t6,272(a0)
 
     # 3. 保存用户寄存器到 trapframe（仍在用户页表下）
     sd   ra, 48(a0)
-    80204934:	02153823          	sd	ra,48(a0)
+    80204564:	02153823          	sd	ra,48(a0)
     sd   sp, 56(a0)
-    80204938:	02253c23          	sd	sp,56(a0)
+    80204568:	02253c23          	sd	sp,56(a0)
     sd   gp, 64(a0)
-    8020493c:	04353023          	sd	gp,64(a0)
+    8020456c:	04353023          	sd	gp,64(a0)
     sd   tp, 72(a0)
-    80204940:	04453423          	sd	tp,72(a0)
+    80204570:	04453423          	sd	tp,72(a0)
     sd   t0, 80(a0)
-    80204944:	04553823          	sd	t0,80(a0)
+    80204574:	04553823          	sd	t0,80(a0)
     sd   t1, 88(a0)
-    80204948:	04653c23          	sd	t1,88(a0)
+    80204578:	04653c23          	sd	t1,88(a0)
     sd   t2, 96(a0)
-    8020494c:	06753023          	sd	t2,96(a0)
+    8020457c:	06753023          	sd	t2,96(a0)
     sd   s0, 104(a0)
-    80204950:	f520                	sd	s0,104(a0)
+    80204580:	f520                	sd	s0,104(a0)
     sd   s1, 112(a0)
-    80204952:	f924                	sd	s1,112(a0)
+    80204582:	f924                	sd	s1,112(a0)
 
     # 保存用户 a0：先取回 sscratch 里的原值
     csrr t2, sscratch
-    80204954:	140023f3          	csrr	t2,sscratch
+    80204584:	140023f3          	csrr	t2,sscratch
     sd   t2, 120(a0)
-    80204958:	06753c23          	sd	t2,120(a0)
+    80204588:	06753c23          	sd	t2,120(a0)
 
     sd   a1, 128(a0)
-    8020495c:	e14c                	sd	a1,128(a0)
+    8020458c:	e14c                	sd	a1,128(a0)
     sd   a2, 136(a0)
-    8020495e:	e550                	sd	a2,136(a0)
+    8020458e:	e550                	sd	a2,136(a0)
     sd   a3, 144(a0)
-    80204960:	e954                	sd	a3,144(a0)
+    80204590:	e954                	sd	a3,144(a0)
     sd   a4, 152(a0)
-    80204962:	ed58                	sd	a4,152(a0)
+    80204592:	ed58                	sd	a4,152(a0)
     sd   a5, 160(a0)
-    80204964:	f15c                	sd	a5,160(a0)
+    80204594:	f15c                	sd	a5,160(a0)
     sd   a6, 168(a0)
-    80204966:	0b053423          	sd	a6,168(a0)
+    80204596:	0b053423          	sd	a6,168(a0)
     sd   a7, 176(a0)
-    8020496a:	0b153823          	sd	a7,176(a0)
+    8020459a:	0b153823          	sd	a7,176(a0)
     sd   s2, 184(a0)
-    8020496e:	0b253c23          	sd	s2,184(a0)
+    8020459e:	0b253c23          	sd	s2,184(a0)
     sd   s3, 192(a0)
-    80204972:	0d353023          	sd	s3,192(a0)
+    802045a2:	0d353023          	sd	s3,192(a0)
     sd   s4, 200(a0)
-    80204976:	0d453423          	sd	s4,200(a0)
+    802045a6:	0d453423          	sd	s4,200(a0)
     sd   s5, 208(a0)
-    8020497a:	0d553823          	sd	s5,208(a0)
+    802045aa:	0d553823          	sd	s5,208(a0)
     sd   s6, 216(a0)
-    8020497e:	0d653c23          	sd	s6,216(a0)
+    802045ae:	0d653c23          	sd	s6,216(a0)
     sd   s7, 224(a0)
-    80204982:	0f753023          	sd	s7,224(a0)
+    802045b2:	0f753023          	sd	s7,224(a0)
     sd   s8, 232(a0)
-    80204986:	0f853423          	sd	s8,232(a0)
+    802045b6:	0f853423          	sd	s8,232(a0)
     sd   s9, 240(a0)
-    8020498a:	0f953823          	sd	s9,240(a0)
+    802045ba:	0f953823          	sd	s9,240(a0)
     sd   s10, 248(a0)
-    8020498e:	0fa53c23          	sd	s10,248(a0)
+    802045be:	0fa53c23          	sd	s10,248(a0)
     sd   s11, 256(a0)
-    80204992:	11b53023          	sd	s11,256(a0)
+    802045c2:	11b53023          	sd	s11,256(a0)
 
     # 保存控制寄存器
     csrr t0, sstatus
-    80204996:	100022f3          	csrr	t0,sstatus
+    802045c6:	100022f3          	csrr	t0,sstatus
     sd   t0, 24(a0)
-    8020499a:	00553c23          	sd	t0,24(a0)
+    802045ca:	00553c23          	sd	t0,24(a0)
     csrr t1, sepc
-    8020499e:	14102373          	csrr	t1,sepc
+    802045ce:	14102373          	csrr	t1,sepc
     sd   t1, 32(a0)
-    802049a2:	02653023          	sd	t1,32(a0)
+    802045d2:	02653023          	sd	t1,32(a0)
 
     # 4. 切换到内核页表
     csrw satp, t3
-    802049a6:	180e1073          	csrw	satp,t3
+    802045d6:	180e1073          	csrw	satp,t3
     sfence.vma x0, x0
-    802049aa:	12000073          	sfence.vma
+    802045da:	12000073          	sfence.vma
 
     # 5. 切换到内核栈
     mv   sp, t4
-    802049ae:	8176                	mv	sp,t4
+    802045de:	8176                	mv	sp,t4
 
     # 6. 设置 stvec 并跳转到 C 层 usertrap
     csrw stvec, t6
-    802049b0:	105f9073          	csrw	stvec,t6
+    802045e0:	105f9073          	csrw	stvec,t6
     jr   t5
-    802049b4:	8f02                	jr	t5
+    802045e4:	8f02                	jr	t5
 
-00000000802049b6 <userret>:
+00000000802045e6 <userret>:
 userret:
         mv t0, a0
-    802049b6:	82aa                	mv	t0,a0
+    802045e6:	82aa                	mv	t0,a0
         mv a0, a1
-    802049b8:	852e                	mv	a0,a1
+    802045e8:	852e                	mv	a0,a1
         csrw satp, a0
-    802049ba:	18051073          	csrw	satp,a0
+    802045ea:	18051073          	csrw	satp,a0
         sfence.vma zero, zero
-    802049be:	12000073          	sfence.vma
+    802045ee:	12000073          	sfence.vma
         mv a0, t0
-    802049c2:	8516                	mv	a0,t0
+    802045f2:	8516                	mv	a0,t0
         ld ra, 48(a0)
-    802049c4:	03053083          	ld	ra,48(a0)
+    802045f4:	03053083          	ld	ra,48(a0)
         ld sp, 56(a0)
-    802049c8:	03853103          	ld	sp,56(a0)
+    802045f8:	03853103          	ld	sp,56(a0)
         ld gp, 64(a0)
-    802049cc:	04053183          	ld	gp,64(a0)
+    802045fc:	04053183          	ld	gp,64(a0)
         ld tp, 72(a0)
-    802049d0:	04853203          	ld	tp,72(a0)
+    80204600:	04853203          	ld	tp,72(a0)
         ld t0, 80(a0)
-    802049d4:	05053283          	ld	t0,80(a0)
+    80204604:	05053283          	ld	t0,80(a0)
         ld t1, 88(a0)
-    802049d8:	05853303          	ld	t1,88(a0)
+    80204608:	05853303          	ld	t1,88(a0)
         ld t2, 96(a0)
-    802049dc:	06053383          	ld	t2,96(a0)
+    8020460c:	06053383          	ld	t2,96(a0)
         ld s0, 104(a0)
-    802049e0:	7520                	ld	s0,104(a0)
+    80204610:	7520                	ld	s0,104(a0)
         ld s1, 112(a0)
-    802049e2:	7924                	ld	s1,112(a0)
+    80204612:	7924                	ld	s1,112(a0)
         ld a1, 128(a0)
-    802049e4:	614c                	ld	a1,128(a0)
+    80204614:	614c                	ld	a1,128(a0)
         ld a2, 136(a0)
-    802049e6:	6550                	ld	a2,136(a0)
+    80204616:	6550                	ld	a2,136(a0)
         ld a3, 144(a0)
-    802049e8:	6954                	ld	a3,144(a0)
+    80204618:	6954                	ld	a3,144(a0)
         ld a4, 152(a0)
-    802049ea:	6d58                	ld	a4,152(a0)
+    8020461a:	6d58                	ld	a4,152(a0)
         ld a5, 160(a0)
-    802049ec:	715c                	ld	a5,160(a0)
+    8020461c:	715c                	ld	a5,160(a0)
         ld a6, 168(a0)
-    802049ee:	0a853803          	ld	a6,168(a0)
+    8020461e:	0a853803          	ld	a6,168(a0)
         ld a7, 176(a0)
-    802049f2:	0b053883          	ld	a7,176(a0)
+    80204622:	0b053883          	ld	a7,176(a0)
         ld s2, 184(a0)
-    802049f6:	0b853903          	ld	s2,184(a0)
+    80204626:	0b853903          	ld	s2,184(a0)
         ld s3, 192(a0)
-    802049fa:	0c053983          	ld	s3,192(a0)
+    8020462a:	0c053983          	ld	s3,192(a0)
         ld s4, 200(a0)
-    802049fe:	0c853a03          	ld	s4,200(a0)
+    8020462e:	0c853a03          	ld	s4,200(a0)
         ld s5, 208(a0)
-    80204a02:	0d053a83          	ld	s5,208(a0)
+    80204632:	0d053a83          	ld	s5,208(a0)
         ld s6, 216(a0)
-    80204a06:	0d853b03          	ld	s6,216(a0)
+    80204636:	0d853b03          	ld	s6,216(a0)
         ld s7, 224(a0)
-    80204a0a:	0e053b83          	ld	s7,224(a0)
+    8020463a:	0e053b83          	ld	s7,224(a0)
         ld s8, 232(a0)
-    80204a0e:	0e853c03          	ld	s8,232(a0)
+    8020463e:	0e853c03          	ld	s8,232(a0)
         ld s9, 240(a0)
-    80204a12:	0f053c83          	ld	s9,240(a0)
+    80204642:	0f053c83          	ld	s9,240(a0)
         ld s10, 248(a0)
-    80204a16:	0f853d03          	ld	s10,248(a0)
+    80204646:	0f853d03          	ld	s10,248(a0)
         ld s11, 256(a0)
-    80204a1a:	10053d83          	ld	s11,256(a0)
+    8020464a:	10053d83          	ld	s11,256(a0)
 
         ld t1, 32(a0)      # 恢复 sepc
-    80204a1e:	02053303          	ld	t1,32(a0)
+    8020464e:	02053303          	ld	t1,32(a0)
         csrw sepc, t1
-    80204a22:	14131073          	csrw	sepc,t1
+    80204652:	14131073          	csrw	sepc,t1
         ld t2, 24(a0)      # 恢复 sstatus
-    80204a26:	01853383          	ld	t2,24(a0)
+    80204656:	01853383          	ld	t2,24(a0)
         csrw sstatus, t2
-    80204a2a:	10039073          	csrw	sstatus,t2
+    8020465a:	10039073          	csrw	sstatus,t2
 		csrw sscratch, a0
-    80204a2e:	14051073          	csrw	sscratch,a0
+    8020465e:	14051073          	csrw	sscratch,a0
 		ld a0, 120(a0)
-    80204a32:	7d28                	ld	a0,120(a0)
-    80204a34:	10200073          	sret
-    80204a38:	00000013          	nop
-    80204a3c:	00000013          	nop
+    80204662:	7d28                	ld	a0,120(a0)
+    80204664:	10200073          	sret
+    80204668:	00000013          	nop
+    8020466c:	00000013          	nop
 
-0000000080204a40 <swtch>:
+0000000080204670 <swtch>:
 # Save current registers in old. Load from new.	
 
 
 .globl swtch
 swtch:
         sd ra, 0(a0)
-    80204a40:	00153023          	sd	ra,0(a0)
+    80204670:	00153023          	sd	ra,0(a0)
         sd sp, 8(a0)
-    80204a44:	00253423          	sd	sp,8(a0)
+    80204674:	00253423          	sd	sp,8(a0)
         sd s0, 16(a0)
-    80204a48:	e900                	sd	s0,16(a0)
+    80204678:	e900                	sd	s0,16(a0)
         sd s1, 24(a0)
-    80204a4a:	ed04                	sd	s1,24(a0)
+    8020467a:	ed04                	sd	s1,24(a0)
         sd s2, 32(a0)
-    80204a4c:	03253023          	sd	s2,32(a0)
+    8020467c:	03253023          	sd	s2,32(a0)
         sd s3, 40(a0)
-    80204a50:	03353423          	sd	s3,40(a0)
+    80204680:	03353423          	sd	s3,40(a0)
         sd s4, 48(a0)
-    80204a54:	03453823          	sd	s4,48(a0)
+    80204684:	03453823          	sd	s4,48(a0)
         sd s5, 56(a0)
-    80204a58:	03553c23          	sd	s5,56(a0)
+    80204688:	03553c23          	sd	s5,56(a0)
         sd s6, 64(a0)
-    80204a5c:	05653023          	sd	s6,64(a0)
+    8020468c:	05653023          	sd	s6,64(a0)
         sd s7, 72(a0)
-    80204a60:	05753423          	sd	s7,72(a0)
+    80204690:	05753423          	sd	s7,72(a0)
         sd s8, 80(a0)
-    80204a64:	05853823          	sd	s8,80(a0)
+    80204694:	05853823          	sd	s8,80(a0)
         sd s9, 88(a0)
-    80204a68:	05953c23          	sd	s9,88(a0)
+    80204698:	05953c23          	sd	s9,88(a0)
         sd s10, 96(a0)
-    80204a6c:	07a53023          	sd	s10,96(a0)
+    8020469c:	07a53023          	sd	s10,96(a0)
         sd s11, 104(a0)
-    80204a70:	07b53423          	sd	s11,104(a0)
+    802046a0:	07b53423          	sd	s11,104(a0)
 
         ld ra, 0(a1)
-    80204a74:	0005b083          	ld	ra,0(a1)
+    802046a4:	0005b083          	ld	ra,0(a1)
         ld sp, 8(a1)
-    80204a78:	0085b103          	ld	sp,8(a1)
+    802046a8:	0085b103          	ld	sp,8(a1)
         ld s0, 16(a1)
-    80204a7c:	6980                	ld	s0,16(a1)
+    802046ac:	6980                	ld	s0,16(a1)
         ld s1, 24(a1)
-    80204a7e:	6d84                	ld	s1,24(a1)
+    802046ae:	6d84                	ld	s1,24(a1)
         ld s2, 32(a1)
-    80204a80:	0205b903          	ld	s2,32(a1)
+    802046b0:	0205b903          	ld	s2,32(a1)
         ld s3, 40(a1)
-    80204a84:	0285b983          	ld	s3,40(a1)
+    802046b4:	0285b983          	ld	s3,40(a1)
         ld s4, 48(a1)
-    80204a88:	0305ba03          	ld	s4,48(a1)
+    802046b8:	0305ba03          	ld	s4,48(a1)
         ld s5, 56(a1)
-    80204a8c:	0385ba83          	ld	s5,56(a1)
+    802046bc:	0385ba83          	ld	s5,56(a1)
         ld s6, 64(a1)
-    80204a90:	0405bb03          	ld	s6,64(a1)
+    802046c0:	0405bb03          	ld	s6,64(a1)
         ld s7, 72(a1)
-    80204a94:	0485bb83          	ld	s7,72(a1)
+    802046c4:	0485bb83          	ld	s7,72(a1)
         ld s8, 80(a1)
-    80204a98:	0505bc03          	ld	s8,80(a1)
+    802046c8:	0505bc03          	ld	s8,80(a1)
         ld s9, 88(a1)
-    80204a9c:	0585bc83          	ld	s9,88(a1)
+    802046cc:	0585bc83          	ld	s9,88(a1)
         ld s10, 96(a1)
-    80204aa0:	0605bd03          	ld	s10,96(a1)
+    802046d0:	0605bd03          	ld	s10,96(a1)
         ld s11, 104(a1)
-    80204aa4:	0685bd83          	ld	s11,104(a1)
+    802046d4:	0685bd83          	ld	s11,104(a1)
         
         ret
-    80204aa8:	8082                	ret
+    802046d8:	8082                	ret
 
-0000000080204aaa <r_sstatus>:
-    // 不parent为NULL的初始进程退出，目前表示为关机
-    if (!p->parent){
-		shutdown();
-	}
-    
-    p->state = ZOMBIE;
-    80204aaa:	1101                	addi	sp,sp,-32
-    80204aac:	ec22                	sd	s0,24(sp)
-    80204aae:	1000                	addi	s0,sp,32
-    void *chan = (void*)p->parent;
-    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
-    80204ab0:	100027f3          	csrr	a5,sstatus
-    80204ab4:	fef43423          	sd	a5,-24(s0)
-        wakeup(chan);
-    80204ab8:	fe843783          	ld	a5,-24(s0)
+00000000802046da <r_sstatus>:
     }
-    80204abc:	853e                	mv	a0,a5
-    80204abe:	6462                	ld	s0,24(sp)
-    80204ac0:	6105                	addi	sp,sp,32
-    80204ac2:	8082                	ret
-
-0000000080204ac4 <w_sstatus>:
-    current_proc = 0;
-    80204ac4:	1101                	addi	sp,sp,-32
-    80204ac6:	ec22                	sd	s0,24(sp)
-    80204ac8:	1000                	addi	s0,sp,32
-    80204aca:	fea43423          	sd	a0,-24(s0)
-    if (mycpu())
-    80204ace:	fe843783          	ld	a5,-24(s0)
-    80204ad2:	10079073          	csrw	sstatus,a5
-        mycpu()->proc = 0;
-    80204ad6:	0001                	nop
-    80204ad8:	6462                	ld	s0,24(sp)
-    80204ada:	6105                	addi	sp,sp,32
-    80204adc:	8082                	ret
-
-0000000080204ade <intr_on>:
-    panic("exit_proc should not return after schedule");
 }
-int wait_proc(int *status) {
-    struct proc *p = myproc();
-    
-    if (p == 0) {
-    80204ade:	1141                	addi	sp,sp,-16
-    80204ae0:	e406                	sd	ra,8(sp)
-    80204ae2:	e022                	sd	s0,0(sp)
-    80204ae4:	0800                	addi	s0,sp,16
-        printf("Warning: wait_proc called with no current process\n");
-    80204ae6:	00000097          	auipc	ra,0x0
-    80204aea:	fc4080e7          	jalr	-60(ra) # 80204aaa <r_sstatus>
-    80204aee:	87aa                	mv	a5,a0
-    80204af0:	0027e793          	ori	a5,a5,2
-    80204af4:	853e                	mv	a0,a5
-    80204af6:	00000097          	auipc	ra,0x0
-    80204afa:	fce080e7          	jalr	-50(ra) # 80204ac4 <w_sstatus>
-        return -1;
-    80204afe:	0001                	nop
-    80204b00:	60a2                	ld	ra,8(sp)
-    80204b02:	6402                	ld	s0,0(sp)
-    80204b04:	0141                	addi	sp,sp,16
-    80204b06:	8082                	ret
-
-0000000080204b08 <intr_off>:
-    }
-    
-    80204b08:	1141                	addi	sp,sp,-16
-    80204b0a:	e406                	sd	ra,8(sp)
-    80204b0c:	e022                	sd	s0,0(sp)
-    80204b0e:	0800                	addi	s0,sp,16
-    while (1) {
-    80204b10:	00000097          	auipc	ra,0x0
-    80204b14:	f9a080e7          	jalr	-102(ra) # 80204aaa <r_sstatus>
-    80204b18:	87aa                	mv	a5,a0
-    80204b1a:	9bf5                	andi	a5,a5,-3
-    80204b1c:	853e                	mv	a0,a5
-    80204b1e:	00000097          	auipc	ra,0x0
-    80204b22:	fa6080e7          	jalr	-90(ra) # 80204ac4 <w_sstatus>
-        // 关中断确保原子操作
-    80204b26:	0001                	nop
-    80204b28:	60a2                	ld	ra,8(sp)
-    80204b2a:	6402                	ld	s0,0(sp)
-    80204b2c:	0141                	addi	sp,sp,16
-    80204b2e:	8082                	ret
-
-0000000080204b30 <w_stvec>:
-        intr_off();
-        
-    80204b30:	1101                	addi	sp,sp,-32
-    80204b32:	ec22                	sd	s0,24(sp)
-    80204b34:	1000                	addi	s0,sp,32
-    80204b36:	fea43423          	sd	a0,-24(s0)
-        // 优先检查是否有僵尸子进程
-    80204b3a:	fe843783          	ld	a5,-24(s0)
-    80204b3e:	10579073          	csrw	stvec,a5
-        int found_zombie = 0;
-    80204b42:	0001                	nop
-    80204b44:	6462                	ld	s0,24(sp)
-    80204b46:	6105                	addi	sp,sp,32
-    80204b48:	8082                	ret
-
-0000000080204b4a <shutdown>:
-void shutdown() {
-    80204b4a:	1141                	addi	sp,sp,-16
-    80204b4c:	e406                	sd	ra,8(sp)
-    80204b4e:	e022                	sd	s0,0(sp)
-    80204b50:	0800                	addi	s0,sp,16
-	free_proc_table();
-    80204b52:	00000097          	auipc	ra,0x0
-    80204b56:	3a2080e7          	jalr	930(ra) # 80204ef4 <free_proc_table>
-    printf("关机\n");
-    80204b5a:	00004517          	auipc	a0,0x4
-    80204b5e:	2a650513          	addi	a0,a0,678 # 80208e00 <etext+0x1e00>
-    80204b62:	ffffc097          	auipc	ra,0xffffc
-    80204b66:	120080e7          	jalr	288(ra) # 80200c82 <printf>
-    asm volatile (
-    80204b6a:	48a1                	li	a7,8
-    80204b6c:	00000073          	ecall
-    while (1) { }
-    80204b70:	0001                	nop
-    80204b72:	bffd                	j	80204b70 <shutdown+0x26>
-
-0000000080204b74 <myproc>:
-struct proc* myproc(void) {
-    80204b74:	1141                	addi	sp,sp,-16
-    80204b76:	e422                	sd	s0,8(sp)
-    80204b78:	0800                	addi	s0,sp,16
-    return current_proc;
-    80204b7a:	00007797          	auipc	a5,0x7
-    80204b7e:	54678793          	addi	a5,a5,1350 # 8020c0c0 <current_proc>
-    80204b82:	639c                	ld	a5,0(a5)
-}
-    80204b84:	853e                	mv	a0,a5
-    80204b86:	6422                	ld	s0,8(sp)
-    80204b88:	0141                	addi	sp,sp,16
-    80204b8a:	8082                	ret
-
-0000000080204b8c <mycpu>:
-struct cpu* mycpu(void) {
-    80204b8c:	1141                	addi	sp,sp,-16
-    80204b8e:	e406                	sd	ra,8(sp)
-    80204b90:	e022                	sd	s0,0(sp)
-    80204b92:	0800                	addi	s0,sp,16
-    if (current_cpu == 0) {
-    80204b94:	00007797          	auipc	a5,0x7
-    80204b98:	53478793          	addi	a5,a5,1332 # 8020c0c8 <current_cpu>
-    80204b9c:	639c                	ld	a5,0(a5)
-    80204b9e:	ebb9                	bnez	a5,80204bf4 <mycpu+0x68>
-        warning("current_cpu is NULL, initializing...\n");
-    80204ba0:	00004517          	auipc	a0,0x4
-    80204ba4:	26850513          	addi	a0,a0,616 # 80208e08 <etext+0x1e08>
-    80204ba8:	ffffd097          	auipc	ra,0xffffd
-    80204bac:	b5a080e7          	jalr	-1190(ra) # 80201702 <warning>
-		memset(&cpu_instance, 0, sizeof(struct cpu));
-    80204bb0:	07800613          	li	a2,120
-    80204bb4:	4581                	li	a1,0
-    80204bb6:	00008517          	auipc	a0,0x8
-    80204bba:	cca50513          	addi	a0,a0,-822 # 8020c880 <cpu_instance.1>
-    80204bbe:	ffffd097          	auipc	ra,0xffffd
-    80204bc2:	24e080e7          	jalr	590(ra) # 80201e0c <memset>
-		current_cpu = &cpu_instance;
-    80204bc6:	00007797          	auipc	a5,0x7
-    80204bca:	50278793          	addi	a5,a5,1282 # 8020c0c8 <current_cpu>
-    80204bce:	00008717          	auipc	a4,0x8
-    80204bd2:	cb270713          	addi	a4,a4,-846 # 8020c880 <cpu_instance.1>
-    80204bd6:	e398                	sd	a4,0(a5)
-		printf("CPU initialized: %p\n", current_cpu);
-    80204bd8:	00007797          	auipc	a5,0x7
-    80204bdc:	4f078793          	addi	a5,a5,1264 # 8020c0c8 <current_cpu>
-    80204be0:	639c                	ld	a5,0(a5)
-    80204be2:	85be                	mv	a1,a5
-    80204be4:	00004517          	auipc	a0,0x4
-    80204be8:	24c50513          	addi	a0,a0,588 # 80208e30 <etext+0x1e30>
-    80204bec:	ffffc097          	auipc	ra,0xffffc
-    80204bf0:	096080e7          	jalr	150(ra) # 80200c82 <printf>
-    return current_cpu;
-    80204bf4:	00007797          	auipc	a5,0x7
-    80204bf8:	4d478793          	addi	a5,a5,1236 # 8020c0c8 <current_cpu>
-    80204bfc:	639c                	ld	a5,0(a5)
-}
-    80204bfe:	853e                	mv	a0,a5
-    80204c00:	60a2                	ld	ra,8(sp)
-    80204c02:	6402                	ld	s0,0(sp)
-    80204c04:	0141                	addi	sp,sp,16
-    80204c06:	8082                	ret
-
-0000000080204c08 <return_to_user>:
-void return_to_user(void) {
-    80204c08:	7179                	addi	sp,sp,-48
-    80204c0a:	f406                	sd	ra,40(sp)
-    80204c0c:	f022                	sd	s0,32(sp)
-    80204c0e:	1800                	addi	s0,sp,48
-    struct proc *p = myproc();
-    80204c10:	00000097          	auipc	ra,0x0
-    80204c14:	f64080e7          	jalr	-156(ra) # 80204b74 <myproc>
-    80204c18:	fea43423          	sd	a0,-24(s0)
-    if (p == 0) {
-    80204c1c:	fe843783          	ld	a5,-24(s0)
-    80204c20:	eb89                	bnez	a5,80204c32 <return_to_user+0x2a>
-        panic("return_to_user: no current process");
-    80204c22:	00004517          	auipc	a0,0x4
-    80204c26:	22650513          	addi	a0,a0,550 # 80208e48 <etext+0x1e48>
-    80204c2a:	ffffd097          	auipc	ra,0xffffd
-    80204c2e:	aa4080e7          	jalr	-1372(ra) # 802016ce <panic>
-    if (p->chan != 0) {
-    80204c32:	fe843783          	ld	a5,-24(s0)
-    80204c36:	73dc                	ld	a5,160(a5)
-    80204c38:	c791                	beqz	a5,80204c44 <return_to_user+0x3c>
-        p->chan = 0;
-    80204c3a:	fe843783          	ld	a5,-24(s0)
-    80204c3e:	0a07b023          	sd	zero,160(a5)
-        return;
-    80204c42:	a869                	j	80204cdc <return_to_user+0xd4>
-    w_stvec(TRAMPOLINE + (uservec - trampoline));
-    80204c44:	00000717          	auipc	a4,0x0
-    80204c48:	cdc70713          	addi	a4,a4,-804 # 80204920 <trampoline>
-    80204c4c:	00000797          	auipc	a5,0x0
-    80204c50:	cd478793          	addi	a5,a5,-812 # 80204920 <trampoline>
-    80204c54:	40f707b3          	sub	a5,a4,a5
-    80204c58:	873e                	mv	a4,a5
-    80204c5a:	77fd                	lui	a5,0xfffff
-    80204c5c:	97ba                	add	a5,a5,a4
-    80204c5e:	853e                	mv	a0,a5
-    80204c60:	00000097          	auipc	ra,0x0
-    80204c64:	ed0080e7          	jalr	-304(ra) # 80204b30 <w_stvec>
-    uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
-    80204c68:	00000717          	auipc	a4,0x0
-    80204c6c:	d4e70713          	addi	a4,a4,-690 # 802049b6 <userret>
-    80204c70:	00000797          	auipc	a5,0x0
-    80204c74:	cb078793          	addi	a5,a5,-848 # 80204920 <trampoline>
-    80204c78:	40f707b3          	sub	a5,a4,a5
-    80204c7c:	873e                	mv	a4,a5
-    80204c7e:	77fd                	lui	a5,0xfffff
-    80204c80:	97ba                	add	a5,a5,a4
-    80204c82:	fef43023          	sd	a5,-32(s0)
-    uint64 satp = MAKE_SATP(p->pagetable);
-    80204c86:	fe843783          	ld	a5,-24(s0)
-    80204c8a:	7fdc                	ld	a5,184(a5)
-    80204c8c:	00c7d713          	srli	a4,a5,0xc
-    80204c90:	57fd                	li	a5,-1
-    80204c92:	17fe                	slli	a5,a5,0x3f
-    80204c94:	8fd9                	or	a5,a5,a4
-    80204c96:	fcf43c23          	sd	a5,-40(s0)
-	if ((trampoline_userret & ~(PGSIZE - 1)) != TRAMPOLINE) {
-    80204c9a:	fe043703          	ld	a4,-32(s0)
-    80204c9e:	77fd                	lui	a5,0xfffff
-    80204ca0:	8f7d                	and	a4,a4,a5
-    80204ca2:	77fd                	lui	a5,0xfffff
-    80204ca4:	00f70a63          	beq	a4,a5,80204cb8 <return_to_user+0xb0>
-		panic("return_to_user: 跳转地址超出trampoline页范围");
-    80204ca8:	00004517          	auipc	a0,0x4
-    80204cac:	1c850513          	addi	a0,a0,456 # 80208e70 <etext+0x1e70>
-    80204cb0:	ffffd097          	auipc	ra,0xffffd
-    80204cb4:	a1e080e7          	jalr	-1506(ra) # 802016ce <panic>
-    void (*userret_fn)(uint64, uint64) = (void (*)(uint64, uint64))trampoline_userret;
-    80204cb8:	fe043783          	ld	a5,-32(s0)
-    80204cbc:	fcf43823          	sd	a5,-48(s0)
-    userret_fn(TRAPFRAME, satp);
-    80204cc0:	fd043783          	ld	a5,-48(s0)
-    80204cc4:	fd843583          	ld	a1,-40(s0)
-    80204cc8:	7579                	lui	a0,0xffffe
-    80204cca:	9782                	jalr	a5
-    panic("return_to_user: 不应该返回到这里");
-    80204ccc:	00004517          	auipc	a0,0x4
-    80204cd0:	1dc50513          	addi	a0,a0,476 # 80208ea8 <etext+0x1ea8>
-    80204cd4:	ffffd097          	auipc	ra,0xffffd
-    80204cd8:	9fa080e7          	jalr	-1542(ra) # 802016ce <panic>
-}
-    80204cdc:	70a2                	ld	ra,40(sp)
-    80204cde:	7402                	ld	s0,32(sp)
-    80204ce0:	6145                	addi	sp,sp,48
-    80204ce2:	8082                	ret
-
-0000000080204ce4 <forkret>:
-void forkret(void){
-    80204ce4:	7179                	addi	sp,sp,-48
-    80204ce6:	f406                	sd	ra,40(sp)
-    80204ce8:	f022                	sd	s0,32(sp)
-    80204cea:	1800                	addi	s0,sp,48
-    struct proc *p = myproc();
-    80204cec:	00000097          	auipc	ra,0x0
-    80204cf0:	e88080e7          	jalr	-376(ra) # 80204b74 <myproc>
-    80204cf4:	fea43423          	sd	a0,-24(s0)
-    if (p == 0) {
-    80204cf8:	fe843783          	ld	a5,-24(s0)
-    80204cfc:	eb89                	bnez	a5,80204d0e <forkret+0x2a>
-        panic("forkret: no current process");
-    80204cfe:	00004517          	auipc	a0,0x4
-    80204d02:	1da50513          	addi	a0,a0,474 # 80208ed8 <etext+0x1ed8>
-    80204d06:	ffffd097          	auipc	ra,0xffffd
-    80204d0a:	9c8080e7          	jalr	-1592(ra) # 802016ce <panic>
-    if (p->chan != 0) {
-    80204d0e:	fe843783          	ld	a5,-24(s0)
-    80204d12:	73dc                	ld	a5,160(a5)
-    80204d14:	c791                	beqz	a5,80204d20 <forkret+0x3c>
-        p->chan = 0;  // 清除通道标记
-    80204d16:	fe843783          	ld	a5,-24(s0)
-    80204d1a:	0a07b023          	sd	zero,160(a5) # fffffffffffff0a0 <_bss_end+0xffffffff7fdf2790>
-        return;  // 直接返回，继续执行原来的函数
-    80204d1e:	a0a9                	j	80204d68 <forkret+0x84>
-    uint64 entry = p->trapframe->epc;
-    80204d20:	fe843783          	ld	a5,-24(s0)
-    80204d24:	63fc                	ld	a5,192(a5)
-    80204d26:	739c                	ld	a5,32(a5)
-    80204d28:	fef43023          	sd	a5,-32(s0)
-	if (p->is_user){
-    80204d2c:	fe843783          	ld	a5,-24(s0)
-    80204d30:	0a87a783          	lw	a5,168(a5)
-    80204d34:	c791                	beqz	a5,80204d40 <forkret+0x5c>
-		return_to_user();
-    80204d36:	00000097          	auipc	ra,0x0
-    80204d3a:	ed2080e7          	jalr	-302(ra) # 80204c08 <return_to_user>
-    80204d3e:	a02d                	j	80204d68 <forkret+0x84>
-	}else if (entry != 0) {
-    80204d40:	fe043783          	ld	a5,-32(s0)
-    80204d44:	cf91                	beqz	a5,80204d60 <forkret+0x7c>
-        void (*fn)(void) = (void(*)(void))entry;
-    80204d46:	fe043783          	ld	a5,-32(s0)
-    80204d4a:	fcf43c23          	sd	a5,-40(s0)
-        fn();  // 调用入口函数
-    80204d4e:	fd843783          	ld	a5,-40(s0)
-    80204d52:	9782                	jalr	a5
-        exit_proc(0);  // 如果入口函数返回，则退出进程
-    80204d54:	4501                	li	a0,0
-    80204d56:	00001097          	auipc	ra,0x1
-    80204d5a:	a0e080e7          	jalr	-1522(ra) # 80205764 <exit_proc>
-    80204d5e:	a029                	j	80204d68 <forkret+0x84>
-        return_to_user();
-    80204d60:	00000097          	auipc	ra,0x0
-    80204d64:	ea8080e7          	jalr	-344(ra) # 80204c08 <return_to_user>
-}
-    80204d68:	70a2                	ld	ra,40(sp)
-    80204d6a:	7402                	ld	s0,32(sp)
-    80204d6c:	6145                	addi	sp,sp,48
-    80204d6e:	8082                	ret
-
-0000000080204d70 <init_proc>:
-void init_proc(void){
-    80204d70:	1101                	addi	sp,sp,-32
-    80204d72:	ec06                	sd	ra,24(sp)
-    80204d74:	e822                	sd	s0,16(sp)
-    80204d76:	1000                	addi	s0,sp,32
-    for (int i = 0; i < PROC; i++) {
-    80204d78:	fe042623          	sw	zero,-20(s0)
-    80204d7c:	aa81                	j	80204ecc <init_proc+0x15c>
-        void *page = alloc_page();
-    80204d7e:	ffffe097          	auipc	ra,0xffffe
-    80204d82:	482080e7          	jalr	1154(ra) # 80203200 <alloc_page>
-    80204d86:	fea43023          	sd	a0,-32(s0)
-        if (!page) panic("init_proc: alloc_page failed for proc_table");
-    80204d8a:	fe043783          	ld	a5,-32(s0)
-    80204d8e:	eb89                	bnez	a5,80204da0 <init_proc+0x30>
-    80204d90:	00004517          	auipc	a0,0x4
-    80204d94:	16850513          	addi	a0,a0,360 # 80208ef8 <etext+0x1ef8>
-    80204d98:	ffffd097          	auipc	ra,0xffffd
-    80204d9c:	936080e7          	jalr	-1738(ra) # 802016ce <panic>
-        proc_table_mem[i] = page;
-    80204da0:	00008717          	auipc	a4,0x8
-    80204da4:	8e070713          	addi	a4,a4,-1824 # 8020c680 <proc_table_mem>
-    80204da8:	fec42783          	lw	a5,-20(s0)
-    80204dac:	078e                	slli	a5,a5,0x3
-    80204dae:	97ba                	add	a5,a5,a4
-    80204db0:	fe043703          	ld	a4,-32(s0)
-    80204db4:	e398                	sd	a4,0(a5)
-        proc_table[i] = (struct proc *)page;
-    80204db6:	00007717          	auipc	a4,0x7
-    80204dba:	6c270713          	addi	a4,a4,1730 # 8020c478 <proc_table>
-    80204dbe:	fec42783          	lw	a5,-20(s0)
-    80204dc2:	078e                	slli	a5,a5,0x3
-    80204dc4:	97ba                	add	a5,a5,a4
-    80204dc6:	fe043703          	ld	a4,-32(s0)
-    80204dca:	e398                	sd	a4,0(a5)
-        memset(proc_table[i], 0, sizeof(struct proc));
-    80204dcc:	00007717          	auipc	a4,0x7
-    80204dd0:	6ac70713          	addi	a4,a4,1708 # 8020c478 <proc_table>
-    80204dd4:	fec42783          	lw	a5,-20(s0)
-    80204dd8:	078e                	slli	a5,a5,0x3
-    80204dda:	97ba                	add	a5,a5,a4
-    80204ddc:	639c                	ld	a5,0(a5)
-    80204dde:	0c800613          	li	a2,200
-    80204de2:	4581                	li	a1,0
-    80204de4:	853e                	mv	a0,a5
-    80204de6:	ffffd097          	auipc	ra,0xffffd
-    80204dea:	026080e7          	jalr	38(ra) # 80201e0c <memset>
-        proc_table[i]->state = UNUSED;
-    80204dee:	00007717          	auipc	a4,0x7
-    80204df2:	68a70713          	addi	a4,a4,1674 # 8020c478 <proc_table>
-    80204df6:	fec42783          	lw	a5,-20(s0)
-    80204dfa:	078e                	slli	a5,a5,0x3
-    80204dfc:	97ba                	add	a5,a5,a4
-    80204dfe:	639c                	ld	a5,0(a5)
-    80204e00:	0007a023          	sw	zero,0(a5)
-        proc_table[i]->pid = 0;
-    80204e04:	00007717          	auipc	a4,0x7
-    80204e08:	67470713          	addi	a4,a4,1652 # 8020c478 <proc_table>
-    80204e0c:	fec42783          	lw	a5,-20(s0)
-    80204e10:	078e                	slli	a5,a5,0x3
-    80204e12:	97ba                	add	a5,a5,a4
-    80204e14:	639c                	ld	a5,0(a5)
-    80204e16:	0007a223          	sw	zero,4(a5)
-        proc_table[i]->kstack = 0;
-    80204e1a:	00007717          	auipc	a4,0x7
-    80204e1e:	65e70713          	addi	a4,a4,1630 # 8020c478 <proc_table>
-    80204e22:	fec42783          	lw	a5,-20(s0)
-    80204e26:	078e                	slli	a5,a5,0x3
-    80204e28:	97ba                	add	a5,a5,a4
-    80204e2a:	639c                	ld	a5,0(a5)
-    80204e2c:	0007b423          	sd	zero,8(a5)
-        proc_table[i]->pagetable = 0;
-    80204e30:	00007717          	auipc	a4,0x7
-    80204e34:	64870713          	addi	a4,a4,1608 # 8020c478 <proc_table>
-    80204e38:	fec42783          	lw	a5,-20(s0)
-    80204e3c:	078e                	slli	a5,a5,0x3
-    80204e3e:	97ba                	add	a5,a5,a4
-    80204e40:	639c                	ld	a5,0(a5)
-    80204e42:	0a07bc23          	sd	zero,184(a5)
-        proc_table[i]->trapframe = 0;
-    80204e46:	00007717          	auipc	a4,0x7
-    80204e4a:	63270713          	addi	a4,a4,1586 # 8020c478 <proc_table>
-    80204e4e:	fec42783          	lw	a5,-20(s0)
-    80204e52:	078e                	slli	a5,a5,0x3
-    80204e54:	97ba                	add	a5,a5,a4
-    80204e56:	639c                	ld	a5,0(a5)
-    80204e58:	0c07b023          	sd	zero,192(a5)
-        proc_table[i]->parent = 0;
-    80204e5c:	00007717          	auipc	a4,0x7
-    80204e60:	61c70713          	addi	a4,a4,1564 # 8020c478 <proc_table>
-    80204e64:	fec42783          	lw	a5,-20(s0)
-    80204e68:	078e                	slli	a5,a5,0x3
-    80204e6a:	97ba                	add	a5,a5,a4
-    80204e6c:	639c                	ld	a5,0(a5)
-    80204e6e:	0807bc23          	sd	zero,152(a5)
-        proc_table[i]->chan = 0;
-    80204e72:	00007717          	auipc	a4,0x7
-    80204e76:	60670713          	addi	a4,a4,1542 # 8020c478 <proc_table>
-    80204e7a:	fec42783          	lw	a5,-20(s0)
-    80204e7e:	078e                	slli	a5,a5,0x3
-    80204e80:	97ba                	add	a5,a5,a4
-    80204e82:	639c                	ld	a5,0(a5)
-    80204e84:	0a07b023          	sd	zero,160(a5)
-        proc_table[i]->exit_status = 0;
-    80204e88:	00007717          	auipc	a4,0x7
-    80204e8c:	5f070713          	addi	a4,a4,1520 # 8020c478 <proc_table>
-    80204e90:	fec42783          	lw	a5,-20(s0)
-    80204e94:	078e                	slli	a5,a5,0x3
-    80204e96:	97ba                	add	a5,a5,a4
-    80204e98:	639c                	ld	a5,0(a5)
-    80204e9a:	0807a223          	sw	zero,132(a5)
-        memset(&proc_table[i]->context, 0, sizeof(struct context));
-    80204e9e:	00007717          	auipc	a4,0x7
-    80204ea2:	5da70713          	addi	a4,a4,1498 # 8020c478 <proc_table>
-    80204ea6:	fec42783          	lw	a5,-20(s0)
-    80204eaa:	078e                	slli	a5,a5,0x3
-    80204eac:	97ba                	add	a5,a5,a4
-    80204eae:	639c                	ld	a5,0(a5)
-    80204eb0:	07c1                	addi	a5,a5,16
-    80204eb2:	07000613          	li	a2,112
-    80204eb6:	4581                	li	a1,0
-    80204eb8:	853e                	mv	a0,a5
-    80204eba:	ffffd097          	auipc	ra,0xffffd
-    80204ebe:	f52080e7          	jalr	-174(ra) # 80201e0c <memset>
-    for (int i = 0; i < PROC; i++) {
-    80204ec2:	fec42783          	lw	a5,-20(s0)
-    80204ec6:	2785                	addiw	a5,a5,1
-    80204ec8:	fef42623          	sw	a5,-20(s0)
-    80204ecc:	fec42783          	lw	a5,-20(s0)
-    80204ed0:	0007871b          	sext.w	a4,a5
-    80204ed4:	03f00793          	li	a5,63
-    80204ed8:	eae7d3e3          	bge	a5,a4,80204d7e <init_proc+0xe>
-    proc_table_pages = PROC; // 每个进程一页
-    80204edc:	00007797          	auipc	a5,0x7
-    80204ee0:	79c78793          	addi	a5,a5,1948 # 8020c678 <proc_table_pages>
-    80204ee4:	04000713          	li	a4,64
-    80204ee8:	c398                	sw	a4,0(a5)
-}
-    80204eea:	0001                	nop
-    80204eec:	60e2                	ld	ra,24(sp)
-    80204eee:	6442                	ld	s0,16(sp)
-    80204ef0:	6105                	addi	sp,sp,32
-    80204ef2:	8082                	ret
-
-0000000080204ef4 <free_proc_table>:
-void free_proc_table(void) {
-    80204ef4:	1101                	addi	sp,sp,-32
-    80204ef6:	ec06                	sd	ra,24(sp)
-    80204ef8:	e822                	sd	s0,16(sp)
-    80204efa:	1000                	addi	s0,sp,32
-    for (int i = 0; i < proc_table_pages; i++) {
-    80204efc:	fe042623          	sw	zero,-20(s0)
-    80204f00:	a025                	j	80204f28 <free_proc_table+0x34>
-        free_page(proc_table_mem[i]);
-    80204f02:	00007717          	auipc	a4,0x7
-    80204f06:	77e70713          	addi	a4,a4,1918 # 8020c680 <proc_table_mem>
-    80204f0a:	fec42783          	lw	a5,-20(s0)
-    80204f0e:	078e                	slli	a5,a5,0x3
-    80204f10:	97ba                	add	a5,a5,a4
-    80204f12:	639c                	ld	a5,0(a5)
-    80204f14:	853e                	mv	a0,a5
-    80204f16:	ffffe097          	auipc	ra,0xffffe
-    80204f1a:	356080e7          	jalr	854(ra) # 8020326c <free_page>
-    for (int i = 0; i < proc_table_pages; i++) {
-    80204f1e:	fec42783          	lw	a5,-20(s0)
-    80204f22:	2785                	addiw	a5,a5,1
-    80204f24:	fef42623          	sw	a5,-20(s0)
-    80204f28:	00007797          	auipc	a5,0x7
-    80204f2c:	75078793          	addi	a5,a5,1872 # 8020c678 <proc_table_pages>
-    80204f30:	4398                	lw	a4,0(a5)
-    80204f32:	fec42783          	lw	a5,-20(s0)
-    80204f36:	2781                	sext.w	a5,a5
-    80204f38:	fce7c5e3          	blt	a5,a4,80204f02 <free_proc_table+0xe>
-}
-    80204f3c:	0001                	nop
-    80204f3e:	0001                	nop
-    80204f40:	60e2                	ld	ra,24(sp)
-    80204f42:	6442                	ld	s0,16(sp)
-    80204f44:	6105                	addi	sp,sp,32
-    80204f46:	8082                	ret
-
-0000000080204f48 <alloc_proc>:
-struct proc* alloc_proc(int is_user) {
-    80204f48:	7139                	addi	sp,sp,-64
-    80204f4a:	fc06                	sd	ra,56(sp)
-    80204f4c:	f822                	sd	s0,48(sp)
-    80204f4e:	0080                	addi	s0,sp,64
-    80204f50:	87aa                	mv	a5,a0
-    80204f52:	fcf42623          	sw	a5,-52(s0)
-    for(int i = 0;i<PROC;i++) {
-    80204f56:	fe042623          	sw	zero,-20(s0)
-    80204f5a:	aa85                	j	802050ca <alloc_proc+0x182>
-		struct proc *p = proc_table[i];
-    80204f5c:	00007717          	auipc	a4,0x7
-    80204f60:	51c70713          	addi	a4,a4,1308 # 8020c478 <proc_table>
-    80204f64:	fec42783          	lw	a5,-20(s0)
-    80204f68:	078e                	slli	a5,a5,0x3
-    80204f6a:	97ba                	add	a5,a5,a4
-    80204f6c:	639c                	ld	a5,0(a5)
-    80204f6e:	fef43023          	sd	a5,-32(s0)
-        if(p->state == UNUSED) {
-    80204f72:	fe043783          	ld	a5,-32(s0)
-    80204f76:	439c                	lw	a5,0(a5)
-    80204f78:	14079463          	bnez	a5,802050c0 <alloc_proc+0x178>
-            p->pid = i;
-    80204f7c:	fe043783          	ld	a5,-32(s0)
-    80204f80:	fec42703          	lw	a4,-20(s0)
-    80204f84:	c3d8                	sw	a4,4(a5)
-            p->state = USED;
-    80204f86:	fe043783          	ld	a5,-32(s0)
-    80204f8a:	4705                	li	a4,1
-    80204f8c:	c398                	sw	a4,0(a5)
-			p->is_user = is_user;
-    80204f8e:	fe043783          	ld	a5,-32(s0)
-    80204f92:	fcc42703          	lw	a4,-52(s0)
-    80204f96:	0ae7a423          	sw	a4,168(a5)
-            p->trapframe = (struct trapframe*)alloc_page();
-    80204f9a:	ffffe097          	auipc	ra,0xffffe
-    80204f9e:	266080e7          	jalr	614(ra) # 80203200 <alloc_page>
-    80204fa2:	872a                	mv	a4,a0
-    80204fa4:	fe043783          	ld	a5,-32(s0)
-    80204fa8:	e3f8                	sd	a4,192(a5)
-            if(p->trapframe == 0){
-    80204faa:	fe043783          	ld	a5,-32(s0)
-    80204fae:	63fc                	ld	a5,192(a5)
-    80204fb0:	eb99                	bnez	a5,80204fc6 <alloc_proc+0x7e>
-                p->state = UNUSED;
-    80204fb2:	fe043783          	ld	a5,-32(s0)
-    80204fb6:	0007a023          	sw	zero,0(a5)
-                p->pid = 0;
-    80204fba:	fe043783          	ld	a5,-32(s0)
-    80204fbe:	0007a223          	sw	zero,4(a5)
-                return 0;
-    80204fc2:	4781                	li	a5,0
-    80204fc4:	aa21                	j	802050dc <alloc_proc+0x194>
-			if(p->is_user){
-    80204fc6:	fe043783          	ld	a5,-32(s0)
-    80204fca:	0a87a783          	lw	a5,168(a5)
-    80204fce:	c3b9                	beqz	a5,80205014 <alloc_proc+0xcc>
-				p->pagetable = create_pagetable();
-    80204fd0:	ffffd097          	auipc	ra,0xffffd
-    80204fd4:	098080e7          	jalr	152(ra) # 80202068 <create_pagetable>
-    80204fd8:	872a                	mv	a4,a0
-    80204fda:	fe043783          	ld	a5,-32(s0)
-    80204fde:	ffd8                	sd	a4,184(a5)
-				if(p->pagetable == 0){
-    80204fe0:	fe043783          	ld	a5,-32(s0)
-    80204fe4:	7fdc                	ld	a5,184(a5)
-    80204fe6:	ef9d                	bnez	a5,80205024 <alloc_proc+0xdc>
-					free_page(p->trapframe);
-    80204fe8:	fe043783          	ld	a5,-32(s0)
-    80204fec:	63fc                	ld	a5,192(a5)
-    80204fee:	853e                	mv	a0,a5
-    80204ff0:	ffffe097          	auipc	ra,0xffffe
-    80204ff4:	27c080e7          	jalr	636(ra) # 8020326c <free_page>
-					p->trapframe = 0;
-    80204ff8:	fe043783          	ld	a5,-32(s0)
-    80204ffc:	0c07b023          	sd	zero,192(a5)
-					p->state = UNUSED;
-    80205000:	fe043783          	ld	a5,-32(s0)
-    80205004:	0007a023          	sw	zero,0(a5)
-					p->pid = 0;
-    80205008:	fe043783          	ld	a5,-32(s0)
-    8020500c:	0007a223          	sw	zero,4(a5)
-					return 0;
-    80205010:	4781                	li	a5,0
-    80205012:	a0e9                	j	802050dc <alloc_proc+0x194>
-				p->pagetable = kernel_pagetable;
-    80205014:	00007797          	auipc	a5,0x7
-    80205018:	08c78793          	addi	a5,a5,140 # 8020c0a0 <kernel_pagetable>
-    8020501c:	6398                	ld	a4,0(a5)
-    8020501e:	fe043783          	ld	a5,-32(s0)
-    80205022:	ffd8                	sd	a4,184(a5)
-            void *kstack_mem = alloc_page();
-    80205024:	ffffe097          	auipc	ra,0xffffe
-    80205028:	1dc080e7          	jalr	476(ra) # 80203200 <alloc_page>
-    8020502c:	fca43c23          	sd	a0,-40(s0)
-            if(kstack_mem == 0) {
-    80205030:	fd843783          	ld	a5,-40(s0)
-    80205034:	e3b9                	bnez	a5,8020507a <alloc_proc+0x132>
-                free_page(p->trapframe);
-    80205036:	fe043783          	ld	a5,-32(s0)
-    8020503a:	63fc                	ld	a5,192(a5)
-    8020503c:	853e                	mv	a0,a5
-    8020503e:	ffffe097          	auipc	ra,0xffffe
-    80205042:	22e080e7          	jalr	558(ra) # 8020326c <free_page>
-                free_pagetable(p->pagetable);
-    80205046:	fe043783          	ld	a5,-32(s0)
-    8020504a:	7fdc                	ld	a5,184(a5)
-    8020504c:	853e                	mv	a0,a5
-    8020504e:	ffffd097          	auipc	ra,0xffffd
-    80205052:	3ea080e7          	jalr	1002(ra) # 80202438 <free_pagetable>
-                p->trapframe = 0;
-    80205056:	fe043783          	ld	a5,-32(s0)
-    8020505a:	0c07b023          	sd	zero,192(a5)
-                p->pagetable = 0;
-    8020505e:	fe043783          	ld	a5,-32(s0)
-    80205062:	0a07bc23          	sd	zero,184(a5)
-                p->state = UNUSED;
-    80205066:	fe043783          	ld	a5,-32(s0)
-    8020506a:	0007a023          	sw	zero,0(a5)
-                p->pid = 0;
-    8020506e:	fe043783          	ld	a5,-32(s0)
-    80205072:	0007a223          	sw	zero,4(a5)
-                return 0;
-    80205076:	4781                	li	a5,0
-    80205078:	a095                	j	802050dc <alloc_proc+0x194>
-            p->kstack = (uint64)kstack_mem;
-    8020507a:	fd843703          	ld	a4,-40(s0)
-    8020507e:	fe043783          	ld	a5,-32(s0)
-    80205082:	e798                	sd	a4,8(a5)
-            memset(&p->context, 0, sizeof(p->context));
-    80205084:	fe043783          	ld	a5,-32(s0)
-    80205088:	07c1                	addi	a5,a5,16
-    8020508a:	07000613          	li	a2,112
-    8020508e:	4581                	li	a1,0
-    80205090:	853e                	mv	a0,a5
-    80205092:	ffffd097          	auipc	ra,0xffffd
-    80205096:	d7a080e7          	jalr	-646(ra) # 80201e0c <memset>
-            p->context.ra = (uint64)forkret;
-    8020509a:	00000717          	auipc	a4,0x0
-    8020509e:	c4a70713          	addi	a4,a4,-950 # 80204ce4 <forkret>
-    802050a2:	fe043783          	ld	a5,-32(s0)
-    802050a6:	eb98                	sd	a4,16(a5)
-            p->context.sp = p->kstack + PGSIZE - 16;  // 16字节对齐
-    802050a8:	fe043783          	ld	a5,-32(s0)
-    802050ac:	6798                	ld	a4,8(a5)
-    802050ae:	6785                	lui	a5,0x1
-    802050b0:	17c1                	addi	a5,a5,-16 # ff0 <_entry-0x801ff010>
-    802050b2:	973e                	add	a4,a4,a5
-    802050b4:	fe043783          	ld	a5,-32(s0)
-    802050b8:	ef98                	sd	a4,24(a5)
-            return p;
-    802050ba:	fe043783          	ld	a5,-32(s0)
-    802050be:	a839                	j	802050dc <alloc_proc+0x194>
-    for(int i = 0;i<PROC;i++) {
-    802050c0:	fec42783          	lw	a5,-20(s0)
-    802050c4:	2785                	addiw	a5,a5,1
-    802050c6:	fef42623          	sw	a5,-20(s0)
-    802050ca:	fec42783          	lw	a5,-20(s0)
-    802050ce:	0007871b          	sext.w	a4,a5
-    802050d2:	03f00793          	li	a5,63
-    802050d6:	e8e7d3e3          	bge	a5,a4,80204f5c <alloc_proc+0x14>
-    return 0;
-    802050da:	4781                	li	a5,0
-}
-    802050dc:	853e                	mv	a0,a5
-    802050de:	70e2                	ld	ra,56(sp)
-    802050e0:	7442                	ld	s0,48(sp)
-    802050e2:	6121                	addi	sp,sp,64
-    802050e4:	8082                	ret
-
-00000000802050e6 <free_proc>:
-void free_proc(struct proc *p){
-    802050e6:	1101                	addi	sp,sp,-32
-    802050e8:	ec06                	sd	ra,24(sp)
-    802050ea:	e822                	sd	s0,16(sp)
-    802050ec:	1000                	addi	s0,sp,32
-    802050ee:	fea43423          	sd	a0,-24(s0)
-    if(p->trapframe)
-    802050f2:	fe843783          	ld	a5,-24(s0)
-    802050f6:	63fc                	ld	a5,192(a5)
-    802050f8:	cb89                	beqz	a5,8020510a <free_proc+0x24>
-        free_page(p->trapframe);
-    802050fa:	fe843783          	ld	a5,-24(s0)
-    802050fe:	63fc                	ld	a5,192(a5)
-    80205100:	853e                	mv	a0,a5
-    80205102:	ffffe097          	auipc	ra,0xffffe
-    80205106:	16a080e7          	jalr	362(ra) # 8020326c <free_page>
-    p->trapframe = 0;
-    8020510a:	fe843783          	ld	a5,-24(s0)
-    8020510e:	0c07b023          	sd	zero,192(a5)
-    if(p->pagetable && p->pagetable != kernel_pagetable)
-    80205112:	fe843783          	ld	a5,-24(s0)
-    80205116:	7fdc                	ld	a5,184(a5)
-    80205118:	c39d                	beqz	a5,8020513e <free_proc+0x58>
-    8020511a:	fe843783          	ld	a5,-24(s0)
-    8020511e:	7fd8                	ld	a4,184(a5)
-    80205120:	00007797          	auipc	a5,0x7
-    80205124:	f8078793          	addi	a5,a5,-128 # 8020c0a0 <kernel_pagetable>
-    80205128:	639c                	ld	a5,0(a5)
-    8020512a:	00f70a63          	beq	a4,a5,8020513e <free_proc+0x58>
-        free_pagetable(p->pagetable);
-    8020512e:	fe843783          	ld	a5,-24(s0)
-    80205132:	7fdc                	ld	a5,184(a5)
-    80205134:	853e                	mv	a0,a5
-    80205136:	ffffd097          	auipc	ra,0xffffd
-    8020513a:	302080e7          	jalr	770(ra) # 80202438 <free_pagetable>
-    p->pagetable = 0;
-    8020513e:	fe843783          	ld	a5,-24(s0)
-    80205142:	0a07bc23          	sd	zero,184(a5)
-    if(p->kstack)
-    80205146:	fe843783          	ld	a5,-24(s0)
-    8020514a:	679c                	ld	a5,8(a5)
-    8020514c:	cb89                	beqz	a5,8020515e <free_proc+0x78>
-        free_page((void*)p->kstack);
-    8020514e:	fe843783          	ld	a5,-24(s0)
-    80205152:	679c                	ld	a5,8(a5)
-    80205154:	853e                	mv	a0,a5
-    80205156:	ffffe097          	auipc	ra,0xffffe
-    8020515a:	116080e7          	jalr	278(ra) # 8020326c <free_page>
-    p->kstack = 0;
-    8020515e:	fe843783          	ld	a5,-24(s0)
-    80205162:	0007b423          	sd	zero,8(a5)
-    p->pid = 0;
-    80205166:	fe843783          	ld	a5,-24(s0)
-    8020516a:	0007a223          	sw	zero,4(a5)
-    p->state = UNUSED;
-    8020516e:	fe843783          	ld	a5,-24(s0)
-    80205172:	0007a023          	sw	zero,0(a5)
-    p->parent = 0;
-    80205176:	fe843783          	ld	a5,-24(s0)
-    8020517a:	0807bc23          	sd	zero,152(a5)
-    p->chan = 0;
-    8020517e:	fe843783          	ld	a5,-24(s0)
-    80205182:	0a07b023          	sd	zero,160(a5)
-    memset(&p->context, 0, sizeof(p->context));
-    80205186:	fe843783          	ld	a5,-24(s0)
-    8020518a:	07c1                	addi	a5,a5,16
-    8020518c:	07000613          	li	a2,112
-    80205190:	4581                	li	a1,0
-    80205192:	853e                	mv	a0,a5
-    80205194:	ffffd097          	auipc	ra,0xffffd
-    80205198:	c78080e7          	jalr	-904(ra) # 80201e0c <memset>
-}
-    8020519c:	0001                	nop
-    8020519e:	60e2                	ld	ra,24(sp)
-    802051a0:	6442                	ld	s0,16(sp)
-    802051a2:	6105                	addi	sp,sp,32
-    802051a4:	8082                	ret
-
-00000000802051a6 <create_kernel_proc>:
-int create_kernel_proc(void (*entry)(void)) {
-    802051a6:	7179                	addi	sp,sp,-48
-    802051a8:	f406                	sd	ra,40(sp)
-    802051aa:	f022                	sd	s0,32(sp)
-    802051ac:	1800                	addi	s0,sp,48
-    802051ae:	fca43c23          	sd	a0,-40(s0)
-    struct proc *p = alloc_proc(0);
-    802051b2:	4501                	li	a0,0
-    802051b4:	00000097          	auipc	ra,0x0
-    802051b8:	d94080e7          	jalr	-620(ra) # 80204f48 <alloc_proc>
-    802051bc:	fea43423          	sd	a0,-24(s0)
-    if (!p) return -1;
-    802051c0:	fe843783          	ld	a5,-24(s0)
-    802051c4:	e399                	bnez	a5,802051ca <create_kernel_proc+0x24>
-    802051c6:	57fd                	li	a5,-1
-    802051c8:	a089                	j	8020520a <create_kernel_proc+0x64>
-    p->trapframe->epc = (uint64)entry;
-    802051ca:	fe843783          	ld	a5,-24(s0)
-    802051ce:	63fc                	ld	a5,192(a5)
-    802051d0:	fd843703          	ld	a4,-40(s0)
-    802051d4:	f398                	sd	a4,32(a5)
-    p->state = RUNNABLE;
-    802051d6:	fe843783          	ld	a5,-24(s0)
-    802051da:	470d                	li	a4,3
-    802051dc:	c398                	sw	a4,0(a5)
-    struct proc *parent = myproc();
-    802051de:	00000097          	auipc	ra,0x0
-    802051e2:	996080e7          	jalr	-1642(ra) # 80204b74 <myproc>
-    802051e6:	fea43023          	sd	a0,-32(s0)
-    if (parent != 0) {
-    802051ea:	fe043783          	ld	a5,-32(s0)
-    802051ee:	c799                	beqz	a5,802051fc <create_kernel_proc+0x56>
-        p->parent = parent;
-    802051f0:	fe843783          	ld	a5,-24(s0)
-    802051f4:	fe043703          	ld	a4,-32(s0)
-    802051f8:	efd8                	sd	a4,152(a5)
-    802051fa:	a029                	j	80205204 <create_kernel_proc+0x5e>
-        p->parent = NULL;
-    802051fc:	fe843783          	ld	a5,-24(s0)
-    80205200:	0807bc23          	sd	zero,152(a5)
-    return p->pid;
-    80205204:	fe843783          	ld	a5,-24(s0)
-    80205208:	43dc                	lw	a5,4(a5)
-}
-    8020520a:	853e                	mv	a0,a5
-    8020520c:	70a2                	ld	ra,40(sp)
-    8020520e:	7402                	ld	s0,32(sp)
-    80205210:	6145                	addi	sp,sp,48
-    80205212:	8082                	ret
-
-0000000080205214 <create_user_proc>:
-int create_user_proc(const void *user_bin, int bin_size) {
-    80205214:	715d                	addi	sp,sp,-80
-    80205216:	e486                	sd	ra,72(sp)
-    80205218:	e0a2                	sd	s0,64(sp)
-    8020521a:	0880                	addi	s0,sp,80
-    8020521c:	faa43c23          	sd	a0,-72(s0)
-    80205220:	87ae                	mv	a5,a1
-    80205222:	faf42a23          	sw	a5,-76(s0)
-    struct proc *p = alloc_proc(1); // 1 表示用户进程
-    80205226:	4505                	li	a0,1
-    80205228:	00000097          	auipc	ra,0x0
-    8020522c:	d20080e7          	jalr	-736(ra) # 80204f48 <alloc_proc>
-    80205230:	fea43423          	sd	a0,-24(s0)
-    if (!p) return -1;
-    80205234:	fe843783          	ld	a5,-24(s0)
-    80205238:	e399                	bnez	a5,8020523e <create_user_proc+0x2a>
-    8020523a:	57fd                	li	a5,-1
-    8020523c:	aa6d                	j	802053f6 <create_user_proc+0x1e2>
-    uint64 user_entry = 0x10000;
-    8020523e:	67c1                	lui	a5,0x10
-    80205240:	fef43023          	sd	a5,-32(s0)
-    uint64 user_stack = 0x20000;
-    80205244:	000207b7          	lui	a5,0x20
-    80205248:	fcf43c23          	sd	a5,-40(s0)
-    void *page = alloc_page();
-    8020524c:	ffffe097          	auipc	ra,0xffffe
-    80205250:	fb4080e7          	jalr	-76(ra) # 80203200 <alloc_page>
-    80205254:	fca43823          	sd	a0,-48(s0)
-    if (!page) { free_proc(p); return -1; }
-    80205258:	fd043783          	ld	a5,-48(s0)
-    8020525c:	eb89                	bnez	a5,8020526e <create_user_proc+0x5a>
-    8020525e:	fe843503          	ld	a0,-24(s0)
-    80205262:	00000097          	auipc	ra,0x0
-    80205266:	e84080e7          	jalr	-380(ra) # 802050e6 <free_proc>
-    8020526a:	57fd                	li	a5,-1
-    8020526c:	a269                	j	802053f6 <create_user_proc+0x1e2>
-    map_page(p->pagetable, user_entry, (uint64)page, PTE_R | PTE_W | PTE_X | PTE_U);
-    8020526e:	fe843783          	ld	a5,-24(s0)
-    80205272:	7fdc                	ld	a5,184(a5)
-    80205274:	fd043703          	ld	a4,-48(s0)
-    80205278:	46f9                	li	a3,30
-    8020527a:	863a                	mv	a2,a4
-    8020527c:	fe043583          	ld	a1,-32(s0)
-    80205280:	853e                	mv	a0,a5
-    80205282:	ffffd097          	auipc	ra,0xffffd
-    80205286:	056080e7          	jalr	86(ra) # 802022d8 <map_page>
-    memcpy((void*)page, user_bin, bin_size);
-    8020528a:	fb442783          	lw	a5,-76(s0)
-    8020528e:	863e                	mv	a2,a5
-    80205290:	fb843583          	ld	a1,-72(s0)
-    80205294:	fd043503          	ld	a0,-48(s0)
-    80205298:	ffffd097          	auipc	ra,0xffffd
-    8020529c:	c80080e7          	jalr	-896(ra) # 80201f18 <memcpy>
-    void *stack_page = alloc_page();
-    802052a0:	ffffe097          	auipc	ra,0xffffe
-    802052a4:	f60080e7          	jalr	-160(ra) # 80203200 <alloc_page>
-    802052a8:	fca43423          	sd	a0,-56(s0)
-    if (!stack_page) { free_proc(p); return -1; }
-    802052ac:	fc843783          	ld	a5,-56(s0)
-    802052b0:	eb89                	bnez	a5,802052c2 <create_user_proc+0xae>
-    802052b2:	fe843503          	ld	a0,-24(s0)
-    802052b6:	00000097          	auipc	ra,0x0
-    802052ba:	e30080e7          	jalr	-464(ra) # 802050e6 <free_proc>
-    802052be:	57fd                	li	a5,-1
-    802052c0:	aa1d                	j	802053f6 <create_user_proc+0x1e2>
-    map_page(p->pagetable, user_stack - PGSIZE, (uint64)stack_page, PTE_R | PTE_W | PTE_U);
-    802052c2:	fe843783          	ld	a5,-24(s0)
-    802052c6:	7fc8                	ld	a0,184(a5)
-    802052c8:	fd843703          	ld	a4,-40(s0)
-    802052cc:	77fd                	lui	a5,0xfffff
-    802052ce:	97ba                	add	a5,a5,a4
-    802052d0:	fc843703          	ld	a4,-56(s0)
-    802052d4:	46d9                	li	a3,22
-    802052d6:	863a                	mv	a2,a4
-    802052d8:	85be                	mv	a1,a5
-    802052da:	ffffd097          	auipc	ra,0xffffd
-    802052de:	ffe080e7          	jalr	-2(ra) # 802022d8 <map_page>
-    if (map_page(p->pagetable, TRAPFRAME, (uint64)p->trapframe, PTE_R | PTE_W) != 0) {
-    802052e2:	fe843783          	ld	a5,-24(s0)
-    802052e6:	7fd8                	ld	a4,184(a5)
-    802052e8:	fe843783          	ld	a5,-24(s0)
-    802052ec:	63fc                	ld	a5,192(a5)
-    802052ee:	4699                	li	a3,6
-    802052f0:	863e                	mv	a2,a5
-    802052f2:	75f9                	lui	a1,0xffffe
-    802052f4:	853a                	mv	a0,a4
-    802052f6:	ffffd097          	auipc	ra,0xffffd
-    802052fa:	fe2080e7          	jalr	-30(ra) # 802022d8 <map_page>
-    802052fe:	87aa                	mv	a5,a0
-    80205300:	cb89                	beqz	a5,80205312 <create_user_proc+0xfe>
-        free_proc(p);
-    80205302:	fe843503          	ld	a0,-24(s0)
-    80205306:	00000097          	auipc	ra,0x0
-    8020530a:	de0080e7          	jalr	-544(ra) # 802050e6 <free_proc>
-        return -1;
-    8020530e:	57fd                	li	a5,-1
-    80205310:	a0dd                	j	802053f6 <create_user_proc+0x1e2>
-	memset(p->trapframe, 0, sizeof(*p->trapframe));
-    80205312:	fe843783          	ld	a5,-24(s0)
-    80205316:	63fc                	ld	a5,192(a5)
-    80205318:	11800613          	li	a2,280
-    8020531c:	4581                	li	a1,0
-    8020531e:	853e                	mv	a0,a5
-    80205320:	ffffd097          	auipc	ra,0xffffd
-    80205324:	aec080e7          	jalr	-1300(ra) # 80201e0c <memset>
-	p->trapframe->epc = user_entry; // 应为 0x10000
-    80205328:	fe843783          	ld	a5,-24(s0)
-    8020532c:	63fc                	ld	a5,192(a5)
-    8020532e:	fe043703          	ld	a4,-32(s0)
-    80205332:	f398                	sd	a4,32(a5)
-	p->trapframe->sp = user_stack;  // 应为 0x20000
-    80205334:	fe843783          	ld	a5,-24(s0)
-    80205338:	63fc                	ld	a5,192(a5)
-    8020533a:	fd843703          	ld	a4,-40(s0)
-    8020533e:	ff98                	sd	a4,56(a5)
-	p->trapframe->sstatus = (1UL << 5); // 0x20
-    80205340:	fe843783          	ld	a5,-24(s0)
-    80205344:	63fc                	ld	a5,192(a5)
-    80205346:	02000713          	li	a4,32
-    8020534a:	ef98                	sd	a4,24(a5)
-	p->trapframe->kernel_satp = MAKE_SATP(kernel_pagetable);
-    8020534c:	00007797          	auipc	a5,0x7
-    80205350:	d5478793          	addi	a5,a5,-684 # 8020c0a0 <kernel_pagetable>
-    80205354:	639c                	ld	a5,0(a5)
-    80205356:	00c7d693          	srli	a3,a5,0xc
-    8020535a:	fe843783          	ld	a5,-24(s0)
-    8020535e:	63fc                	ld	a5,192(a5)
-    80205360:	577d                	li	a4,-1
-    80205362:	177e                	slli	a4,a4,0x3f
-    80205364:	8f55                	or	a4,a4,a3
-    80205366:	e398                	sd	a4,0(a5)
-	p->trapframe->kernel_sp = p->kstack + PGSIZE;   // 内核栈顶
-    80205368:	fe843783          	ld	a5,-24(s0)
-    8020536c:	6794                	ld	a3,8(a5)
-    8020536e:	fe843783          	ld	a5,-24(s0)
-    80205372:	63fc                	ld	a5,192(a5)
-    80205374:	6705                	lui	a4,0x1
-    80205376:	9736                	add	a4,a4,a3
-    80205378:	e798                	sd	a4,8(a5)
-	p->trapframe->usertrap  = (uint64)usertrap;     // C 层 trap 处理函数
-    8020537a:	fe843783          	ld	a5,-24(s0)
-    8020537e:	63fc                	ld	a5,192(a5)
-    80205380:	fffff717          	auipc	a4,0xfffff
-    80205384:	10e70713          	addi	a4,a4,270 # 8020448e <usertrap>
-    80205388:	10e7b423          	sd	a4,264(a5)
-	p->trapframe->kernel_vec = (uint64)kernelvec;
-    8020538c:	fe843783          	ld	a5,-24(s0)
-    80205390:	63fc                	ld	a5,192(a5)
-    80205392:	fffff717          	auipc	a4,0xfffff
-    80205396:	4fe70713          	addi	a4,a4,1278 # 80204890 <kernelvec>
-    8020539a:	10e7b823          	sd	a4,272(a5)
-    p->state = RUNNABLE;
-    8020539e:	fe843783          	ld	a5,-24(s0)
-    802053a2:	470d                	li	a4,3
-    802053a4:	c398                	sw	a4,0(a5)
-	if (map_page(p->pagetable, TRAMPOLINE, trampoline_phys_addr, PTE_X | PTE_R) != 0) {
-    802053a6:	fe843783          	ld	a5,-24(s0)
-    802053aa:	7fd8                	ld	a4,184(a5)
-    802053ac:	00007797          	auipc	a5,0x7
-    802053b0:	cfc78793          	addi	a5,a5,-772 # 8020c0a8 <trampoline_phys_addr>
-    802053b4:	639c                	ld	a5,0(a5)
-    802053b6:	46a9                	li	a3,10
-    802053b8:	863e                	mv	a2,a5
-    802053ba:	75fd                	lui	a1,0xfffff
-    802053bc:	853a                	mv	a0,a4
-    802053be:	ffffd097          	auipc	ra,0xffffd
-    802053c2:	f1a080e7          	jalr	-230(ra) # 802022d8 <map_page>
-    802053c6:	87aa                	mv	a5,a0
-    802053c8:	cb89                	beqz	a5,802053da <create_user_proc+0x1c6>
-		free_proc(p);
-    802053ca:	fe843503          	ld	a0,-24(s0)
-    802053ce:	00000097          	auipc	ra,0x0
-    802053d2:	d18080e7          	jalr	-744(ra) # 802050e6 <free_proc>
-		return -1;
-    802053d6:	57fd                	li	a5,-1
-    802053d8:	a839                	j	802053f6 <create_user_proc+0x1e2>
-    struct proc *parent = myproc();
-    802053da:	fffff097          	auipc	ra,0xfffff
-    802053de:	79a080e7          	jalr	1946(ra) # 80204b74 <myproc>
-    802053e2:	fca43023          	sd	a0,-64(s0)
-    p->parent = parent ? parent : NULL;
-    802053e6:	fe843783          	ld	a5,-24(s0)
-    802053ea:	fc043703          	ld	a4,-64(s0)
-    802053ee:	efd8                	sd	a4,152(a5)
-    return p->pid;
-    802053f0:	fe843783          	ld	a5,-24(s0)
-    802053f4:	43dc                	lw	a5,4(a5)
-}
-    802053f6:	853e                	mv	a0,a5
-    802053f8:	60a6                	ld	ra,72(sp)
-    802053fa:	6406                	ld	s0,64(sp)
-    802053fc:	6161                	addi	sp,sp,80
-    802053fe:	8082                	ret
-
-0000000080205400 <fork_proc>:
-int fork_proc(void) {
-    80205400:	1101                	addi	sp,sp,-32
-    80205402:	ec06                	sd	ra,24(sp)
-    80205404:	e822                	sd	s0,16(sp)
-    80205406:	1000                	addi	s0,sp,32
-    struct proc *parent = myproc();
-    80205408:	fffff097          	auipc	ra,0xfffff
-    8020540c:	76c080e7          	jalr	1900(ra) # 80204b74 <myproc>
-    80205410:	fea43423          	sd	a0,-24(s0)
-    struct proc *child = alloc_proc(parent->is_user);
-    80205414:	fe843783          	ld	a5,-24(s0)
-    80205418:	0a87a783          	lw	a5,168(a5)
-    8020541c:	853e                	mv	a0,a5
-    8020541e:	00000097          	auipc	ra,0x0
-    80205422:	b2a080e7          	jalr	-1238(ra) # 80204f48 <alloc_proc>
-    80205426:	fea43023          	sd	a0,-32(s0)
-    if(child == 0)
-    8020542a:	fe043783          	ld	a5,-32(s0)
-    8020542e:	e399                	bnez	a5,80205434 <fork_proc+0x34>
-        return -1;
-    80205430:	57fd                	li	a5,-1
-    80205432:	a059                	j	802054b8 <fork_proc+0xb8>
-    if(uvmcopy(parent->pagetable, child->pagetable, parent->sz) < 0){
-    80205434:	fe843783          	ld	a5,-24(s0)
-    80205438:	7fd8                	ld	a4,184(a5)
-    8020543a:	fe043783          	ld	a5,-32(s0)
-    8020543e:	7fd4                	ld	a3,184(a5)
-    80205440:	fe843783          	ld	a5,-24(s0)
-    80205444:	7bdc                	ld	a5,176(a5)
-    80205446:	863e                	mv	a2,a5
-    80205448:	85b6                	mv	a1,a3
-    8020544a:	853a                	mv	a0,a4
-    8020544c:	ffffe097          	auipc	ra,0xffffe
-    80205450:	be4080e7          	jalr	-1052(ra) # 80203030 <uvmcopy>
-    80205454:	87aa                	mv	a5,a0
-    80205456:	0007da63          	bgez	a5,8020546a <fork_proc+0x6a>
-        free_proc(child);
-    8020545a:	fe043503          	ld	a0,-32(s0)
-    8020545e:	00000097          	auipc	ra,0x0
-    80205462:	c88080e7          	jalr	-888(ra) # 802050e6 <free_proc>
-        return -1;
-    80205466:	57fd                	li	a5,-1
-    80205468:	a881                	j	802054b8 <fork_proc+0xb8>
-    child->sz = parent->sz;
-    8020546a:	fe843783          	ld	a5,-24(s0)
-    8020546e:	7bd8                	ld	a4,176(a5)
-    80205470:	fe043783          	ld	a5,-32(s0)
-    80205474:	fbd8                	sd	a4,176(a5)
-    *(child->trapframe) = *(parent->trapframe);
-    80205476:	fe843783          	ld	a5,-24(s0)
-    8020547a:	63f8                	ld	a4,192(a5)
-    8020547c:	fe043783          	ld	a5,-32(s0)
-    80205480:	63fc                	ld	a5,192(a5)
-    80205482:	86be                	mv	a3,a5
-    80205484:	11800793          	li	a5,280
-    80205488:	863e                	mv	a2,a5
-    8020548a:	85ba                	mv	a1,a4
-    8020548c:	8536                	mv	a0,a3
-    8020548e:	ffffd097          	auipc	ra,0xffffd
-    80205492:	a8a080e7          	jalr	-1398(ra) # 80201f18 <memcpy>
-    child->trapframe->a0 = 0; // 子进程fork返回值为0
-    80205496:	fe043783          	ld	a5,-32(s0)
-    8020549a:	63fc                	ld	a5,192(a5)
-    8020549c:	0607bc23          	sd	zero,120(a5)
-    child->state = RUNNABLE;
-    802054a0:	fe043783          	ld	a5,-32(s0)
-    802054a4:	470d                	li	a4,3
-    802054a6:	c398                	sw	a4,0(a5)
-    child->parent = parent;
-    802054a8:	fe043783          	ld	a5,-32(s0)
-    802054ac:	fe843703          	ld	a4,-24(s0)
-    802054b0:	efd8                	sd	a4,152(a5)
-    return child->pid;
-    802054b2:	fe043783          	ld	a5,-32(s0)
-    802054b6:	43dc                	lw	a5,4(a5)
-}
-    802054b8:	853e                	mv	a0,a5
-    802054ba:	60e2                	ld	ra,24(sp)
-    802054bc:	6442                	ld	s0,16(sp)
-    802054be:	6105                	addi	sp,sp,32
-    802054c0:	8082                	ret
-
-00000000802054c2 <schedule>:
-void schedule(void) {
-    802054c2:	7179                	addi	sp,sp,-48
-    802054c4:	f406                	sd	ra,40(sp)
-    802054c6:	f022                	sd	s0,32(sp)
-    802054c8:	1800                	addi	s0,sp,48
-  struct cpu *c = mycpu();
-    802054ca:	fffff097          	auipc	ra,0xfffff
-    802054ce:	6c2080e7          	jalr	1730(ra) # 80204b8c <mycpu>
-    802054d2:	fea43423          	sd	a0,-24(s0)
-  if (!initialized) {
-    802054d6:	00007797          	auipc	a5,0x7
-    802054da:	42278793          	addi	a5,a5,1058 # 8020c8f8 <initialized.0>
-    802054de:	439c                	lw	a5,0(a5)
-    802054e0:	ef85                	bnez	a5,80205518 <schedule+0x56>
-    if(c == 0) {
-    802054e2:	fe843783          	ld	a5,-24(s0)
-    802054e6:	eb89                	bnez	a5,802054f8 <schedule+0x36>
-      panic("schedule: no current cpu");
-    802054e8:	00004517          	auipc	a0,0x4
-    802054ec:	a4050513          	addi	a0,a0,-1472 # 80208f28 <etext+0x1f28>
-    802054f0:	ffffc097          	auipc	ra,0xffffc
-    802054f4:	1de080e7          	jalr	478(ra) # 802016ce <panic>
-    c->proc = 0;
-    802054f8:	fe843783          	ld	a5,-24(s0)
-    802054fc:	0007b023          	sd	zero,0(a5)
-    current_proc = 0;
-    80205500:	00007797          	auipc	a5,0x7
-    80205504:	bc078793          	addi	a5,a5,-1088 # 8020c0c0 <current_proc>
-    80205508:	0007b023          	sd	zero,0(a5)
-    initialized = 1;
-    8020550c:	00007797          	auipc	a5,0x7
-    80205510:	3ec78793          	addi	a5,a5,1004 # 8020c8f8 <initialized.0>
-    80205514:	4705                	li	a4,1
-    80205516:	c398                	sw	a4,0(a5)
-    intr_on();
-    80205518:	fffff097          	auipc	ra,0xfffff
-    8020551c:	5c6080e7          	jalr	1478(ra) # 80204ade <intr_on>
-    for(int i = 0; i < PROC; i++) {
-    80205520:	fe042223          	sw	zero,-28(s0)
-    80205524:	a069                	j	802055ae <schedule+0xec>
-        struct proc *p = proc_table[i];
-    80205526:	00007717          	auipc	a4,0x7
-    8020552a:	f5270713          	addi	a4,a4,-174 # 8020c478 <proc_table>
-    8020552e:	fe442783          	lw	a5,-28(s0)
-    80205532:	078e                	slli	a5,a5,0x3
-    80205534:	97ba                	add	a5,a5,a4
-    80205536:	639c                	ld	a5,0(a5)
-    80205538:	fcf43c23          	sd	a5,-40(s0)
-      	if(p->state == RUNNABLE) {
-    8020553c:	fd843783          	ld	a5,-40(s0)
-    80205540:	439c                	lw	a5,0(a5)
-    80205542:	873e                	mv	a4,a5
-    80205544:	478d                	li	a5,3
-    80205546:	04f71f63          	bne	a4,a5,802055a4 <schedule+0xe2>
-			p->state = RUNNING;
-    8020554a:	fd843783          	ld	a5,-40(s0)
-    8020554e:	4711                	li	a4,4
-    80205550:	c398                	sw	a4,0(a5)
-			c->proc = p;
-    80205552:	fe843783          	ld	a5,-24(s0)
-    80205556:	fd843703          	ld	a4,-40(s0)
-    8020555a:	e398                	sd	a4,0(a5)
-			current_proc = p;
-    8020555c:	00007797          	auipc	a5,0x7
-    80205560:	b6478793          	addi	a5,a5,-1180 # 8020c0c0 <current_proc>
-    80205564:	fd843703          	ld	a4,-40(s0)
-    80205568:	e398                	sd	a4,0(a5)
-			swtch(&c->context, &p->context);
-    8020556a:	fe843783          	ld	a5,-24(s0)
-    8020556e:	00878713          	addi	a4,a5,8
-    80205572:	fd843783          	ld	a5,-40(s0)
-    80205576:	07c1                	addi	a5,a5,16
-    80205578:	85be                	mv	a1,a5
-    8020557a:	853a                	mv	a0,a4
-    8020557c:	fffff097          	auipc	ra,0xfffff
-    80205580:	4c4080e7          	jalr	1220(ra) # 80204a40 <swtch>
-			c = mycpu();
-    80205584:	fffff097          	auipc	ra,0xfffff
-    80205588:	608080e7          	jalr	1544(ra) # 80204b8c <mycpu>
-    8020558c:	fea43423          	sd	a0,-24(s0)
-			c->proc = 0;
-    80205590:	fe843783          	ld	a5,-24(s0)
-    80205594:	0007b023          	sd	zero,0(a5)
-			current_proc = 0;
-    80205598:	00007797          	auipc	a5,0x7
-    8020559c:	b2878793          	addi	a5,a5,-1240 # 8020c0c0 <current_proc>
-    802055a0:	0007b023          	sd	zero,0(a5)
-    for(int i = 0; i < PROC; i++) {
-    802055a4:	fe442783          	lw	a5,-28(s0)
-    802055a8:	2785                	addiw	a5,a5,1
-    802055aa:	fef42223          	sw	a5,-28(s0)
-    802055ae:	fe442783          	lw	a5,-28(s0)
-    802055b2:	0007871b          	sext.w	a4,a5
-    802055b6:	03f00793          	li	a5,63
-    802055ba:	f6e7d6e3          	bge	a5,a4,80205526 <schedule+0x64>
-    intr_on();
-    802055be:	bfa9                	j	80205518 <schedule+0x56>
-
-00000000802055c0 <yield>:
-void yield(void) {
-    802055c0:	1101                	addi	sp,sp,-32
-    802055c2:	ec06                	sd	ra,24(sp)
-    802055c4:	e822                	sd	s0,16(sp)
-    802055c6:	1000                	addi	s0,sp,32
-    struct proc *p = myproc();
-    802055c8:	fffff097          	auipc	ra,0xfffff
-    802055cc:	5ac080e7          	jalr	1452(ra) # 80204b74 <myproc>
-    802055d0:	fea43423          	sd	a0,-24(s0)
-    if (p == 0) {
-    802055d4:	fe843783          	ld	a5,-24(s0)
-    802055d8:	c7cd                	beqz	a5,80205682 <yield+0xc2>
-    if (p->state != RUNNING) {
-    802055da:	fe843783          	ld	a5,-24(s0)
-    802055de:	439c                	lw	a5,0(a5)
-    802055e0:	873e                	mv	a4,a5
-    802055e2:	4791                	li	a5,4
-    802055e4:	00f70f63          	beq	a4,a5,80205602 <yield+0x42>
-        warning("yield when status is not RUNNING (%d)\n", p->state);
-    802055e8:	fe843783          	ld	a5,-24(s0)
-    802055ec:	439c                	lw	a5,0(a5)
-    802055ee:	85be                	mv	a1,a5
-    802055f0:	00004517          	auipc	a0,0x4
-    802055f4:	95850513          	addi	a0,a0,-1704 # 80208f48 <etext+0x1f48>
-    802055f8:	ffffc097          	auipc	ra,0xffffc
-    802055fc:	10a080e7          	jalr	266(ra) # 80201702 <warning>
-        return;
-    80205600:	a051                	j	80205684 <yield+0xc4>
-    intr_off();
-    80205602:	fffff097          	auipc	ra,0xfffff
-    80205606:	506080e7          	jalr	1286(ra) # 80204b08 <intr_off>
-    struct cpu *c = mycpu();
-    8020560a:	fffff097          	auipc	ra,0xfffff
-    8020560e:	582080e7          	jalr	1410(ra) # 80204b8c <mycpu>
-    80205612:	fea43023          	sd	a0,-32(s0)
-    p->state = RUNNABLE;
-    80205616:	fe843783          	ld	a5,-24(s0)
-    8020561a:	470d                	li	a4,3
-    8020561c:	c398                	sw	a4,0(a5)
-    p->context.ra = ra;
-    8020561e:	8706                	mv	a4,ra
-    80205620:	fe843783          	ld	a5,-24(s0)
-    80205624:	eb98                	sd	a4,16(a5)
-    if (c->context.ra == 0) {
-    80205626:	fe043783          	ld	a5,-32(s0)
-    8020562a:	679c                	ld	a5,8(a5)
-    8020562c:	ef99                	bnez	a5,8020564a <yield+0x8a>
-        c->context.ra = (uint64)schedule;
-    8020562e:	00000717          	auipc	a4,0x0
-    80205632:	e9470713          	addi	a4,a4,-364 # 802054c2 <schedule>
-    80205636:	fe043783          	ld	a5,-32(s0)
-    8020563a:	e798                	sd	a4,8(a5)
-        c->context.sp = (uint64)c + PGSIZE;
-    8020563c:	fe043703          	ld	a4,-32(s0)
-    80205640:	6785                	lui	a5,0x1
-    80205642:	973e                	add	a4,a4,a5
-    80205644:	fe043783          	ld	a5,-32(s0)
-    80205648:	eb98                	sd	a4,16(a5)
-    current_proc = 0;
-    8020564a:	00007797          	auipc	a5,0x7
-    8020564e:	a7678793          	addi	a5,a5,-1418 # 8020c0c0 <current_proc>
-    80205652:	0007b023          	sd	zero,0(a5)
-    c->proc = 0;
-    80205656:	fe043783          	ld	a5,-32(s0)
-    8020565a:	0007b023          	sd	zero,0(a5)
-    swtch(&p->context, &c->context);
-    8020565e:	fe843783          	ld	a5,-24(s0)
-    80205662:	01078713          	addi	a4,a5,16
-    80205666:	fe043783          	ld	a5,-32(s0)
-    8020566a:	07a1                	addi	a5,a5,8
-    8020566c:	85be                	mv	a1,a5
-    8020566e:	853a                	mv	a0,a4
-    80205670:	fffff097          	auipc	ra,0xfffff
-    80205674:	3d0080e7          	jalr	976(ra) # 80204a40 <swtch>
-    intr_on();
-    80205678:	fffff097          	auipc	ra,0xfffff
-    8020567c:	466080e7          	jalr	1126(ra) # 80204ade <intr_on>
-    80205680:	a011                	j	80205684 <yield+0xc4>
-        return;
-    80205682:	0001                	nop
-}
-    80205684:	60e2                	ld	ra,24(sp)
-    80205686:	6442                	ld	s0,16(sp)
-    80205688:	6105                	addi	sp,sp,32
-    8020568a:	8082                	ret
-
-000000008020568c <sleep>:
-void sleep(void *chan){
-    8020568c:	7179                	addi	sp,sp,-48
-    8020568e:	f406                	sd	ra,40(sp)
-    80205690:	f022                	sd	s0,32(sp)
-    80205692:	1800                	addi	s0,sp,48
-    80205694:	fca43c23          	sd	a0,-40(s0)
-    struct proc *p = myproc();
-    80205698:	fffff097          	auipc	ra,0xfffff
-    8020569c:	4dc080e7          	jalr	1244(ra) # 80204b74 <myproc>
-    802056a0:	fea43423          	sd	a0,-24(s0)
-    struct cpu *c = mycpu();
-    802056a4:	fffff097          	auipc	ra,0xfffff
-    802056a8:	4e8080e7          	jalr	1256(ra) # 80204b8c <mycpu>
-    802056ac:	fea43023          	sd	a0,-32(s0)
-    p->context.ra = ra;
-    802056b0:	8706                	mv	a4,ra
-    802056b2:	fe843783          	ld	a5,-24(s0)
-    802056b6:	eb98                	sd	a4,16(a5)
-    p->chan = chan;
-    802056b8:	fe843783          	ld	a5,-24(s0)
-    802056bc:	fd843703          	ld	a4,-40(s0)
-    802056c0:	f3d8                	sd	a4,160(a5)
-    p->state = SLEEPING;
-    802056c2:	fe843783          	ld	a5,-24(s0)
-    802056c6:	4709                	li	a4,2
-    802056c8:	c398                	sw	a4,0(a5)
-    swtch(&p->context, &c->context);
-    802056ca:	fe843783          	ld	a5,-24(s0)
-    802056ce:	01078713          	addi	a4,a5,16
-    802056d2:	fe043783          	ld	a5,-32(s0)
-    802056d6:	07a1                	addi	a5,a5,8
-    802056d8:	85be                	mv	a1,a5
-    802056da:	853a                	mv	a0,a4
-    802056dc:	fffff097          	auipc	ra,0xfffff
-    802056e0:	364080e7          	jalr	868(ra) # 80204a40 <swtch>
-    p->chan = 0;
-    802056e4:	fe843783          	ld	a5,-24(s0)
-    802056e8:	0a07b023          	sd	zero,160(a5)
-}
-    802056ec:	0001                	nop
-    802056ee:	70a2                	ld	ra,40(sp)
-    802056f0:	7402                	ld	s0,32(sp)
-    802056f2:	6145                	addi	sp,sp,48
-    802056f4:	8082                	ret
-
-00000000802056f6 <wakeup>:
-void wakeup(void *chan) {
-    802056f6:	7179                	addi	sp,sp,-48
-    802056f8:	f422                	sd	s0,40(sp)
-    802056fa:	1800                	addi	s0,sp,48
-    802056fc:	fca43c23          	sd	a0,-40(s0)
-    for(int i = 0; i < PROC; i++) {
-    80205700:	fe042623          	sw	zero,-20(s0)
-    80205704:	a099                	j	8020574a <wakeup+0x54>
-        struct proc *p = proc_table[i];
-    80205706:	00007717          	auipc	a4,0x7
-    8020570a:	d7270713          	addi	a4,a4,-654 # 8020c478 <proc_table>
-    8020570e:	fec42783          	lw	a5,-20(s0)
-    80205712:	078e                	slli	a5,a5,0x3
-    80205714:	97ba                	add	a5,a5,a4
-    80205716:	639c                	ld	a5,0(a5)
-    80205718:	fef43023          	sd	a5,-32(s0)
-        if(p->state == SLEEPING && p->chan == chan) {
-    8020571c:	fe043783          	ld	a5,-32(s0)
-    80205720:	439c                	lw	a5,0(a5)
-    80205722:	873e                	mv	a4,a5
-    80205724:	4789                	li	a5,2
-    80205726:	00f71d63          	bne	a4,a5,80205740 <wakeup+0x4a>
-    8020572a:	fe043783          	ld	a5,-32(s0)
-    8020572e:	73dc                	ld	a5,160(a5)
-    80205730:	fd843703          	ld	a4,-40(s0)
-    80205734:	00f71663          	bne	a4,a5,80205740 <wakeup+0x4a>
-            p->state = RUNNABLE;
-    80205738:	fe043783          	ld	a5,-32(s0)
-    8020573c:	470d                	li	a4,3
-    8020573e:	c398                	sw	a4,0(a5)
-    for(int i = 0; i < PROC; i++) {
-    80205740:	fec42783          	lw	a5,-20(s0)
-    80205744:	2785                	addiw	a5,a5,1
-    80205746:	fef42623          	sw	a5,-20(s0)
-    8020574a:	fec42783          	lw	a5,-20(s0)
-    8020574e:	0007871b          	sext.w	a4,a5
-    80205752:	03f00793          	li	a5,63
-    80205756:	fae7d8e3          	bge	a5,a4,80205706 <wakeup+0x10>
-}
-    8020575a:	0001                	nop
-    8020575c:	0001                	nop
-    8020575e:	7422                	ld	s0,40(sp)
-    80205760:	6145                	addi	sp,sp,48
-    80205762:	8082                	ret
-
-0000000080205764 <exit_proc>:
 void exit_proc(int status) {
-    80205764:	7179                	addi	sp,sp,-48
-    80205766:	f406                	sd	ra,40(sp)
-    80205768:	f022                	sd	s0,32(sp)
-    8020576a:	1800                	addi	s0,sp,48
-    8020576c:	87aa                	mv	a5,a0
-    8020576e:	fcf42e23          	sw	a5,-36(s0)
     struct proc *p = myproc();
-    80205772:	fffff097          	auipc	ra,0xfffff
-    80205776:	402080e7          	jalr	1026(ra) # 80204b74 <myproc>
-    8020577a:	fea43423          	sd	a0,-24(s0)
     p->exit_status = status;
-    8020577e:	fe843783          	ld	a5,-24(s0)
-    80205782:	fdc42703          	lw	a4,-36(s0)
-    80205786:	08e7a223          	sw	a4,132(a5)
     if (p == 0) {
-    8020578a:	fe843783          	ld	a5,-24(s0)
-    8020578e:	eb89                	bnez	a5,802057a0 <exit_proc+0x3c>
+    802046da:	1101                	addi	sp,sp,-32
+    802046dc:	ec22                	sd	s0,24(sp)
+    802046de:	1000                	addi	s0,sp,32
         panic("exit_proc: no current process");
-    80205790:	00003517          	auipc	a0,0x3
-    80205794:	7e050513          	addi	a0,a0,2016 # 80208f70 <etext+0x1f70>
-    80205798:	ffffc097          	auipc	ra,0xffffc
-    8020579c:	f36080e7          	jalr	-202(ra) # 802016ce <panic>
-    if (!p->parent){
-    802057a0:	fe843783          	ld	a5,-24(s0)
-    802057a4:	6fdc                	ld	a5,152(a5)
-    802057a6:	e789                	bnez	a5,802057b0 <exit_proc+0x4c>
-		shutdown();
-    802057a8:	fffff097          	auipc	ra,0xfffff
-    802057ac:	3a2080e7          	jalr	930(ra) # 80204b4a <shutdown>
-    p->state = ZOMBIE;
-    802057b0:	fe843783          	ld	a5,-24(s0)
-    802057b4:	4715                	li	a4,5
-    802057b6:	c398                	sw	a4,0(a5)
-    void *chan = (void*)p->parent;
-    802057b8:	fe843783          	ld	a5,-24(s0)
-    802057bc:	6fdc                	ld	a5,152(a5)
-    802057be:	fef43023          	sd	a5,-32(s0)
-    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
-    802057c2:	fe843783          	ld	a5,-24(s0)
-    802057c6:	6fdc                	ld	a5,152(a5)
-    802057c8:	439c                	lw	a5,0(a5)
-    802057ca:	873e                	mv	a4,a5
-    802057cc:	4789                	li	a5,2
-    802057ce:	02f71063          	bne	a4,a5,802057ee <exit_proc+0x8a>
-    802057d2:	fe843783          	ld	a5,-24(s0)
-    802057d6:	6fdc                	ld	a5,152(a5)
-    802057d8:	73dc                	ld	a5,160(a5)
-    802057da:	fe043703          	ld	a4,-32(s0)
-    802057de:	00f71863          	bne	a4,a5,802057ee <exit_proc+0x8a>
-        wakeup(chan);
-    802057e2:	fe043503          	ld	a0,-32(s0)
-    802057e6:	00000097          	auipc	ra,0x0
-    802057ea:	f10080e7          	jalr	-240(ra) # 802056f6 <wakeup>
-    current_proc = 0;
-    802057ee:	00007797          	auipc	a5,0x7
-    802057f2:	8d278793          	addi	a5,a5,-1838 # 8020c0c0 <current_proc>
-    802057f6:	0007b023          	sd	zero,0(a5)
-    if (mycpu())
-    802057fa:	fffff097          	auipc	ra,0xfffff
-    802057fe:	392080e7          	jalr	914(ra) # 80204b8c <mycpu>
-    80205802:	87aa                	mv	a5,a0
-    80205804:	cb81                	beqz	a5,80205814 <exit_proc+0xb0>
-        mycpu()->proc = 0;
-    80205806:	fffff097          	auipc	ra,0xfffff
-    8020580a:	386080e7          	jalr	902(ra) # 80204b8c <mycpu>
-    8020580e:	87aa                	mv	a5,a0
-    80205810:	0007b023          	sd	zero,0(a5)
-    schedule();
-    80205814:	00000097          	auipc	ra,0x0
-    80205818:	cae080e7          	jalr	-850(ra) # 802054c2 <schedule>
-    panic("exit_proc should not return after schedule");
-    8020581c:	00003517          	auipc	a0,0x3
-    80205820:	77450513          	addi	a0,a0,1908 # 80208f90 <etext+0x1f90>
-    80205824:	ffffc097          	auipc	ra,0xffffc
-    80205828:	eaa080e7          	jalr	-342(ra) # 802016ce <panic>
-}
-    8020582c:	0001                	nop
-    8020582e:	70a2                	ld	ra,40(sp)
-    80205830:	7402                	ld	s0,32(sp)
-    80205832:	6145                	addi	sp,sp,48
-    80205834:	8082                	ret
+    }
+    802046e0:	100027f3          	csrr	a5,sstatus
+    802046e4:	fef43423          	sd	a5,-24(s0)
+    
+    802046e8:	fe843783          	ld	a5,-24(s0)
+    // 不parent为NULL的初始进程退出，目前表示为关机
+    802046ec:	853e                	mv	a0,a5
+    802046ee:	6462                	ld	s0,24(sp)
+    802046f0:	6105                	addi	sp,sp,32
+    802046f2:	8082                	ret
 
-0000000080205836 <wait_proc>:
+00000000802046f4 <w_sstatus>:
+    if (!p->parent){
+    802046f4:	1101                	addi	sp,sp,-32
+    802046f6:	ec22                	sd	s0,24(sp)
+    802046f8:	1000                	addi	s0,sp,32
+    802046fa:	fea43423          	sd	a0,-24(s0)
+		shutdown();
+    802046fe:	fe843783          	ld	a5,-24(s0)
+    80204702:	10079073          	csrw	sstatus,a5
+	}
+    80204706:	0001                	nop
+    80204708:	6462                	ld	s0,24(sp)
+    8020470a:	6105                	addi	sp,sp,32
+    8020470c:	8082                	ret
+
+000000008020470e <intr_on>:
+    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
+        wakeup(chan);
+    }
+    current_proc = 0;
+    if (mycpu())
+        mycpu()->proc = 0;
+    8020470e:	1141                	addi	sp,sp,-16
+    80204710:	e406                	sd	ra,8(sp)
+    80204712:	e022                	sd	s0,0(sp)
+    80204714:	0800                	addi	s0,sp,16
+        
+    80204716:	00000097          	auipc	ra,0x0
+    8020471a:	fc4080e7          	jalr	-60(ra) # 802046da <r_sstatus>
+    8020471e:	87aa                	mv	a5,a0
+    80204720:	0027e793          	ori	a5,a5,2
+    80204724:	853e                	mv	a0,a5
+    80204726:	00000097          	auipc	ra,0x0
+    8020472a:	fce080e7          	jalr	-50(ra) # 802046f4 <w_sstatus>
+    schedule();
+    8020472e:	0001                	nop
+    80204730:	60a2                	ld	ra,8(sp)
+    80204732:	6402                	ld	s0,0(sp)
+    80204734:	0141                	addi	sp,sp,16
+    80204736:	8082                	ret
+
+0000000080204738 <intr_off>:
+    
+    panic("exit_proc should not return after schedule");
+    80204738:	1141                	addi	sp,sp,-16
+    8020473a:	e406                	sd	ra,8(sp)
+    8020473c:	e022                	sd	s0,0(sp)
+    8020473e:	0800                	addi	s0,sp,16
+}
+    80204740:	00000097          	auipc	ra,0x0
+    80204744:	f9a080e7          	jalr	-102(ra) # 802046da <r_sstatus>
+    80204748:	87aa                	mv	a5,a0
+    8020474a:	9bf5                	andi	a5,a5,-3
+    8020474c:	853e                	mv	a0,a5
+    8020474e:	00000097          	auipc	ra,0x0
+    80204752:	fa6080e7          	jalr	-90(ra) # 802046f4 <w_sstatus>
 int wait_proc(int *status) {
-    80205836:	7159                	addi	sp,sp,-112
-    80205838:	f486                	sd	ra,104(sp)
-    8020583a:	f0a2                	sd	s0,96(sp)
-    8020583c:	1880                	addi	s0,sp,112
-    8020583e:	f8a43c23          	sd	a0,-104(s0)
+    80204756:	0001                	nop
+    80204758:	60a2                	ld	ra,8(sp)
+    8020475a:	6402                	ld	s0,0(sp)
+    8020475c:	0141                	addi	sp,sp,16
+    8020475e:	8082                	ret
+
+0000000080204760 <w_stvec>:
     struct proc *p = myproc();
-    80205842:	fffff097          	auipc	ra,0xfffff
-    80205846:	332080e7          	jalr	818(ra) # 80204b74 <myproc>
-    8020584a:	fca43023          	sd	a0,-64(s0)
+    
+    80204760:	1101                	addi	sp,sp,-32
+    80204762:	ec22                	sd	s0,24(sp)
+    80204764:	1000                	addi	s0,sp,32
+    80204766:	fea43423          	sd	a0,-24(s0)
     if (p == 0) {
-    8020584e:	fc043783          	ld	a5,-64(s0)
-    80205852:	eb99                	bnez	a5,80205868 <wait_proc+0x32>
+    8020476a:	fe843783          	ld	a5,-24(s0)
+    8020476e:	10579073          	csrw	stvec,a5
         printf("Warning: wait_proc called with no current process\n");
-    80205854:	00003517          	auipc	a0,0x3
-    80205858:	76450513          	addi	a0,a0,1892 # 80208fb8 <etext+0x1fb8>
-    8020585c:	ffffb097          	auipc	ra,0xffffb
-    80205860:	426080e7          	jalr	1062(ra) # 80200c82 <printf>
+    80204772:	0001                	nop
+    80204774:	6462                	ld	s0,24(sp)
+    80204776:	6105                	addi	sp,sp,32
+    80204778:	8082                	ret
+
+000000008020477a <shutdown>:
+void shutdown() {
+    8020477a:	1141                	addi	sp,sp,-16
+    8020477c:	e406                	sd	ra,8(sp)
+    8020477e:	e022                	sd	s0,0(sp)
+    80204780:	0800                	addi	s0,sp,16
+	free_proc_table();
+    80204782:	00000097          	auipc	ra,0x0
+    80204786:	3a2080e7          	jalr	930(ra) # 80204b24 <free_proc_table>
+    printf("关机\n");
+    8020478a:	00004517          	auipc	a0,0x4
+    8020478e:	22650513          	addi	a0,a0,550 # 802089b0 <etext+0x19b0>
+    80204792:	ffffc097          	auipc	ra,0xffffc
+    80204796:	4f0080e7          	jalr	1264(ra) # 80200c82 <printf>
+    asm volatile (
+    8020479a:	48a1                	li	a7,8
+    8020479c:	00000073          	ecall
+    while (1) { }
+    802047a0:	0001                	nop
+    802047a2:	bffd                	j	802047a0 <shutdown+0x26>
+
+00000000802047a4 <myproc>:
+struct proc* myproc(void) {
+    802047a4:	1141                	addi	sp,sp,-16
+    802047a6:	e422                	sd	s0,8(sp)
+    802047a8:	0800                	addi	s0,sp,16
+    return current_proc;
+    802047aa:	00008797          	auipc	a5,0x8
+    802047ae:	91e78793          	addi	a5,a5,-1762 # 8020c0c8 <current_proc>
+    802047b2:	639c                	ld	a5,0(a5)
+}
+    802047b4:	853e                	mv	a0,a5
+    802047b6:	6422                	ld	s0,8(sp)
+    802047b8:	0141                	addi	sp,sp,16
+    802047ba:	8082                	ret
+
+00000000802047bc <mycpu>:
+struct cpu* mycpu(void) {
+    802047bc:	1141                	addi	sp,sp,-16
+    802047be:	e406                	sd	ra,8(sp)
+    802047c0:	e022                	sd	s0,0(sp)
+    802047c2:	0800                	addi	s0,sp,16
+    if (current_cpu == 0) {
+    802047c4:	00008797          	auipc	a5,0x8
+    802047c8:	90c78793          	addi	a5,a5,-1780 # 8020c0d0 <current_cpu>
+    802047cc:	639c                	ld	a5,0(a5)
+    802047ce:	ebb9                	bnez	a5,80204824 <mycpu+0x68>
+        warning("current_cpu is NULL, initializing...\n");
+    802047d0:	00004517          	auipc	a0,0x4
+    802047d4:	1e850513          	addi	a0,a0,488 # 802089b8 <etext+0x19b8>
+    802047d8:	ffffd097          	auipc	ra,0xffffd
+    802047dc:	f2a080e7          	jalr	-214(ra) # 80201702 <warning>
+		memset(&cpu_instance, 0, sizeof(struct cpu));
+    802047e0:	07800613          	li	a2,120
+    802047e4:	4581                	li	a1,0
+    802047e6:	00008517          	auipc	a0,0x8
+    802047ea:	0aa50513          	addi	a0,a0,170 # 8020c890 <cpu_instance.1>
+    802047ee:	ffffd097          	auipc	ra,0xffffd
+    802047f2:	61e080e7          	jalr	1566(ra) # 80201e0c <memset>
+		current_cpu = &cpu_instance;
+    802047f6:	00008797          	auipc	a5,0x8
+    802047fa:	8da78793          	addi	a5,a5,-1830 # 8020c0d0 <current_cpu>
+    802047fe:	00008717          	auipc	a4,0x8
+    80204802:	09270713          	addi	a4,a4,146 # 8020c890 <cpu_instance.1>
+    80204806:	e398                	sd	a4,0(a5)
+		printf("CPU initialized: %p\n", current_cpu);
+    80204808:	00008797          	auipc	a5,0x8
+    8020480c:	8c878793          	addi	a5,a5,-1848 # 8020c0d0 <current_cpu>
+    80204810:	639c                	ld	a5,0(a5)
+    80204812:	85be                	mv	a1,a5
+    80204814:	00004517          	auipc	a0,0x4
+    80204818:	1cc50513          	addi	a0,a0,460 # 802089e0 <etext+0x19e0>
+    8020481c:	ffffc097          	auipc	ra,0xffffc
+    80204820:	466080e7          	jalr	1126(ra) # 80200c82 <printf>
+    return current_cpu;
+    80204824:	00008797          	auipc	a5,0x8
+    80204828:	8ac78793          	addi	a5,a5,-1876 # 8020c0d0 <current_cpu>
+    8020482c:	639c                	ld	a5,0(a5)
+}
+    8020482e:	853e                	mv	a0,a5
+    80204830:	60a2                	ld	ra,8(sp)
+    80204832:	6402                	ld	s0,0(sp)
+    80204834:	0141                	addi	sp,sp,16
+    80204836:	8082                	ret
+
+0000000080204838 <return_to_user>:
+void return_to_user(void) {
+    80204838:	7179                	addi	sp,sp,-48
+    8020483a:	f406                	sd	ra,40(sp)
+    8020483c:	f022                	sd	s0,32(sp)
+    8020483e:	1800                	addi	s0,sp,48
+    struct proc *p = myproc();
+    80204840:	00000097          	auipc	ra,0x0
+    80204844:	f64080e7          	jalr	-156(ra) # 802047a4 <myproc>
+    80204848:	fea43423          	sd	a0,-24(s0)
+    if (p == 0) {
+    8020484c:	fe843783          	ld	a5,-24(s0)
+    80204850:	eb89                	bnez	a5,80204862 <return_to_user+0x2a>
+        panic("return_to_user: no current process");
+    80204852:	00004517          	auipc	a0,0x4
+    80204856:	1a650513          	addi	a0,a0,422 # 802089f8 <etext+0x19f8>
+    8020485a:	ffffd097          	auipc	ra,0xffffd
+    8020485e:	e74080e7          	jalr	-396(ra) # 802016ce <panic>
+    if (p->chan != 0) {
+    80204862:	fe843783          	ld	a5,-24(s0)
+    80204866:	73dc                	ld	a5,160(a5)
+    80204868:	c791                	beqz	a5,80204874 <return_to_user+0x3c>
+        p->chan = 0;
+    8020486a:	fe843783          	ld	a5,-24(s0)
+    8020486e:	0a07b023          	sd	zero,160(a5)
+        return;
+    80204872:	a869                	j	8020490c <return_to_user+0xd4>
+    w_stvec(TRAMPOLINE + (uservec - trampoline));
+    80204874:	00000717          	auipc	a4,0x0
+    80204878:	cdc70713          	addi	a4,a4,-804 # 80204550 <trampoline>
+    8020487c:	00000797          	auipc	a5,0x0
+    80204880:	cd478793          	addi	a5,a5,-812 # 80204550 <trampoline>
+    80204884:	40f707b3          	sub	a5,a4,a5
+    80204888:	873e                	mv	a4,a5
+    8020488a:	77fd                	lui	a5,0xfffff
+    8020488c:	97ba                	add	a5,a5,a4
+    8020488e:	853e                	mv	a0,a5
+    80204890:	00000097          	auipc	ra,0x0
+    80204894:	ed0080e7          	jalr	-304(ra) # 80204760 <w_stvec>
+    uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
+    80204898:	00000717          	auipc	a4,0x0
+    8020489c:	d4e70713          	addi	a4,a4,-690 # 802045e6 <userret>
+    802048a0:	00000797          	auipc	a5,0x0
+    802048a4:	cb078793          	addi	a5,a5,-848 # 80204550 <trampoline>
+    802048a8:	40f707b3          	sub	a5,a4,a5
+    802048ac:	873e                	mv	a4,a5
+    802048ae:	77fd                	lui	a5,0xfffff
+    802048b0:	97ba                	add	a5,a5,a4
+    802048b2:	fef43023          	sd	a5,-32(s0)
+    uint64 satp = MAKE_SATP(p->pagetable);
+    802048b6:	fe843783          	ld	a5,-24(s0)
+    802048ba:	7fdc                	ld	a5,184(a5)
+    802048bc:	00c7d713          	srli	a4,a5,0xc
+    802048c0:	57fd                	li	a5,-1
+    802048c2:	17fe                	slli	a5,a5,0x3f
+    802048c4:	8fd9                	or	a5,a5,a4
+    802048c6:	fcf43c23          	sd	a5,-40(s0)
+	if ((trampoline_userret & ~(PGSIZE - 1)) != TRAMPOLINE) {
+    802048ca:	fe043703          	ld	a4,-32(s0)
+    802048ce:	77fd                	lui	a5,0xfffff
+    802048d0:	8f7d                	and	a4,a4,a5
+    802048d2:	77fd                	lui	a5,0xfffff
+    802048d4:	00f70a63          	beq	a4,a5,802048e8 <return_to_user+0xb0>
+		panic("return_to_user: 跳转地址超出trampoline页范围");
+    802048d8:	00004517          	auipc	a0,0x4
+    802048dc:	14850513          	addi	a0,a0,328 # 80208a20 <etext+0x1a20>
+    802048e0:	ffffd097          	auipc	ra,0xffffd
+    802048e4:	dee080e7          	jalr	-530(ra) # 802016ce <panic>
+    void (*userret_fn)(uint64, uint64) = (void (*)(uint64, uint64))trampoline_userret;
+    802048e8:	fe043783          	ld	a5,-32(s0)
+    802048ec:	fcf43823          	sd	a5,-48(s0)
+    userret_fn(TRAPFRAME, satp);
+    802048f0:	fd043783          	ld	a5,-48(s0)
+    802048f4:	fd843583          	ld	a1,-40(s0)
+    802048f8:	7579                	lui	a0,0xffffe
+    802048fa:	9782                	jalr	a5
+    panic("return_to_user: 不应该返回到这里");
+    802048fc:	00004517          	auipc	a0,0x4
+    80204900:	15c50513          	addi	a0,a0,348 # 80208a58 <etext+0x1a58>
+    80204904:	ffffd097          	auipc	ra,0xffffd
+    80204908:	dca080e7          	jalr	-566(ra) # 802016ce <panic>
+}
+    8020490c:	70a2                	ld	ra,40(sp)
+    8020490e:	7402                	ld	s0,32(sp)
+    80204910:	6145                	addi	sp,sp,48
+    80204912:	8082                	ret
+
+0000000080204914 <forkret>:
+void forkret(void){
+    80204914:	7179                	addi	sp,sp,-48
+    80204916:	f406                	sd	ra,40(sp)
+    80204918:	f022                	sd	s0,32(sp)
+    8020491a:	1800                	addi	s0,sp,48
+    struct proc *p = myproc();
+    8020491c:	00000097          	auipc	ra,0x0
+    80204920:	e88080e7          	jalr	-376(ra) # 802047a4 <myproc>
+    80204924:	fea43423          	sd	a0,-24(s0)
+    if (p == 0) {
+    80204928:	fe843783          	ld	a5,-24(s0)
+    8020492c:	eb89                	bnez	a5,8020493e <forkret+0x2a>
+        panic("forkret: no current process");
+    8020492e:	00004517          	auipc	a0,0x4
+    80204932:	15a50513          	addi	a0,a0,346 # 80208a88 <etext+0x1a88>
+    80204936:	ffffd097          	auipc	ra,0xffffd
+    8020493a:	d98080e7          	jalr	-616(ra) # 802016ce <panic>
+    if (p->chan != 0) {
+    8020493e:	fe843783          	ld	a5,-24(s0)
+    80204942:	73dc                	ld	a5,160(a5)
+    80204944:	c791                	beqz	a5,80204950 <forkret+0x3c>
+        p->chan = 0;  // 清除通道标记
+    80204946:	fe843783          	ld	a5,-24(s0)
+    8020494a:	0a07b023          	sd	zero,160(a5) # fffffffffffff0a0 <_bss_end+0xffffffff7fdf2780>
+        return;  // 直接返回，继续执行原来的函数
+    8020494e:	a0a9                	j	80204998 <forkret+0x84>
+    uint64 entry = p->trapframe->epc;
+    80204950:	fe843783          	ld	a5,-24(s0)
+    80204954:	63fc                	ld	a5,192(a5)
+    80204956:	739c                	ld	a5,32(a5)
+    80204958:	fef43023          	sd	a5,-32(s0)
+	if (p->is_user){
+    8020495c:	fe843783          	ld	a5,-24(s0)
+    80204960:	0a87a783          	lw	a5,168(a5)
+    80204964:	c791                	beqz	a5,80204970 <forkret+0x5c>
+		return_to_user();
+    80204966:	00000097          	auipc	ra,0x0
+    8020496a:	ed2080e7          	jalr	-302(ra) # 80204838 <return_to_user>
+    8020496e:	a02d                	j	80204998 <forkret+0x84>
+	}else if (entry != 0) {
+    80204970:	fe043783          	ld	a5,-32(s0)
+    80204974:	cf91                	beqz	a5,80204990 <forkret+0x7c>
+        void (*fn)(void) = (void(*)(void))entry;
+    80204976:	fe043783          	ld	a5,-32(s0)
+    8020497a:	fcf43c23          	sd	a5,-40(s0)
+        fn();  // 调用入口函数
+    8020497e:	fd843783          	ld	a5,-40(s0)
+    80204982:	9782                	jalr	a5
+        exit_proc(0);  // 如果入口函数返回，则退出进程
+    80204984:	4501                	li	a0,0
+    80204986:	00001097          	auipc	ra,0x1
+    8020498a:	a0e080e7          	jalr	-1522(ra) # 80205394 <exit_proc>
+    8020498e:	a029                	j	80204998 <forkret+0x84>
+        return_to_user();
+    80204990:	00000097          	auipc	ra,0x0
+    80204994:	ea8080e7          	jalr	-344(ra) # 80204838 <return_to_user>
+}
+    80204998:	70a2                	ld	ra,40(sp)
+    8020499a:	7402                	ld	s0,32(sp)
+    8020499c:	6145                	addi	sp,sp,48
+    8020499e:	8082                	ret
+
+00000000802049a0 <init_proc>:
+void init_proc(void){
+    802049a0:	1101                	addi	sp,sp,-32
+    802049a2:	ec06                	sd	ra,24(sp)
+    802049a4:	e822                	sd	s0,16(sp)
+    802049a6:	1000                	addi	s0,sp,32
+    for (int i = 0; i < PROC; i++) {
+    802049a8:	fe042623          	sw	zero,-20(s0)
+    802049ac:	aa81                	j	80204afc <init_proc+0x15c>
+        void *page = alloc_page();
+    802049ae:	fffff097          	auipc	ra,0xfffff
+    802049b2:	852080e7          	jalr	-1966(ra) # 80203200 <alloc_page>
+    802049b6:	fea43023          	sd	a0,-32(s0)
+        if (!page) panic("init_proc: alloc_page failed for proc_table");
+    802049ba:	fe043783          	ld	a5,-32(s0)
+    802049be:	eb89                	bnez	a5,802049d0 <init_proc+0x30>
+    802049c0:	00004517          	auipc	a0,0x4
+    802049c4:	0e850513          	addi	a0,a0,232 # 80208aa8 <etext+0x1aa8>
+    802049c8:	ffffd097          	auipc	ra,0xffffd
+    802049cc:	d06080e7          	jalr	-762(ra) # 802016ce <panic>
+        proc_table_mem[i] = page;
+    802049d0:	00008717          	auipc	a4,0x8
+    802049d4:	cc070713          	addi	a4,a4,-832 # 8020c690 <proc_table_mem>
+    802049d8:	fec42783          	lw	a5,-20(s0)
+    802049dc:	078e                	slli	a5,a5,0x3
+    802049de:	97ba                	add	a5,a5,a4
+    802049e0:	fe043703          	ld	a4,-32(s0)
+    802049e4:	e398                	sd	a4,0(a5)
+        proc_table[i] = (struct proc *)page;
+    802049e6:	00008717          	auipc	a4,0x8
+    802049ea:	aa270713          	addi	a4,a4,-1374 # 8020c488 <proc_table>
+    802049ee:	fec42783          	lw	a5,-20(s0)
+    802049f2:	078e                	slli	a5,a5,0x3
+    802049f4:	97ba                	add	a5,a5,a4
+    802049f6:	fe043703          	ld	a4,-32(s0)
+    802049fa:	e398                	sd	a4,0(a5)
+        memset(proc_table[i], 0, sizeof(struct proc));
+    802049fc:	00008717          	auipc	a4,0x8
+    80204a00:	a8c70713          	addi	a4,a4,-1396 # 8020c488 <proc_table>
+    80204a04:	fec42783          	lw	a5,-20(s0)
+    80204a08:	078e                	slli	a5,a5,0x3
+    80204a0a:	97ba                	add	a5,a5,a4
+    80204a0c:	639c                	ld	a5,0(a5)
+    80204a0e:	0c800613          	li	a2,200
+    80204a12:	4581                	li	a1,0
+    80204a14:	853e                	mv	a0,a5
+    80204a16:	ffffd097          	auipc	ra,0xffffd
+    80204a1a:	3f6080e7          	jalr	1014(ra) # 80201e0c <memset>
+        proc_table[i]->state = UNUSED;
+    80204a1e:	00008717          	auipc	a4,0x8
+    80204a22:	a6a70713          	addi	a4,a4,-1430 # 8020c488 <proc_table>
+    80204a26:	fec42783          	lw	a5,-20(s0)
+    80204a2a:	078e                	slli	a5,a5,0x3
+    80204a2c:	97ba                	add	a5,a5,a4
+    80204a2e:	639c                	ld	a5,0(a5)
+    80204a30:	0007a023          	sw	zero,0(a5)
+        proc_table[i]->pid = 0;
+    80204a34:	00008717          	auipc	a4,0x8
+    80204a38:	a5470713          	addi	a4,a4,-1452 # 8020c488 <proc_table>
+    80204a3c:	fec42783          	lw	a5,-20(s0)
+    80204a40:	078e                	slli	a5,a5,0x3
+    80204a42:	97ba                	add	a5,a5,a4
+    80204a44:	639c                	ld	a5,0(a5)
+    80204a46:	0007a223          	sw	zero,4(a5)
+        proc_table[i]->kstack = 0;
+    80204a4a:	00008717          	auipc	a4,0x8
+    80204a4e:	a3e70713          	addi	a4,a4,-1474 # 8020c488 <proc_table>
+    80204a52:	fec42783          	lw	a5,-20(s0)
+    80204a56:	078e                	slli	a5,a5,0x3
+    80204a58:	97ba                	add	a5,a5,a4
+    80204a5a:	639c                	ld	a5,0(a5)
+    80204a5c:	0007b423          	sd	zero,8(a5)
+        proc_table[i]->pagetable = 0;
+    80204a60:	00008717          	auipc	a4,0x8
+    80204a64:	a2870713          	addi	a4,a4,-1496 # 8020c488 <proc_table>
+    80204a68:	fec42783          	lw	a5,-20(s0)
+    80204a6c:	078e                	slli	a5,a5,0x3
+    80204a6e:	97ba                	add	a5,a5,a4
+    80204a70:	639c                	ld	a5,0(a5)
+    80204a72:	0a07bc23          	sd	zero,184(a5)
+        proc_table[i]->trapframe = 0;
+    80204a76:	00008717          	auipc	a4,0x8
+    80204a7a:	a1270713          	addi	a4,a4,-1518 # 8020c488 <proc_table>
+    80204a7e:	fec42783          	lw	a5,-20(s0)
+    80204a82:	078e                	slli	a5,a5,0x3
+    80204a84:	97ba                	add	a5,a5,a4
+    80204a86:	639c                	ld	a5,0(a5)
+    80204a88:	0c07b023          	sd	zero,192(a5)
+        proc_table[i]->parent = 0;
+    80204a8c:	00008717          	auipc	a4,0x8
+    80204a90:	9fc70713          	addi	a4,a4,-1540 # 8020c488 <proc_table>
+    80204a94:	fec42783          	lw	a5,-20(s0)
+    80204a98:	078e                	slli	a5,a5,0x3
+    80204a9a:	97ba                	add	a5,a5,a4
+    80204a9c:	639c                	ld	a5,0(a5)
+    80204a9e:	0807bc23          	sd	zero,152(a5)
+        proc_table[i]->chan = 0;
+    80204aa2:	00008717          	auipc	a4,0x8
+    80204aa6:	9e670713          	addi	a4,a4,-1562 # 8020c488 <proc_table>
+    80204aaa:	fec42783          	lw	a5,-20(s0)
+    80204aae:	078e                	slli	a5,a5,0x3
+    80204ab0:	97ba                	add	a5,a5,a4
+    80204ab2:	639c                	ld	a5,0(a5)
+    80204ab4:	0a07b023          	sd	zero,160(a5)
+        proc_table[i]->exit_status = 0;
+    80204ab8:	00008717          	auipc	a4,0x8
+    80204abc:	9d070713          	addi	a4,a4,-1584 # 8020c488 <proc_table>
+    80204ac0:	fec42783          	lw	a5,-20(s0)
+    80204ac4:	078e                	slli	a5,a5,0x3
+    80204ac6:	97ba                	add	a5,a5,a4
+    80204ac8:	639c                	ld	a5,0(a5)
+    80204aca:	0807a223          	sw	zero,132(a5)
+        memset(&proc_table[i]->context, 0, sizeof(struct context));
+    80204ace:	00008717          	auipc	a4,0x8
+    80204ad2:	9ba70713          	addi	a4,a4,-1606 # 8020c488 <proc_table>
+    80204ad6:	fec42783          	lw	a5,-20(s0)
+    80204ada:	078e                	slli	a5,a5,0x3
+    80204adc:	97ba                	add	a5,a5,a4
+    80204ade:	639c                	ld	a5,0(a5)
+    80204ae0:	07c1                	addi	a5,a5,16
+    80204ae2:	07000613          	li	a2,112
+    80204ae6:	4581                	li	a1,0
+    80204ae8:	853e                	mv	a0,a5
+    80204aea:	ffffd097          	auipc	ra,0xffffd
+    80204aee:	322080e7          	jalr	802(ra) # 80201e0c <memset>
+    for (int i = 0; i < PROC; i++) {
+    80204af2:	fec42783          	lw	a5,-20(s0)
+    80204af6:	2785                	addiw	a5,a5,1
+    80204af8:	fef42623          	sw	a5,-20(s0)
+    80204afc:	fec42783          	lw	a5,-20(s0)
+    80204b00:	0007871b          	sext.w	a4,a5
+    80204b04:	03f00793          	li	a5,63
+    80204b08:	eae7d3e3          	bge	a5,a4,802049ae <init_proc+0xe>
+    proc_table_pages = PROC; // 每个进程一页
+    80204b0c:	00008797          	auipc	a5,0x8
+    80204b10:	b7c78793          	addi	a5,a5,-1156 # 8020c688 <proc_table_pages>
+    80204b14:	04000713          	li	a4,64
+    80204b18:	c398                	sw	a4,0(a5)
+}
+    80204b1a:	0001                	nop
+    80204b1c:	60e2                	ld	ra,24(sp)
+    80204b1e:	6442                	ld	s0,16(sp)
+    80204b20:	6105                	addi	sp,sp,32
+    80204b22:	8082                	ret
+
+0000000080204b24 <free_proc_table>:
+void free_proc_table(void) {
+    80204b24:	1101                	addi	sp,sp,-32
+    80204b26:	ec06                	sd	ra,24(sp)
+    80204b28:	e822                	sd	s0,16(sp)
+    80204b2a:	1000                	addi	s0,sp,32
+    for (int i = 0; i < proc_table_pages; i++) {
+    80204b2c:	fe042623          	sw	zero,-20(s0)
+    80204b30:	a025                	j	80204b58 <free_proc_table+0x34>
+        free_page(proc_table_mem[i]);
+    80204b32:	00008717          	auipc	a4,0x8
+    80204b36:	b5e70713          	addi	a4,a4,-1186 # 8020c690 <proc_table_mem>
+    80204b3a:	fec42783          	lw	a5,-20(s0)
+    80204b3e:	078e                	slli	a5,a5,0x3
+    80204b40:	97ba                	add	a5,a5,a4
+    80204b42:	639c                	ld	a5,0(a5)
+    80204b44:	853e                	mv	a0,a5
+    80204b46:	ffffe097          	auipc	ra,0xffffe
+    80204b4a:	726080e7          	jalr	1830(ra) # 8020326c <free_page>
+    for (int i = 0; i < proc_table_pages; i++) {
+    80204b4e:	fec42783          	lw	a5,-20(s0)
+    80204b52:	2785                	addiw	a5,a5,1
+    80204b54:	fef42623          	sw	a5,-20(s0)
+    80204b58:	00008797          	auipc	a5,0x8
+    80204b5c:	b3078793          	addi	a5,a5,-1232 # 8020c688 <proc_table_pages>
+    80204b60:	4398                	lw	a4,0(a5)
+    80204b62:	fec42783          	lw	a5,-20(s0)
+    80204b66:	2781                	sext.w	a5,a5
+    80204b68:	fce7c5e3          	blt	a5,a4,80204b32 <free_proc_table+0xe>
+}
+    80204b6c:	0001                	nop
+    80204b6e:	0001                	nop
+    80204b70:	60e2                	ld	ra,24(sp)
+    80204b72:	6442                	ld	s0,16(sp)
+    80204b74:	6105                	addi	sp,sp,32
+    80204b76:	8082                	ret
+
+0000000080204b78 <alloc_proc>:
+struct proc* alloc_proc(int is_user) {
+    80204b78:	7139                	addi	sp,sp,-64
+    80204b7a:	fc06                	sd	ra,56(sp)
+    80204b7c:	f822                	sd	s0,48(sp)
+    80204b7e:	0080                	addi	s0,sp,64
+    80204b80:	87aa                	mv	a5,a0
+    80204b82:	fcf42623          	sw	a5,-52(s0)
+    for(int i = 0;i<PROC;i++) {
+    80204b86:	fe042623          	sw	zero,-20(s0)
+    80204b8a:	aa85                	j	80204cfa <alloc_proc+0x182>
+		struct proc *p = proc_table[i];
+    80204b8c:	00008717          	auipc	a4,0x8
+    80204b90:	8fc70713          	addi	a4,a4,-1796 # 8020c488 <proc_table>
+    80204b94:	fec42783          	lw	a5,-20(s0)
+    80204b98:	078e                	slli	a5,a5,0x3
+    80204b9a:	97ba                	add	a5,a5,a4
+    80204b9c:	639c                	ld	a5,0(a5)
+    80204b9e:	fef43023          	sd	a5,-32(s0)
+        if(p->state == UNUSED) {
+    80204ba2:	fe043783          	ld	a5,-32(s0)
+    80204ba6:	439c                	lw	a5,0(a5)
+    80204ba8:	14079463          	bnez	a5,80204cf0 <alloc_proc+0x178>
+            p->pid = i;
+    80204bac:	fe043783          	ld	a5,-32(s0)
+    80204bb0:	fec42703          	lw	a4,-20(s0)
+    80204bb4:	c3d8                	sw	a4,4(a5)
+            p->state = USED;
+    80204bb6:	fe043783          	ld	a5,-32(s0)
+    80204bba:	4705                	li	a4,1
+    80204bbc:	c398                	sw	a4,0(a5)
+			p->is_user = is_user;
+    80204bbe:	fe043783          	ld	a5,-32(s0)
+    80204bc2:	fcc42703          	lw	a4,-52(s0)
+    80204bc6:	0ae7a423          	sw	a4,168(a5)
+            p->trapframe = (struct trapframe*)alloc_page();
+    80204bca:	ffffe097          	auipc	ra,0xffffe
+    80204bce:	636080e7          	jalr	1590(ra) # 80203200 <alloc_page>
+    80204bd2:	872a                	mv	a4,a0
+    80204bd4:	fe043783          	ld	a5,-32(s0)
+    80204bd8:	e3f8                	sd	a4,192(a5)
+            if(p->trapframe == 0){
+    80204bda:	fe043783          	ld	a5,-32(s0)
+    80204bde:	63fc                	ld	a5,192(a5)
+    80204be0:	eb99                	bnez	a5,80204bf6 <alloc_proc+0x7e>
+                p->state = UNUSED;
+    80204be2:	fe043783          	ld	a5,-32(s0)
+    80204be6:	0007a023          	sw	zero,0(a5)
+                p->pid = 0;
+    80204bea:	fe043783          	ld	a5,-32(s0)
+    80204bee:	0007a223          	sw	zero,4(a5)
+                return 0;
+    80204bf2:	4781                	li	a5,0
+    80204bf4:	aa21                	j	80204d0c <alloc_proc+0x194>
+			if(p->is_user){
+    80204bf6:	fe043783          	ld	a5,-32(s0)
+    80204bfa:	0a87a783          	lw	a5,168(a5)
+    80204bfe:	c3b9                	beqz	a5,80204c44 <alloc_proc+0xcc>
+				p->pagetable = create_pagetable();
+    80204c00:	ffffd097          	auipc	ra,0xffffd
+    80204c04:	468080e7          	jalr	1128(ra) # 80202068 <create_pagetable>
+    80204c08:	872a                	mv	a4,a0
+    80204c0a:	fe043783          	ld	a5,-32(s0)
+    80204c0e:	ffd8                	sd	a4,184(a5)
+				if(p->pagetable == 0){
+    80204c10:	fe043783          	ld	a5,-32(s0)
+    80204c14:	7fdc                	ld	a5,184(a5)
+    80204c16:	ef9d                	bnez	a5,80204c54 <alloc_proc+0xdc>
+					free_page(p->trapframe);
+    80204c18:	fe043783          	ld	a5,-32(s0)
+    80204c1c:	63fc                	ld	a5,192(a5)
+    80204c1e:	853e                	mv	a0,a5
+    80204c20:	ffffe097          	auipc	ra,0xffffe
+    80204c24:	64c080e7          	jalr	1612(ra) # 8020326c <free_page>
+					p->trapframe = 0;
+    80204c28:	fe043783          	ld	a5,-32(s0)
+    80204c2c:	0c07b023          	sd	zero,192(a5)
+					p->state = UNUSED;
+    80204c30:	fe043783          	ld	a5,-32(s0)
+    80204c34:	0007a023          	sw	zero,0(a5)
+					p->pid = 0;
+    80204c38:	fe043783          	ld	a5,-32(s0)
+    80204c3c:	0007a223          	sw	zero,4(a5)
+					return 0;
+    80204c40:	4781                	li	a5,0
+    80204c42:	a0e9                	j	80204d0c <alloc_proc+0x194>
+				p->pagetable = kernel_pagetable;
+    80204c44:	00007797          	auipc	a5,0x7
+    80204c48:	46c78793          	addi	a5,a5,1132 # 8020c0b0 <kernel_pagetable>
+    80204c4c:	6398                	ld	a4,0(a5)
+    80204c4e:	fe043783          	ld	a5,-32(s0)
+    80204c52:	ffd8                	sd	a4,184(a5)
+            void *kstack_mem = alloc_page();
+    80204c54:	ffffe097          	auipc	ra,0xffffe
+    80204c58:	5ac080e7          	jalr	1452(ra) # 80203200 <alloc_page>
+    80204c5c:	fca43c23          	sd	a0,-40(s0)
+            if(kstack_mem == 0) {
+    80204c60:	fd843783          	ld	a5,-40(s0)
+    80204c64:	e3b9                	bnez	a5,80204caa <alloc_proc+0x132>
+                free_page(p->trapframe);
+    80204c66:	fe043783          	ld	a5,-32(s0)
+    80204c6a:	63fc                	ld	a5,192(a5)
+    80204c6c:	853e                	mv	a0,a5
+    80204c6e:	ffffe097          	auipc	ra,0xffffe
+    80204c72:	5fe080e7          	jalr	1534(ra) # 8020326c <free_page>
+                free_pagetable(p->pagetable);
+    80204c76:	fe043783          	ld	a5,-32(s0)
+    80204c7a:	7fdc                	ld	a5,184(a5)
+    80204c7c:	853e                	mv	a0,a5
+    80204c7e:	ffffd097          	auipc	ra,0xffffd
+    80204c82:	7ba080e7          	jalr	1978(ra) # 80202438 <free_pagetable>
+                p->trapframe = 0;
+    80204c86:	fe043783          	ld	a5,-32(s0)
+    80204c8a:	0c07b023          	sd	zero,192(a5)
+                p->pagetable = 0;
+    80204c8e:	fe043783          	ld	a5,-32(s0)
+    80204c92:	0a07bc23          	sd	zero,184(a5)
+                p->state = UNUSED;
+    80204c96:	fe043783          	ld	a5,-32(s0)
+    80204c9a:	0007a023          	sw	zero,0(a5)
+                p->pid = 0;
+    80204c9e:	fe043783          	ld	a5,-32(s0)
+    80204ca2:	0007a223          	sw	zero,4(a5)
+                return 0;
+    80204ca6:	4781                	li	a5,0
+    80204ca8:	a095                	j	80204d0c <alloc_proc+0x194>
+            p->kstack = (uint64)kstack_mem;
+    80204caa:	fd843703          	ld	a4,-40(s0)
+    80204cae:	fe043783          	ld	a5,-32(s0)
+    80204cb2:	e798                	sd	a4,8(a5)
+            memset(&p->context, 0, sizeof(p->context));
+    80204cb4:	fe043783          	ld	a5,-32(s0)
+    80204cb8:	07c1                	addi	a5,a5,16
+    80204cba:	07000613          	li	a2,112
+    80204cbe:	4581                	li	a1,0
+    80204cc0:	853e                	mv	a0,a5
+    80204cc2:	ffffd097          	auipc	ra,0xffffd
+    80204cc6:	14a080e7          	jalr	330(ra) # 80201e0c <memset>
+            p->context.ra = (uint64)forkret;
+    80204cca:	00000717          	auipc	a4,0x0
+    80204cce:	c4a70713          	addi	a4,a4,-950 # 80204914 <forkret>
+    80204cd2:	fe043783          	ld	a5,-32(s0)
+    80204cd6:	eb98                	sd	a4,16(a5)
+            p->context.sp = p->kstack + PGSIZE - 16;  // 16字节对齐
+    80204cd8:	fe043783          	ld	a5,-32(s0)
+    80204cdc:	6798                	ld	a4,8(a5)
+    80204cde:	6785                	lui	a5,0x1
+    80204ce0:	17c1                	addi	a5,a5,-16 # ff0 <_entry-0x801ff010>
+    80204ce2:	973e                	add	a4,a4,a5
+    80204ce4:	fe043783          	ld	a5,-32(s0)
+    80204ce8:	ef98                	sd	a4,24(a5)
+            return p;
+    80204cea:	fe043783          	ld	a5,-32(s0)
+    80204cee:	a839                	j	80204d0c <alloc_proc+0x194>
+    for(int i = 0;i<PROC;i++) {
+    80204cf0:	fec42783          	lw	a5,-20(s0)
+    80204cf4:	2785                	addiw	a5,a5,1
+    80204cf6:	fef42623          	sw	a5,-20(s0)
+    80204cfa:	fec42783          	lw	a5,-20(s0)
+    80204cfe:	0007871b          	sext.w	a4,a5
+    80204d02:	03f00793          	li	a5,63
+    80204d06:	e8e7d3e3          	bge	a5,a4,80204b8c <alloc_proc+0x14>
+    return 0;
+    80204d0a:	4781                	li	a5,0
+}
+    80204d0c:	853e                	mv	a0,a5
+    80204d0e:	70e2                	ld	ra,56(sp)
+    80204d10:	7442                	ld	s0,48(sp)
+    80204d12:	6121                	addi	sp,sp,64
+    80204d14:	8082                	ret
+
+0000000080204d16 <free_proc>:
+void free_proc(struct proc *p){
+    80204d16:	1101                	addi	sp,sp,-32
+    80204d18:	ec06                	sd	ra,24(sp)
+    80204d1a:	e822                	sd	s0,16(sp)
+    80204d1c:	1000                	addi	s0,sp,32
+    80204d1e:	fea43423          	sd	a0,-24(s0)
+    if(p->trapframe)
+    80204d22:	fe843783          	ld	a5,-24(s0)
+    80204d26:	63fc                	ld	a5,192(a5)
+    80204d28:	cb89                	beqz	a5,80204d3a <free_proc+0x24>
+        free_page(p->trapframe);
+    80204d2a:	fe843783          	ld	a5,-24(s0)
+    80204d2e:	63fc                	ld	a5,192(a5)
+    80204d30:	853e                	mv	a0,a5
+    80204d32:	ffffe097          	auipc	ra,0xffffe
+    80204d36:	53a080e7          	jalr	1338(ra) # 8020326c <free_page>
+    p->trapframe = 0;
+    80204d3a:	fe843783          	ld	a5,-24(s0)
+    80204d3e:	0c07b023          	sd	zero,192(a5)
+    if(p->pagetable && p->pagetable != kernel_pagetable)
+    80204d42:	fe843783          	ld	a5,-24(s0)
+    80204d46:	7fdc                	ld	a5,184(a5)
+    80204d48:	c39d                	beqz	a5,80204d6e <free_proc+0x58>
+    80204d4a:	fe843783          	ld	a5,-24(s0)
+    80204d4e:	7fd8                	ld	a4,184(a5)
+    80204d50:	00007797          	auipc	a5,0x7
+    80204d54:	36078793          	addi	a5,a5,864 # 8020c0b0 <kernel_pagetable>
+    80204d58:	639c                	ld	a5,0(a5)
+    80204d5a:	00f70a63          	beq	a4,a5,80204d6e <free_proc+0x58>
+        free_pagetable(p->pagetable);
+    80204d5e:	fe843783          	ld	a5,-24(s0)
+    80204d62:	7fdc                	ld	a5,184(a5)
+    80204d64:	853e                	mv	a0,a5
+    80204d66:	ffffd097          	auipc	ra,0xffffd
+    80204d6a:	6d2080e7          	jalr	1746(ra) # 80202438 <free_pagetable>
+    p->pagetable = 0;
+    80204d6e:	fe843783          	ld	a5,-24(s0)
+    80204d72:	0a07bc23          	sd	zero,184(a5)
+    if(p->kstack)
+    80204d76:	fe843783          	ld	a5,-24(s0)
+    80204d7a:	679c                	ld	a5,8(a5)
+    80204d7c:	cb89                	beqz	a5,80204d8e <free_proc+0x78>
+        free_page((void*)p->kstack);
+    80204d7e:	fe843783          	ld	a5,-24(s0)
+    80204d82:	679c                	ld	a5,8(a5)
+    80204d84:	853e                	mv	a0,a5
+    80204d86:	ffffe097          	auipc	ra,0xffffe
+    80204d8a:	4e6080e7          	jalr	1254(ra) # 8020326c <free_page>
+    p->kstack = 0;
+    80204d8e:	fe843783          	ld	a5,-24(s0)
+    80204d92:	0007b423          	sd	zero,8(a5)
+    p->pid = 0;
+    80204d96:	fe843783          	ld	a5,-24(s0)
+    80204d9a:	0007a223          	sw	zero,4(a5)
+    p->state = UNUSED;
+    80204d9e:	fe843783          	ld	a5,-24(s0)
+    80204da2:	0007a023          	sw	zero,0(a5)
+    p->parent = 0;
+    80204da6:	fe843783          	ld	a5,-24(s0)
+    80204daa:	0807bc23          	sd	zero,152(a5)
+    p->chan = 0;
+    80204dae:	fe843783          	ld	a5,-24(s0)
+    80204db2:	0a07b023          	sd	zero,160(a5)
+    memset(&p->context, 0, sizeof(p->context));
+    80204db6:	fe843783          	ld	a5,-24(s0)
+    80204dba:	07c1                	addi	a5,a5,16
+    80204dbc:	07000613          	li	a2,112
+    80204dc0:	4581                	li	a1,0
+    80204dc2:	853e                	mv	a0,a5
+    80204dc4:	ffffd097          	auipc	ra,0xffffd
+    80204dc8:	048080e7          	jalr	72(ra) # 80201e0c <memset>
+}
+    80204dcc:	0001                	nop
+    80204dce:	60e2                	ld	ra,24(sp)
+    80204dd0:	6442                	ld	s0,16(sp)
+    80204dd2:	6105                	addi	sp,sp,32
+    80204dd4:	8082                	ret
+
+0000000080204dd6 <create_kernel_proc>:
+int create_kernel_proc(void (*entry)(void)) {
+    80204dd6:	7179                	addi	sp,sp,-48
+    80204dd8:	f406                	sd	ra,40(sp)
+    80204dda:	f022                	sd	s0,32(sp)
+    80204ddc:	1800                	addi	s0,sp,48
+    80204dde:	fca43c23          	sd	a0,-40(s0)
+    struct proc *p = alloc_proc(0);
+    80204de2:	4501                	li	a0,0
+    80204de4:	00000097          	auipc	ra,0x0
+    80204de8:	d94080e7          	jalr	-620(ra) # 80204b78 <alloc_proc>
+    80204dec:	fea43423          	sd	a0,-24(s0)
+    if (!p) return -1;
+    80204df0:	fe843783          	ld	a5,-24(s0)
+    80204df4:	e399                	bnez	a5,80204dfa <create_kernel_proc+0x24>
+    80204df6:	57fd                	li	a5,-1
+    80204df8:	a089                	j	80204e3a <create_kernel_proc+0x64>
+    p->trapframe->epc = (uint64)entry;
+    80204dfa:	fe843783          	ld	a5,-24(s0)
+    80204dfe:	63fc                	ld	a5,192(a5)
+    80204e00:	fd843703          	ld	a4,-40(s0)
+    80204e04:	f398                	sd	a4,32(a5)
+    p->state = RUNNABLE;
+    80204e06:	fe843783          	ld	a5,-24(s0)
+    80204e0a:	470d                	li	a4,3
+    80204e0c:	c398                	sw	a4,0(a5)
+    struct proc *parent = myproc();
+    80204e0e:	00000097          	auipc	ra,0x0
+    80204e12:	996080e7          	jalr	-1642(ra) # 802047a4 <myproc>
+    80204e16:	fea43023          	sd	a0,-32(s0)
+    if (parent != 0) {
+    80204e1a:	fe043783          	ld	a5,-32(s0)
+    80204e1e:	c799                	beqz	a5,80204e2c <create_kernel_proc+0x56>
+        p->parent = parent;
+    80204e20:	fe843783          	ld	a5,-24(s0)
+    80204e24:	fe043703          	ld	a4,-32(s0)
+    80204e28:	efd8                	sd	a4,152(a5)
+    80204e2a:	a029                	j	80204e34 <create_kernel_proc+0x5e>
+        p->parent = NULL;
+    80204e2c:	fe843783          	ld	a5,-24(s0)
+    80204e30:	0807bc23          	sd	zero,152(a5)
+    return p->pid;
+    80204e34:	fe843783          	ld	a5,-24(s0)
+    80204e38:	43dc                	lw	a5,4(a5)
+}
+    80204e3a:	853e                	mv	a0,a5
+    80204e3c:	70a2                	ld	ra,40(sp)
+    80204e3e:	7402                	ld	s0,32(sp)
+    80204e40:	6145                	addi	sp,sp,48
+    80204e42:	8082                	ret
+
+0000000080204e44 <create_user_proc>:
+int create_user_proc(const void *user_bin, int bin_size) {
+    80204e44:	715d                	addi	sp,sp,-80
+    80204e46:	e486                	sd	ra,72(sp)
+    80204e48:	e0a2                	sd	s0,64(sp)
+    80204e4a:	0880                	addi	s0,sp,80
+    80204e4c:	faa43c23          	sd	a0,-72(s0)
+    80204e50:	87ae                	mv	a5,a1
+    80204e52:	faf42a23          	sw	a5,-76(s0)
+    struct proc *p = alloc_proc(1); // 1 表示用户进程
+    80204e56:	4505                	li	a0,1
+    80204e58:	00000097          	auipc	ra,0x0
+    80204e5c:	d20080e7          	jalr	-736(ra) # 80204b78 <alloc_proc>
+    80204e60:	fea43423          	sd	a0,-24(s0)
+    if (!p) return -1;
+    80204e64:	fe843783          	ld	a5,-24(s0)
+    80204e68:	e399                	bnez	a5,80204e6e <create_user_proc+0x2a>
+    80204e6a:	57fd                	li	a5,-1
+    80204e6c:	aa6d                	j	80205026 <create_user_proc+0x1e2>
+    uint64 user_entry = 0x10000;
+    80204e6e:	67c1                	lui	a5,0x10
+    80204e70:	fef43023          	sd	a5,-32(s0)
+    uint64 user_stack = 0x20000;
+    80204e74:	000207b7          	lui	a5,0x20
+    80204e78:	fcf43c23          	sd	a5,-40(s0)
+    void *page = alloc_page();
+    80204e7c:	ffffe097          	auipc	ra,0xffffe
+    80204e80:	384080e7          	jalr	900(ra) # 80203200 <alloc_page>
+    80204e84:	fca43823          	sd	a0,-48(s0)
+    if (!page) { free_proc(p); return -1; }
+    80204e88:	fd043783          	ld	a5,-48(s0)
+    80204e8c:	eb89                	bnez	a5,80204e9e <create_user_proc+0x5a>
+    80204e8e:	fe843503          	ld	a0,-24(s0)
+    80204e92:	00000097          	auipc	ra,0x0
+    80204e96:	e84080e7          	jalr	-380(ra) # 80204d16 <free_proc>
+    80204e9a:	57fd                	li	a5,-1
+    80204e9c:	a269                	j	80205026 <create_user_proc+0x1e2>
+    map_page(p->pagetable, user_entry, (uint64)page, PTE_R | PTE_W | PTE_X | PTE_U);
+    80204e9e:	fe843783          	ld	a5,-24(s0)
+    80204ea2:	7fdc                	ld	a5,184(a5)
+    80204ea4:	fd043703          	ld	a4,-48(s0)
+    80204ea8:	46f9                	li	a3,30
+    80204eaa:	863a                	mv	a2,a4
+    80204eac:	fe043583          	ld	a1,-32(s0)
+    80204eb0:	853e                	mv	a0,a5
+    80204eb2:	ffffd097          	auipc	ra,0xffffd
+    80204eb6:	426080e7          	jalr	1062(ra) # 802022d8 <map_page>
+    memcpy((void*)page, user_bin, bin_size);
+    80204eba:	fb442783          	lw	a5,-76(s0)
+    80204ebe:	863e                	mv	a2,a5
+    80204ec0:	fb843583          	ld	a1,-72(s0)
+    80204ec4:	fd043503          	ld	a0,-48(s0)
+    80204ec8:	ffffd097          	auipc	ra,0xffffd
+    80204ecc:	050080e7          	jalr	80(ra) # 80201f18 <memcpy>
+    void *stack_page = alloc_page();
+    80204ed0:	ffffe097          	auipc	ra,0xffffe
+    80204ed4:	330080e7          	jalr	816(ra) # 80203200 <alloc_page>
+    80204ed8:	fca43423          	sd	a0,-56(s0)
+    if (!stack_page) { free_proc(p); return -1; }
+    80204edc:	fc843783          	ld	a5,-56(s0)
+    80204ee0:	eb89                	bnez	a5,80204ef2 <create_user_proc+0xae>
+    80204ee2:	fe843503          	ld	a0,-24(s0)
+    80204ee6:	00000097          	auipc	ra,0x0
+    80204eea:	e30080e7          	jalr	-464(ra) # 80204d16 <free_proc>
+    80204eee:	57fd                	li	a5,-1
+    80204ef0:	aa1d                	j	80205026 <create_user_proc+0x1e2>
+    map_page(p->pagetable, user_stack - PGSIZE, (uint64)stack_page, PTE_R | PTE_W | PTE_U);
+    80204ef2:	fe843783          	ld	a5,-24(s0)
+    80204ef6:	7fc8                	ld	a0,184(a5)
+    80204ef8:	fd843703          	ld	a4,-40(s0)
+    80204efc:	77fd                	lui	a5,0xfffff
+    80204efe:	97ba                	add	a5,a5,a4
+    80204f00:	fc843703          	ld	a4,-56(s0)
+    80204f04:	46d9                	li	a3,22
+    80204f06:	863a                	mv	a2,a4
+    80204f08:	85be                	mv	a1,a5
+    80204f0a:	ffffd097          	auipc	ra,0xffffd
+    80204f0e:	3ce080e7          	jalr	974(ra) # 802022d8 <map_page>
+    if (map_page(p->pagetable, TRAPFRAME, (uint64)p->trapframe, PTE_R | PTE_W) != 0) {
+    80204f12:	fe843783          	ld	a5,-24(s0)
+    80204f16:	7fd8                	ld	a4,184(a5)
+    80204f18:	fe843783          	ld	a5,-24(s0)
+    80204f1c:	63fc                	ld	a5,192(a5)
+    80204f1e:	4699                	li	a3,6
+    80204f20:	863e                	mv	a2,a5
+    80204f22:	75f9                	lui	a1,0xffffe
+    80204f24:	853a                	mv	a0,a4
+    80204f26:	ffffd097          	auipc	ra,0xffffd
+    80204f2a:	3b2080e7          	jalr	946(ra) # 802022d8 <map_page>
+    80204f2e:	87aa                	mv	a5,a0
+    80204f30:	cb89                	beqz	a5,80204f42 <create_user_proc+0xfe>
+        free_proc(p);
+    80204f32:	fe843503          	ld	a0,-24(s0)
+    80204f36:	00000097          	auipc	ra,0x0
+    80204f3a:	de0080e7          	jalr	-544(ra) # 80204d16 <free_proc>
         return -1;
-    80205864:	57fd                	li	a5,-1
-    80205866:	aa45                	j	80205a16 <wait_proc+0x1e0>
+    80204f3e:	57fd                	li	a5,-1
+    80204f40:	a0dd                	j	80205026 <create_user_proc+0x1e2>
+	memset(p->trapframe, 0, sizeof(*p->trapframe));
+    80204f42:	fe843783          	ld	a5,-24(s0)
+    80204f46:	63fc                	ld	a5,192(a5)
+    80204f48:	11800613          	li	a2,280
+    80204f4c:	4581                	li	a1,0
+    80204f4e:	853e                	mv	a0,a5
+    80204f50:	ffffd097          	auipc	ra,0xffffd
+    80204f54:	ebc080e7          	jalr	-324(ra) # 80201e0c <memset>
+	p->trapframe->epc = user_entry; // 应为 0x10000
+    80204f58:	fe843783          	ld	a5,-24(s0)
+    80204f5c:	63fc                	ld	a5,192(a5)
+    80204f5e:	fe043703          	ld	a4,-32(s0)
+    80204f62:	f398                	sd	a4,32(a5)
+	p->trapframe->sp = user_stack;  // 应为 0x20000
+    80204f64:	fe843783          	ld	a5,-24(s0)
+    80204f68:	63fc                	ld	a5,192(a5)
+    80204f6a:	fd843703          	ld	a4,-40(s0)
+    80204f6e:	ff98                	sd	a4,56(a5)
+	p->trapframe->sstatus = (1UL << 5); // 0x20
+    80204f70:	fe843783          	ld	a5,-24(s0)
+    80204f74:	63fc                	ld	a5,192(a5)
+    80204f76:	02000713          	li	a4,32
+    80204f7a:	ef98                	sd	a4,24(a5)
+	p->trapframe->kernel_satp = MAKE_SATP(kernel_pagetable);
+    80204f7c:	00007797          	auipc	a5,0x7
+    80204f80:	13478793          	addi	a5,a5,308 # 8020c0b0 <kernel_pagetable>
+    80204f84:	639c                	ld	a5,0(a5)
+    80204f86:	00c7d693          	srli	a3,a5,0xc
+    80204f8a:	fe843783          	ld	a5,-24(s0)
+    80204f8e:	63fc                	ld	a5,192(a5)
+    80204f90:	577d                	li	a4,-1
+    80204f92:	177e                	slli	a4,a4,0x3f
+    80204f94:	8f55                	or	a4,a4,a3
+    80204f96:	e398                	sd	a4,0(a5)
+	p->trapframe->kernel_sp = p->kstack + PGSIZE;   // 内核栈顶
+    80204f98:	fe843783          	ld	a5,-24(s0)
+    80204f9c:	6794                	ld	a3,8(a5)
+    80204f9e:	fe843783          	ld	a5,-24(s0)
+    80204fa2:	63fc                	ld	a5,192(a5)
+    80204fa4:	6705                	lui	a4,0x1
+    80204fa6:	9736                	add	a4,a4,a3
+    80204fa8:	e798                	sd	a4,8(a5)
+	p->trapframe->usertrap  = (uint64)usertrap;     // C 层 trap 处理函数
+    80204faa:	fe843783          	ld	a5,-24(s0)
+    80204fae:	63fc                	ld	a5,192(a5)
+    80204fb0:	fffff717          	auipc	a4,0xfffff
+    80204fb4:	0ec70713          	addi	a4,a4,236 # 8020409c <usertrap>
+    80204fb8:	10e7b423          	sd	a4,264(a5)
+	p->trapframe->kernel_vec = (uint64)kernelvec;
+    80204fbc:	fe843783          	ld	a5,-24(s0)
+    80204fc0:	63fc                	ld	a5,192(a5)
+    80204fc2:	fffff717          	auipc	a4,0xfffff
+    80204fc6:	4fe70713          	addi	a4,a4,1278 # 802044c0 <kernelvec>
+    80204fca:	10e7b823          	sd	a4,272(a5)
+    p->state = RUNNABLE;
+    80204fce:	fe843783          	ld	a5,-24(s0)
+    80204fd2:	470d                	li	a4,3
+    80204fd4:	c398                	sw	a4,0(a5)
+	if (map_page(p->pagetable, TRAMPOLINE, trampoline_phys_addr, PTE_X | PTE_R) != 0) {
+    80204fd6:	fe843783          	ld	a5,-24(s0)
+    80204fda:	7fd8                	ld	a4,184(a5)
+    80204fdc:	00007797          	auipc	a5,0x7
+    80204fe0:	0dc78793          	addi	a5,a5,220 # 8020c0b8 <trampoline_phys_addr>
+    80204fe4:	639c                	ld	a5,0(a5)
+    80204fe6:	46a9                	li	a3,10
+    80204fe8:	863e                	mv	a2,a5
+    80204fea:	75fd                	lui	a1,0xfffff
+    80204fec:	853a                	mv	a0,a4
+    80204fee:	ffffd097          	auipc	ra,0xffffd
+    80204ff2:	2ea080e7          	jalr	746(ra) # 802022d8 <map_page>
+    80204ff6:	87aa                	mv	a5,a0
+    80204ff8:	cb89                	beqz	a5,8020500a <create_user_proc+0x1c6>
+		free_proc(p);
+    80204ffa:	fe843503          	ld	a0,-24(s0)
+    80204ffe:	00000097          	auipc	ra,0x0
+    80205002:	d18080e7          	jalr	-744(ra) # 80204d16 <free_proc>
+		return -1;
+    80205006:	57fd                	li	a5,-1
+    80205008:	a839                	j	80205026 <create_user_proc+0x1e2>
+    struct proc *parent = myproc();
+    8020500a:	fffff097          	auipc	ra,0xfffff
+    8020500e:	79a080e7          	jalr	1946(ra) # 802047a4 <myproc>
+    80205012:	fca43023          	sd	a0,-64(s0)
+    p->parent = parent ? parent : NULL;
+    80205016:	fe843783          	ld	a5,-24(s0)
+    8020501a:	fc043703          	ld	a4,-64(s0)
+    8020501e:	efd8                	sd	a4,152(a5)
+    return p->pid;
+    80205020:	fe843783          	ld	a5,-24(s0)
+    80205024:	43dc                	lw	a5,4(a5)
+}
+    80205026:	853e                	mv	a0,a5
+    80205028:	60a6                	ld	ra,72(sp)
+    8020502a:	6406                	ld	s0,64(sp)
+    8020502c:	6161                	addi	sp,sp,80
+    8020502e:	8082                	ret
+
+0000000080205030 <fork_proc>:
+int fork_proc(void) {
+    80205030:	1101                	addi	sp,sp,-32
+    80205032:	ec06                	sd	ra,24(sp)
+    80205034:	e822                	sd	s0,16(sp)
+    80205036:	1000                	addi	s0,sp,32
+    struct proc *parent = myproc();
+    80205038:	fffff097          	auipc	ra,0xfffff
+    8020503c:	76c080e7          	jalr	1900(ra) # 802047a4 <myproc>
+    80205040:	fea43423          	sd	a0,-24(s0)
+    struct proc *child = alloc_proc(parent->is_user);
+    80205044:	fe843783          	ld	a5,-24(s0)
+    80205048:	0a87a783          	lw	a5,168(a5)
+    8020504c:	853e                	mv	a0,a5
+    8020504e:	00000097          	auipc	ra,0x0
+    80205052:	b2a080e7          	jalr	-1238(ra) # 80204b78 <alloc_proc>
+    80205056:	fea43023          	sd	a0,-32(s0)
+    if(child == 0)
+    8020505a:	fe043783          	ld	a5,-32(s0)
+    8020505e:	e399                	bnez	a5,80205064 <fork_proc+0x34>
+        return -1;
+    80205060:	57fd                	li	a5,-1
+    80205062:	a059                	j	802050e8 <fork_proc+0xb8>
+    if(uvmcopy(parent->pagetable, child->pagetable, parent->sz) < 0){
+    80205064:	fe843783          	ld	a5,-24(s0)
+    80205068:	7fd8                	ld	a4,184(a5)
+    8020506a:	fe043783          	ld	a5,-32(s0)
+    8020506e:	7fd4                	ld	a3,184(a5)
+    80205070:	fe843783          	ld	a5,-24(s0)
+    80205074:	7bdc                	ld	a5,176(a5)
+    80205076:	863e                	mv	a2,a5
+    80205078:	85b6                	mv	a1,a3
+    8020507a:	853a                	mv	a0,a4
+    8020507c:	ffffe097          	auipc	ra,0xffffe
+    80205080:	fb4080e7          	jalr	-76(ra) # 80203030 <uvmcopy>
+    80205084:	87aa                	mv	a5,a0
+    80205086:	0007da63          	bgez	a5,8020509a <fork_proc+0x6a>
+        free_proc(child);
+    8020508a:	fe043503          	ld	a0,-32(s0)
+    8020508e:	00000097          	auipc	ra,0x0
+    80205092:	c88080e7          	jalr	-888(ra) # 80204d16 <free_proc>
+        return -1;
+    80205096:	57fd                	li	a5,-1
+    80205098:	a881                	j	802050e8 <fork_proc+0xb8>
+    child->sz = parent->sz;
+    8020509a:	fe843783          	ld	a5,-24(s0)
+    8020509e:	7bd8                	ld	a4,176(a5)
+    802050a0:	fe043783          	ld	a5,-32(s0)
+    802050a4:	fbd8                	sd	a4,176(a5)
+    *(child->trapframe) = *(parent->trapframe);
+    802050a6:	fe843783          	ld	a5,-24(s0)
+    802050aa:	63f8                	ld	a4,192(a5)
+    802050ac:	fe043783          	ld	a5,-32(s0)
+    802050b0:	63fc                	ld	a5,192(a5)
+    802050b2:	86be                	mv	a3,a5
+    802050b4:	11800793          	li	a5,280
+    802050b8:	863e                	mv	a2,a5
+    802050ba:	85ba                	mv	a1,a4
+    802050bc:	8536                	mv	a0,a3
+    802050be:	ffffd097          	auipc	ra,0xffffd
+    802050c2:	e5a080e7          	jalr	-422(ra) # 80201f18 <memcpy>
+    child->trapframe->a0 = 0; // 子进程fork返回值为0
+    802050c6:	fe043783          	ld	a5,-32(s0)
+    802050ca:	63fc                	ld	a5,192(a5)
+    802050cc:	0607bc23          	sd	zero,120(a5)
+    child->state = RUNNABLE;
+    802050d0:	fe043783          	ld	a5,-32(s0)
+    802050d4:	470d                	li	a4,3
+    802050d6:	c398                	sw	a4,0(a5)
+    child->parent = parent;
+    802050d8:	fe043783          	ld	a5,-32(s0)
+    802050dc:	fe843703          	ld	a4,-24(s0)
+    802050e0:	efd8                	sd	a4,152(a5)
+    return child->pid;
+    802050e2:	fe043783          	ld	a5,-32(s0)
+    802050e6:	43dc                	lw	a5,4(a5)
+}
+    802050e8:	853e                	mv	a0,a5
+    802050ea:	60e2                	ld	ra,24(sp)
+    802050ec:	6442                	ld	s0,16(sp)
+    802050ee:	6105                	addi	sp,sp,32
+    802050f0:	8082                	ret
+
+00000000802050f2 <schedule>:
+void schedule(void) {
+    802050f2:	7179                	addi	sp,sp,-48
+    802050f4:	f406                	sd	ra,40(sp)
+    802050f6:	f022                	sd	s0,32(sp)
+    802050f8:	1800                	addi	s0,sp,48
+  struct cpu *c = mycpu();
+    802050fa:	fffff097          	auipc	ra,0xfffff
+    802050fe:	6c2080e7          	jalr	1730(ra) # 802047bc <mycpu>
+    80205102:	fea43423          	sd	a0,-24(s0)
+  if (!initialized) {
+    80205106:	00008797          	auipc	a5,0x8
+    8020510a:	80278793          	addi	a5,a5,-2046 # 8020c908 <initialized.0>
+    8020510e:	439c                	lw	a5,0(a5)
+    80205110:	ef85                	bnez	a5,80205148 <schedule+0x56>
+    if(c == 0) {
+    80205112:	fe843783          	ld	a5,-24(s0)
+    80205116:	eb89                	bnez	a5,80205128 <schedule+0x36>
+      panic("schedule: no current cpu");
+    80205118:	00004517          	auipc	a0,0x4
+    8020511c:	9c050513          	addi	a0,a0,-1600 # 80208ad8 <etext+0x1ad8>
+    80205120:	ffffc097          	auipc	ra,0xffffc
+    80205124:	5ae080e7          	jalr	1454(ra) # 802016ce <panic>
+    c->proc = 0;
+    80205128:	fe843783          	ld	a5,-24(s0)
+    8020512c:	0007b023          	sd	zero,0(a5)
+    current_proc = 0;
+    80205130:	00007797          	auipc	a5,0x7
+    80205134:	f9878793          	addi	a5,a5,-104 # 8020c0c8 <current_proc>
+    80205138:	0007b023          	sd	zero,0(a5)
+    initialized = 1;
+    8020513c:	00007797          	auipc	a5,0x7
+    80205140:	7cc78793          	addi	a5,a5,1996 # 8020c908 <initialized.0>
+    80205144:	4705                	li	a4,1
+    80205146:	c398                	sw	a4,0(a5)
+    intr_on();
+    80205148:	fffff097          	auipc	ra,0xfffff
+    8020514c:	5c6080e7          	jalr	1478(ra) # 8020470e <intr_on>
+    for(int i = 0; i < PROC; i++) {
+    80205150:	fe042223          	sw	zero,-28(s0)
+    80205154:	a069                	j	802051de <schedule+0xec>
+        struct proc *p = proc_table[i];
+    80205156:	00007717          	auipc	a4,0x7
+    8020515a:	33270713          	addi	a4,a4,818 # 8020c488 <proc_table>
+    8020515e:	fe442783          	lw	a5,-28(s0)
+    80205162:	078e                	slli	a5,a5,0x3
+    80205164:	97ba                	add	a5,a5,a4
+    80205166:	639c                	ld	a5,0(a5)
+    80205168:	fcf43c23          	sd	a5,-40(s0)
+      	if(p->state == RUNNABLE) {
+    8020516c:	fd843783          	ld	a5,-40(s0)
+    80205170:	439c                	lw	a5,0(a5)
+    80205172:	873e                	mv	a4,a5
+    80205174:	478d                	li	a5,3
+    80205176:	04f71f63          	bne	a4,a5,802051d4 <schedule+0xe2>
+			p->state = RUNNING;
+    8020517a:	fd843783          	ld	a5,-40(s0)
+    8020517e:	4711                	li	a4,4
+    80205180:	c398                	sw	a4,0(a5)
+			c->proc = p;
+    80205182:	fe843783          	ld	a5,-24(s0)
+    80205186:	fd843703          	ld	a4,-40(s0)
+    8020518a:	e398                	sd	a4,0(a5)
+			current_proc = p;
+    8020518c:	00007797          	auipc	a5,0x7
+    80205190:	f3c78793          	addi	a5,a5,-196 # 8020c0c8 <current_proc>
+    80205194:	fd843703          	ld	a4,-40(s0)
+    80205198:	e398                	sd	a4,0(a5)
+			swtch(&c->context, &p->context);
+    8020519a:	fe843783          	ld	a5,-24(s0)
+    8020519e:	00878713          	addi	a4,a5,8
+    802051a2:	fd843783          	ld	a5,-40(s0)
+    802051a6:	07c1                	addi	a5,a5,16
+    802051a8:	85be                	mv	a1,a5
+    802051aa:	853a                	mv	a0,a4
+    802051ac:	fffff097          	auipc	ra,0xfffff
+    802051b0:	4c4080e7          	jalr	1220(ra) # 80204670 <swtch>
+			c = mycpu();
+    802051b4:	fffff097          	auipc	ra,0xfffff
+    802051b8:	608080e7          	jalr	1544(ra) # 802047bc <mycpu>
+    802051bc:	fea43423          	sd	a0,-24(s0)
+			c->proc = 0;
+    802051c0:	fe843783          	ld	a5,-24(s0)
+    802051c4:	0007b023          	sd	zero,0(a5)
+			current_proc = 0;
+    802051c8:	00007797          	auipc	a5,0x7
+    802051cc:	f0078793          	addi	a5,a5,-256 # 8020c0c8 <current_proc>
+    802051d0:	0007b023          	sd	zero,0(a5)
+    for(int i = 0; i < PROC; i++) {
+    802051d4:	fe442783          	lw	a5,-28(s0)
+    802051d8:	2785                	addiw	a5,a5,1
+    802051da:	fef42223          	sw	a5,-28(s0)
+    802051de:	fe442783          	lw	a5,-28(s0)
+    802051e2:	0007871b          	sext.w	a4,a5
+    802051e6:	03f00793          	li	a5,63
+    802051ea:	f6e7d6e3          	bge	a5,a4,80205156 <schedule+0x64>
+    intr_on();
+    802051ee:	bfa9                	j	80205148 <schedule+0x56>
+
+00000000802051f0 <yield>:
+void yield(void) {
+    802051f0:	1101                	addi	sp,sp,-32
+    802051f2:	ec06                	sd	ra,24(sp)
+    802051f4:	e822                	sd	s0,16(sp)
+    802051f6:	1000                	addi	s0,sp,32
+    struct proc *p = myproc();
+    802051f8:	fffff097          	auipc	ra,0xfffff
+    802051fc:	5ac080e7          	jalr	1452(ra) # 802047a4 <myproc>
+    80205200:	fea43423          	sd	a0,-24(s0)
+    if (p == 0) {
+    80205204:	fe843783          	ld	a5,-24(s0)
+    80205208:	c7cd                	beqz	a5,802052b2 <yield+0xc2>
+    if (p->state != RUNNING) {
+    8020520a:	fe843783          	ld	a5,-24(s0)
+    8020520e:	439c                	lw	a5,0(a5)
+    80205210:	873e                	mv	a4,a5
+    80205212:	4791                	li	a5,4
+    80205214:	00f70f63          	beq	a4,a5,80205232 <yield+0x42>
+        warning("yield when status is not RUNNING (%d)\n", p->state);
+    80205218:	fe843783          	ld	a5,-24(s0)
+    8020521c:	439c                	lw	a5,0(a5)
+    8020521e:	85be                	mv	a1,a5
+    80205220:	00004517          	auipc	a0,0x4
+    80205224:	8d850513          	addi	a0,a0,-1832 # 80208af8 <etext+0x1af8>
+    80205228:	ffffc097          	auipc	ra,0xffffc
+    8020522c:	4da080e7          	jalr	1242(ra) # 80201702 <warning>
+        return;
+    80205230:	a051                	j	802052b4 <yield+0xc4>
+    intr_off();
+    80205232:	fffff097          	auipc	ra,0xfffff
+    80205236:	506080e7          	jalr	1286(ra) # 80204738 <intr_off>
+    struct cpu *c = mycpu();
+    8020523a:	fffff097          	auipc	ra,0xfffff
+    8020523e:	582080e7          	jalr	1410(ra) # 802047bc <mycpu>
+    80205242:	fea43023          	sd	a0,-32(s0)
+    p->state = RUNNABLE;
+    80205246:	fe843783          	ld	a5,-24(s0)
+    8020524a:	470d                	li	a4,3
+    8020524c:	c398                	sw	a4,0(a5)
+    p->context.ra = ra;
+    8020524e:	8706                	mv	a4,ra
+    80205250:	fe843783          	ld	a5,-24(s0)
+    80205254:	eb98                	sd	a4,16(a5)
+    if (c->context.ra == 0) {
+    80205256:	fe043783          	ld	a5,-32(s0)
+    8020525a:	679c                	ld	a5,8(a5)
+    8020525c:	ef99                	bnez	a5,8020527a <yield+0x8a>
+        c->context.ra = (uint64)schedule;
+    8020525e:	00000717          	auipc	a4,0x0
+    80205262:	e9470713          	addi	a4,a4,-364 # 802050f2 <schedule>
+    80205266:	fe043783          	ld	a5,-32(s0)
+    8020526a:	e798                	sd	a4,8(a5)
+        c->context.sp = (uint64)c + PGSIZE;
+    8020526c:	fe043703          	ld	a4,-32(s0)
+    80205270:	6785                	lui	a5,0x1
+    80205272:	973e                	add	a4,a4,a5
+    80205274:	fe043783          	ld	a5,-32(s0)
+    80205278:	eb98                	sd	a4,16(a5)
+    current_proc = 0;
+    8020527a:	00007797          	auipc	a5,0x7
+    8020527e:	e4e78793          	addi	a5,a5,-434 # 8020c0c8 <current_proc>
+    80205282:	0007b023          	sd	zero,0(a5)
+    c->proc = 0;
+    80205286:	fe043783          	ld	a5,-32(s0)
+    8020528a:	0007b023          	sd	zero,0(a5)
+    swtch(&p->context, &c->context);
+    8020528e:	fe843783          	ld	a5,-24(s0)
+    80205292:	01078713          	addi	a4,a5,16
+    80205296:	fe043783          	ld	a5,-32(s0)
+    8020529a:	07a1                	addi	a5,a5,8
+    8020529c:	85be                	mv	a1,a5
+    8020529e:	853a                	mv	a0,a4
+    802052a0:	fffff097          	auipc	ra,0xfffff
+    802052a4:	3d0080e7          	jalr	976(ra) # 80204670 <swtch>
+    intr_on();
+    802052a8:	fffff097          	auipc	ra,0xfffff
+    802052ac:	466080e7          	jalr	1126(ra) # 8020470e <intr_on>
+    802052b0:	a011                	j	802052b4 <yield+0xc4>
+        return;
+    802052b2:	0001                	nop
+}
+    802052b4:	60e2                	ld	ra,24(sp)
+    802052b6:	6442                	ld	s0,16(sp)
+    802052b8:	6105                	addi	sp,sp,32
+    802052ba:	8082                	ret
+
+00000000802052bc <sleep>:
+void sleep(void *chan){
+    802052bc:	7179                	addi	sp,sp,-48
+    802052be:	f406                	sd	ra,40(sp)
+    802052c0:	f022                	sd	s0,32(sp)
+    802052c2:	1800                	addi	s0,sp,48
+    802052c4:	fca43c23          	sd	a0,-40(s0)
+    struct proc *p = myproc();
+    802052c8:	fffff097          	auipc	ra,0xfffff
+    802052cc:	4dc080e7          	jalr	1244(ra) # 802047a4 <myproc>
+    802052d0:	fea43423          	sd	a0,-24(s0)
+    struct cpu *c = mycpu();
+    802052d4:	fffff097          	auipc	ra,0xfffff
+    802052d8:	4e8080e7          	jalr	1256(ra) # 802047bc <mycpu>
+    802052dc:	fea43023          	sd	a0,-32(s0)
+    p->context.ra = ra;
+    802052e0:	8706                	mv	a4,ra
+    802052e2:	fe843783          	ld	a5,-24(s0)
+    802052e6:	eb98                	sd	a4,16(a5)
+    p->chan = chan;
+    802052e8:	fe843783          	ld	a5,-24(s0)
+    802052ec:	fd843703          	ld	a4,-40(s0)
+    802052f0:	f3d8                	sd	a4,160(a5)
+    p->state = SLEEPING;
+    802052f2:	fe843783          	ld	a5,-24(s0)
+    802052f6:	4709                	li	a4,2
+    802052f8:	c398                	sw	a4,0(a5)
+    swtch(&p->context, &c->context);
+    802052fa:	fe843783          	ld	a5,-24(s0)
+    802052fe:	01078713          	addi	a4,a5,16
+    80205302:	fe043783          	ld	a5,-32(s0)
+    80205306:	07a1                	addi	a5,a5,8
+    80205308:	85be                	mv	a1,a5
+    8020530a:	853a                	mv	a0,a4
+    8020530c:	fffff097          	auipc	ra,0xfffff
+    80205310:	364080e7          	jalr	868(ra) # 80204670 <swtch>
+    p->chan = 0;
+    80205314:	fe843783          	ld	a5,-24(s0)
+    80205318:	0a07b023          	sd	zero,160(a5)
+}
+    8020531c:	0001                	nop
+    8020531e:	70a2                	ld	ra,40(sp)
+    80205320:	7402                	ld	s0,32(sp)
+    80205322:	6145                	addi	sp,sp,48
+    80205324:	8082                	ret
+
+0000000080205326 <wakeup>:
+void wakeup(void *chan) {
+    80205326:	7179                	addi	sp,sp,-48
+    80205328:	f422                	sd	s0,40(sp)
+    8020532a:	1800                	addi	s0,sp,48
+    8020532c:	fca43c23          	sd	a0,-40(s0)
+    for(int i = 0; i < PROC; i++) {
+    80205330:	fe042623          	sw	zero,-20(s0)
+    80205334:	a099                	j	8020537a <wakeup+0x54>
+        struct proc *p = proc_table[i];
+    80205336:	00007717          	auipc	a4,0x7
+    8020533a:	15270713          	addi	a4,a4,338 # 8020c488 <proc_table>
+    8020533e:	fec42783          	lw	a5,-20(s0)
+    80205342:	078e                	slli	a5,a5,0x3
+    80205344:	97ba                	add	a5,a5,a4
+    80205346:	639c                	ld	a5,0(a5)
+    80205348:	fef43023          	sd	a5,-32(s0)
+        if(p->state == SLEEPING && p->chan == chan) {
+    8020534c:	fe043783          	ld	a5,-32(s0)
+    80205350:	439c                	lw	a5,0(a5)
+    80205352:	873e                	mv	a4,a5
+    80205354:	4789                	li	a5,2
+    80205356:	00f71d63          	bne	a4,a5,80205370 <wakeup+0x4a>
+    8020535a:	fe043783          	ld	a5,-32(s0)
+    8020535e:	73dc                	ld	a5,160(a5)
+    80205360:	fd843703          	ld	a4,-40(s0)
+    80205364:	00f71663          	bne	a4,a5,80205370 <wakeup+0x4a>
+            p->state = RUNNABLE;
+    80205368:	fe043783          	ld	a5,-32(s0)
+    8020536c:	470d                	li	a4,3
+    8020536e:	c398                	sw	a4,0(a5)
+    for(int i = 0; i < PROC; i++) {
+    80205370:	fec42783          	lw	a5,-20(s0)
+    80205374:	2785                	addiw	a5,a5,1
+    80205376:	fef42623          	sw	a5,-20(s0)
+    8020537a:	fec42783          	lw	a5,-20(s0)
+    8020537e:	0007871b          	sext.w	a4,a5
+    80205382:	03f00793          	li	a5,63
+    80205386:	fae7d8e3          	bge	a5,a4,80205336 <wakeup+0x10>
+}
+    8020538a:	0001                	nop
+    8020538c:	0001                	nop
+    8020538e:	7422                	ld	s0,40(sp)
+    80205390:	6145                	addi	sp,sp,48
+    80205392:	8082                	ret
+
+0000000080205394 <exit_proc>:
+void exit_proc(int status) {
+    80205394:	7179                	addi	sp,sp,-48
+    80205396:	f406                	sd	ra,40(sp)
+    80205398:	f022                	sd	s0,32(sp)
+    8020539a:	1800                	addi	s0,sp,48
+    8020539c:	87aa                	mv	a5,a0
+    8020539e:	fcf42e23          	sw	a5,-36(s0)
+    struct proc *p = myproc();
+    802053a2:	fffff097          	auipc	ra,0xfffff
+    802053a6:	402080e7          	jalr	1026(ra) # 802047a4 <myproc>
+    802053aa:	fea43423          	sd	a0,-24(s0)
+    p->exit_status = status;
+    802053ae:	fe843783          	ld	a5,-24(s0)
+    802053b2:	fdc42703          	lw	a4,-36(s0)
+    802053b6:	08e7a223          	sw	a4,132(a5)
+    if (p == 0) {
+    802053ba:	fe843783          	ld	a5,-24(s0)
+    802053be:	eb89                	bnez	a5,802053d0 <exit_proc+0x3c>
+        panic("exit_proc: no current process");
+    802053c0:	00003517          	auipc	a0,0x3
+    802053c4:	76050513          	addi	a0,a0,1888 # 80208b20 <etext+0x1b20>
+    802053c8:	ffffc097          	auipc	ra,0xffffc
+    802053cc:	306080e7          	jalr	774(ra) # 802016ce <panic>
+    if (!p->parent){
+    802053d0:	fe843783          	ld	a5,-24(s0)
+    802053d4:	6fdc                	ld	a5,152(a5)
+    802053d6:	e789                	bnez	a5,802053e0 <exit_proc+0x4c>
+		shutdown();
+    802053d8:	fffff097          	auipc	ra,0xfffff
+    802053dc:	3a2080e7          	jalr	930(ra) # 8020477a <shutdown>
+    p->state = ZOMBIE;
+    802053e0:	fe843783          	ld	a5,-24(s0)
+    802053e4:	4715                	li	a4,5
+    802053e6:	c398                	sw	a4,0(a5)
+    void *chan = (void*)p->parent;
+    802053e8:	fe843783          	ld	a5,-24(s0)
+    802053ec:	6fdc                	ld	a5,152(a5)
+    802053ee:	fef43023          	sd	a5,-32(s0)
+    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
+    802053f2:	fe843783          	ld	a5,-24(s0)
+    802053f6:	6fdc                	ld	a5,152(a5)
+    802053f8:	439c                	lw	a5,0(a5)
+    802053fa:	873e                	mv	a4,a5
+    802053fc:	4789                	li	a5,2
+    802053fe:	02f71063          	bne	a4,a5,8020541e <exit_proc+0x8a>
+    80205402:	fe843783          	ld	a5,-24(s0)
+    80205406:	6fdc                	ld	a5,152(a5)
+    80205408:	73dc                	ld	a5,160(a5)
+    8020540a:	fe043703          	ld	a4,-32(s0)
+    8020540e:	00f71863          	bne	a4,a5,8020541e <exit_proc+0x8a>
+        wakeup(chan);
+    80205412:	fe043503          	ld	a0,-32(s0)
+    80205416:	00000097          	auipc	ra,0x0
+    8020541a:	f10080e7          	jalr	-240(ra) # 80205326 <wakeup>
+    current_proc = 0;
+    8020541e:	00007797          	auipc	a5,0x7
+    80205422:	caa78793          	addi	a5,a5,-854 # 8020c0c8 <current_proc>
+    80205426:	0007b023          	sd	zero,0(a5)
+    if (mycpu())
+    8020542a:	fffff097          	auipc	ra,0xfffff
+    8020542e:	392080e7          	jalr	914(ra) # 802047bc <mycpu>
+    80205432:	87aa                	mv	a5,a0
+    80205434:	cb81                	beqz	a5,80205444 <exit_proc+0xb0>
+        mycpu()->proc = 0;
+    80205436:	fffff097          	auipc	ra,0xfffff
+    8020543a:	386080e7          	jalr	902(ra) # 802047bc <mycpu>
+    8020543e:	87aa                	mv	a5,a0
+    80205440:	0007b023          	sd	zero,0(a5)
+    schedule();
+    80205444:	00000097          	auipc	ra,0x0
+    80205448:	cae080e7          	jalr	-850(ra) # 802050f2 <schedule>
+    panic("exit_proc should not return after schedule");
+    8020544c:	00003517          	auipc	a0,0x3
+    80205450:	6f450513          	addi	a0,a0,1780 # 80208b40 <etext+0x1b40>
+    80205454:	ffffc097          	auipc	ra,0xffffc
+    80205458:	27a080e7          	jalr	634(ra) # 802016ce <panic>
+}
+    8020545c:	0001                	nop
+    8020545e:	70a2                	ld	ra,40(sp)
+    80205460:	7402                	ld	s0,32(sp)
+    80205462:	6145                	addi	sp,sp,48
+    80205464:	8082                	ret
+
+0000000080205466 <wait_proc>:
+int wait_proc(int *status) {
+    80205466:	7159                	addi	sp,sp,-112
+    80205468:	f486                	sd	ra,104(sp)
+    8020546a:	f0a2                	sd	s0,96(sp)
+    8020546c:	1880                	addi	s0,sp,112
+    8020546e:	f8a43c23          	sd	a0,-104(s0)
+    struct proc *p = myproc();
+    80205472:	fffff097          	auipc	ra,0xfffff
+    80205476:	332080e7          	jalr	818(ra) # 802047a4 <myproc>
+    8020547a:	fca43023          	sd	a0,-64(s0)
+    if (p == 0) {
+    8020547e:	fc043783          	ld	a5,-64(s0)
+    80205482:	eb99                	bnez	a5,80205498 <wait_proc+0x32>
+        printf("Warning: wait_proc called with no current process\n");
+    80205484:	00003517          	auipc	a0,0x3
+    80205488:	6ec50513          	addi	a0,a0,1772 # 80208b70 <etext+0x1b70>
+    8020548c:	ffffb097          	auipc	ra,0xffffb
+    80205490:	7f6080e7          	jalr	2038(ra) # 80200c82 <printf>
+        return -1;
+    80205494:	57fd                	li	a5,-1
+    80205496:	aa45                	j	80205646 <wait_proc+0x1e0>
+    }
+    
+    while (1) {
+        // 关中断确保原子操作
         intr_off();
-    80205868:	fffff097          	auipc	ra,0xfffff
-    8020586c:	2a0080e7          	jalr	672(ra) # 80204b08 <intr_off>
+    80205498:	fffff097          	auipc	ra,0xfffff
+    8020549c:	2a0080e7          	jalr	672(ra) # 80204738 <intr_off>
+        
+        // 优先检查是否有僵尸子进程
         int found_zombie = 0;
-    80205870:	fe042623          	sw	zero,-20(s0)
+    802054a0:	fe042623          	sw	zero,-20(s0)
         int zombie_pid = 0;
-    80205874:	fe042423          	sw	zero,-24(s0)
+    802054a4:	fe042423          	sw	zero,-24(s0)
         int zombie_status = 0;
-    80205878:	fe042223          	sw	zero,-28(s0)
+    802054a8:	fe042223          	sw	zero,-28(s0)
         struct proc *zombie_child = 0;
-    8020587c:	fc043c23          	sd	zero,-40(s0)
+    802054ac:	fc043c23          	sd	zero,-40(s0)
         
         // 先查找ZOMBIE状态的子进程
         for (int i = 0; i < PROC; i++) {
-    80205880:	fc042a23          	sw	zero,-44(s0)
-    80205884:	a095                	j	802058e8 <wait_proc+0xb2>
+    802054b0:	fc042a23          	sw	zero,-44(s0)
+    802054b4:	a095                	j	80205518 <wait_proc+0xb2>
             struct proc *child = proc_table[i];
-    80205886:	00007717          	auipc	a4,0x7
-    8020588a:	bf270713          	addi	a4,a4,-1038 # 8020c478 <proc_table>
-    8020588e:	fd442783          	lw	a5,-44(s0)
-    80205892:	078e                	slli	a5,a5,0x3
-    80205894:	97ba                	add	a5,a5,a4
-    80205896:	639c                	ld	a5,0(a5)
-    80205898:	faf43c23          	sd	a5,-72(s0)
+    802054b6:	00007717          	auipc	a4,0x7
+    802054ba:	fd270713          	addi	a4,a4,-46 # 8020c488 <proc_table>
+    802054be:	fd442783          	lw	a5,-44(s0)
+    802054c2:	078e                	slli	a5,a5,0x3
+    802054c4:	97ba                	add	a5,a5,a4
+    802054c6:	639c                	ld	a5,0(a5)
+    802054c8:	faf43c23          	sd	a5,-72(s0)
             if (child->state == ZOMBIE && child->parent == p) {
-    8020589c:	fb843783          	ld	a5,-72(s0)
-    802058a0:	439c                	lw	a5,0(a5)
-    802058a2:	873e                	mv	a4,a5
-    802058a4:	4795                	li	a5,5
-    802058a6:	02f71c63          	bne	a4,a5,802058de <wait_proc+0xa8>
-    802058aa:	fb843783          	ld	a5,-72(s0)
-    802058ae:	6fdc                	ld	a5,152(a5)
-    802058b0:	fc043703          	ld	a4,-64(s0)
-    802058b4:	02f71563          	bne	a4,a5,802058de <wait_proc+0xa8>
+    802054cc:	fb843783          	ld	a5,-72(s0)
+    802054d0:	439c                	lw	a5,0(a5)
+    802054d2:	873e                	mv	a4,a5
+    802054d4:	4795                	li	a5,5
+    802054d6:	02f71c63          	bne	a4,a5,8020550e <wait_proc+0xa8>
+    802054da:	fb843783          	ld	a5,-72(s0)
+    802054de:	6fdc                	ld	a5,152(a5)
+    802054e0:	fc043703          	ld	a4,-64(s0)
+    802054e4:	02f71563          	bne	a4,a5,8020550e <wait_proc+0xa8>
                 found_zombie = 1;
-    802058b8:	4785                	li	a5,1
-    802058ba:	fef42623          	sw	a5,-20(s0)
+    802054e8:	4785                	li	a5,1
+    802054ea:	fef42623          	sw	a5,-20(s0)
                 zombie_pid = child->pid;
-    802058be:	fb843783          	ld	a5,-72(s0)
-    802058c2:	43dc                	lw	a5,4(a5)
-    802058c4:	fef42423          	sw	a5,-24(s0)
+    802054ee:	fb843783          	ld	a5,-72(s0)
+    802054f2:	43dc                	lw	a5,4(a5)
+    802054f4:	fef42423          	sw	a5,-24(s0)
                 zombie_status = child->exit_status;
-    802058c8:	fb843783          	ld	a5,-72(s0)
-    802058cc:	0847a783          	lw	a5,132(a5)
-    802058d0:	fef42223          	sw	a5,-28(s0)
+    802054f8:	fb843783          	ld	a5,-72(s0)
+    802054fc:	0847a783          	lw	a5,132(a5)
+    80205500:	fef42223          	sw	a5,-28(s0)
                 zombie_child = child;
-    802058d4:	fb843783          	ld	a5,-72(s0)
-    802058d8:	fcf43c23          	sd	a5,-40(s0)
+    80205504:	fb843783          	ld	a5,-72(s0)
+    80205508:	fcf43c23          	sd	a5,-40(s0)
                 break;
-    802058dc:	a831                	j	802058f8 <wait_proc+0xc2>
+    8020550c:	a831                	j	80205528 <wait_proc+0xc2>
         for (int i = 0; i < PROC; i++) {
-    802058de:	fd442783          	lw	a5,-44(s0)
-    802058e2:	2785                	addiw	a5,a5,1
-    802058e4:	fcf42a23          	sw	a5,-44(s0)
-    802058e8:	fd442783          	lw	a5,-44(s0)
-    802058ec:	0007871b          	sext.w	a4,a5
-    802058f0:	03f00793          	li	a5,63
-    802058f4:	f8e7d9e3          	bge	a5,a4,80205886 <wait_proc+0x50>
+    8020550e:	fd442783          	lw	a5,-44(s0)
+    80205512:	2785                	addiw	a5,a5,1
+    80205514:	fcf42a23          	sw	a5,-44(s0)
+    80205518:	fd442783          	lw	a5,-44(s0)
+    8020551c:	0007871b          	sext.w	a4,a5
+    80205520:	03f00793          	li	a5,63
+    80205524:	f8e7d9e3          	bge	a5,a4,802054b6 <wait_proc+0x50>
             }
         }
         
         if (found_zombie) {
-    802058f8:	fec42783          	lw	a5,-20(s0)
-    802058fc:	2781                	sext.w	a5,a5
-    802058fe:	cb85                	beqz	a5,8020592e <wait_proc+0xf8>
+    80205528:	fec42783          	lw	a5,-20(s0)
+    8020552c:	2781                	sext.w	a5,a5
+    8020552e:	cb85                	beqz	a5,8020555e <wait_proc+0xf8>
             if (status)
-    80205900:	f9843783          	ld	a5,-104(s0)
-    80205904:	c791                	beqz	a5,80205910 <wait_proc+0xda>
+    80205530:	f9843783          	ld	a5,-104(s0)
+    80205534:	c791                	beqz	a5,80205540 <wait_proc+0xda>
                 *status = zombie_status;
-    80205906:	f9843783          	ld	a5,-104(s0)
-    8020590a:	fe442703          	lw	a4,-28(s0)
-    8020590e:	c398                	sw	a4,0(a5)
+    80205536:	f9843783          	ld	a5,-104(s0)
+    8020553a:	fe442703          	lw	a4,-28(s0)
+    8020553e:	c398                	sw	a4,0(a5)
 
             free_proc(zombie_child);
-    80205910:	fd843503          	ld	a0,-40(s0)
-    80205914:	fffff097          	auipc	ra,0xfffff
-    80205918:	7d2080e7          	jalr	2002(ra) # 802050e6 <free_proc>
+    80205540:	fd843503          	ld	a0,-40(s0)
+    80205544:	fffff097          	auipc	ra,0xfffff
+    80205548:	7d2080e7          	jalr	2002(ra) # 80204d16 <free_proc>
 			zombie_child = NULL;
-    8020591c:	fc043c23          	sd	zero,-40(s0)
+    8020554c:	fc043c23          	sd	zero,-40(s0)
             intr_on();
-    80205920:	fffff097          	auipc	ra,0xfffff
-    80205924:	1be080e7          	jalr	446(ra) # 80204ade <intr_on>
+    80205550:	fffff097          	auipc	ra,0xfffff
+    80205554:	1be080e7          	jalr	446(ra) # 8020470e <intr_on>
             return zombie_pid;
-    80205928:	fe842783          	lw	a5,-24(s0)
-    8020592c:	a0ed                	j	80205a16 <wait_proc+0x1e0>
+    80205558:	fe842783          	lw	a5,-24(s0)
+    8020555c:	a0ed                	j	80205646 <wait_proc+0x1e0>
         }
         
         // 检查是否有任何子进程
         int havekids = 0;
-    8020592e:	fc042823          	sw	zero,-48(s0)
+    8020555e:	fc042823          	sw	zero,-48(s0)
         for (int i = 0; i < PROC; i++) {
-    80205932:	fc042623          	sw	zero,-52(s0)
-    80205936:	a83d                	j	80205974 <wait_proc+0x13e>
+    80205562:	fc042623          	sw	zero,-52(s0)
+    80205566:	a83d                	j	802055a4 <wait_proc+0x13e>
             struct proc *child = proc_table[i];
-    80205938:	00007717          	auipc	a4,0x7
-    8020593c:	b4070713          	addi	a4,a4,-1216 # 8020c478 <proc_table>
-    80205940:	fcc42783          	lw	a5,-52(s0)
-    80205944:	078e                	slli	a5,a5,0x3
-    80205946:	97ba                	add	a5,a5,a4
-    80205948:	639c                	ld	a5,0(a5)
-    8020594a:	faf43023          	sd	a5,-96(s0)
+    80205568:	00007717          	auipc	a4,0x7
+    8020556c:	f2070713          	addi	a4,a4,-224 # 8020c488 <proc_table>
+    80205570:	fcc42783          	lw	a5,-52(s0)
+    80205574:	078e                	slli	a5,a5,0x3
+    80205576:	97ba                	add	a5,a5,a4
+    80205578:	639c                	ld	a5,0(a5)
+    8020557a:	faf43023          	sd	a5,-96(s0)
             if (child->state != UNUSED && child->parent == p) {
-    8020594e:	fa043783          	ld	a5,-96(s0)
-    80205952:	439c                	lw	a5,0(a5)
-    80205954:	cb99                	beqz	a5,8020596a <wait_proc+0x134>
-    80205956:	fa043783          	ld	a5,-96(s0)
-    8020595a:	6fdc                	ld	a5,152(a5)
-    8020595c:	fc043703          	ld	a4,-64(s0)
-    80205960:	00f71563          	bne	a4,a5,8020596a <wait_proc+0x134>
+    8020557e:	fa043783          	ld	a5,-96(s0)
+    80205582:	439c                	lw	a5,0(a5)
+    80205584:	cb99                	beqz	a5,8020559a <wait_proc+0x134>
+    80205586:	fa043783          	ld	a5,-96(s0)
+    8020558a:	6fdc                	ld	a5,152(a5)
+    8020558c:	fc043703          	ld	a4,-64(s0)
+    80205590:	00f71563          	bne	a4,a5,8020559a <wait_proc+0x134>
                 havekids = 1;
-    80205964:	4785                	li	a5,1
-    80205966:	fcf42823          	sw	a5,-48(s0)
+    80205594:	4785                	li	a5,1
+    80205596:	fcf42823          	sw	a5,-48(s0)
         for (int i = 0; i < PROC; i++) {
-    8020596a:	fcc42783          	lw	a5,-52(s0)
-    8020596e:	2785                	addiw	a5,a5,1
-    80205970:	fcf42623          	sw	a5,-52(s0)
-    80205974:	fcc42783          	lw	a5,-52(s0)
-    80205978:	0007871b          	sext.w	a4,a5
-    8020597c:	03f00793          	li	a5,63
-    80205980:	fae7dce3          	bge	a5,a4,80205938 <wait_proc+0x102>
+    8020559a:	fcc42783          	lw	a5,-52(s0)
+    8020559e:	2785                	addiw	a5,a5,1
+    802055a0:	fcf42623          	sw	a5,-52(s0)
+    802055a4:	fcc42783          	lw	a5,-52(s0)
+    802055a8:	0007871b          	sext.w	a4,a5
+    802055ac:	03f00793          	li	a5,63
+    802055b0:	fae7dce3          	bge	a5,a4,80205568 <wait_proc+0x102>
             }
         }
         
         if (!havekids) {
-    80205984:	fd042783          	lw	a5,-48(s0)
-    80205988:	2781                	sext.w	a5,a5
-    8020598a:	e799                	bnez	a5,80205998 <wait_proc+0x162>
+    802055b4:	fd042783          	lw	a5,-48(s0)
+    802055b8:	2781                	sext.w	a5,a5
+    802055ba:	e799                	bnez	a5,802055c8 <wait_proc+0x162>
             intr_on();
-    8020598c:	fffff097          	auipc	ra,0xfffff
-    80205990:	152080e7          	jalr	338(ra) # 80204ade <intr_on>
+    802055bc:	fffff097          	auipc	ra,0xfffff
+    802055c0:	152080e7          	jalr	338(ra) # 8020470e <intr_on>
             return -1;
-    80205994:	57fd                	li	a5,-1
-    80205996:	a041                	j	80205a16 <wait_proc+0x1e0>
+    802055c4:	57fd                	li	a5,-1
+    802055c6:	a041                	j	80205646 <wait_proc+0x1e0>
         }
         void *wait_chan = (void*)p;
-    80205998:	fc043783          	ld	a5,-64(s0)
-    8020599c:	faf43823          	sd	a5,-80(s0)
+    802055c8:	fc043783          	ld	a5,-64(s0)
+    802055cc:	faf43823          	sd	a5,-80(s0)
 		register uint64 ra asm("ra");
 		p->context.ra = ra;
-    802059a0:	8706                	mv	a4,ra
-    802059a2:	fc043783          	ld	a5,-64(s0)
-    802059a6:	eb98                	sd	a4,16(a5)
+    802055d0:	8706                	mv	a4,ra
+    802055d2:	fc043783          	ld	a5,-64(s0)
+    802055d6:	eb98                	sd	a4,16(a5)
         p->chan = wait_chan;
-    802059a8:	fc043783          	ld	a5,-64(s0)
-    802059ac:	fb043703          	ld	a4,-80(s0)
-    802059b0:	f3d8                	sd	a4,160(a5)
+    802055d8:	fc043783          	ld	a5,-64(s0)
+    802055dc:	fb043703          	ld	a4,-80(s0)
+    802055e0:	f3d8                	sd	a4,160(a5)
         p->state = SLEEPING;
-    802059b2:	fc043783          	ld	a5,-64(s0)
-    802059b6:	4709                	li	a4,2
-    802059b8:	c398                	sw	a4,0(a5)
+    802055e2:	fc043783          	ld	a5,-64(s0)
+    802055e6:	4709                	li	a4,2
+    802055e8:	c398                	sw	a4,0(a5)
         
 		struct cpu *c = mycpu();
-    802059ba:	fffff097          	auipc	ra,0xfffff
-    802059be:	1d2080e7          	jalr	466(ra) # 80204b8c <mycpu>
-    802059c2:	faa43423          	sd	a0,-88(s0)
+    802055ea:	fffff097          	auipc	ra,0xfffff
+    802055ee:	1d2080e7          	jalr	466(ra) # 802047bc <mycpu>
+    802055f2:	faa43423          	sd	a0,-88(s0)
 		current_proc = 0;
-    802059c6:	00006797          	auipc	a5,0x6
-    802059ca:	6fa78793          	addi	a5,a5,1786 # 8020c0c0 <current_proc>
-    802059ce:	0007b023          	sd	zero,0(a5)
+    802055f6:	00007797          	auipc	a5,0x7
+    802055fa:	ad278793          	addi	a5,a5,-1326 # 8020c0c8 <current_proc>
+    802055fe:	0007b023          	sd	zero,0(a5)
 		c->proc = 0;
-    802059d2:	fa843783          	ld	a5,-88(s0)
-    802059d6:	0007b023          	sd	zero,0(a5)
+    80205602:	fa843783          	ld	a5,-88(s0)
+    80205606:	0007b023          	sd	zero,0(a5)
         // 在睡眠前确保中断是开启的
         intr_on();
-    802059da:	fffff097          	auipc	ra,0xfffff
-    802059de:	104080e7          	jalr	260(ra) # 80204ade <intr_on>
+    8020560a:	fffff097          	auipc	ra,0xfffff
+    8020560e:	104080e7          	jalr	260(ra) # 8020470e <intr_on>
         swtch(&p->context,&c->context);
-    802059e2:	fc043783          	ld	a5,-64(s0)
-    802059e6:	01078713          	addi	a4,a5,16
-    802059ea:	fa843783          	ld	a5,-88(s0)
-    802059ee:	07a1                	addi	a5,a5,8
-    802059f0:	85be                	mv	a1,a5
-    802059f2:	853a                	mv	a0,a4
-    802059f4:	fffff097          	auipc	ra,0xfffff
-    802059f8:	04c080e7          	jalr	76(ra) # 80204a40 <swtch>
+    80205612:	fc043783          	ld	a5,-64(s0)
+    80205616:	01078713          	addi	a4,a5,16
+    8020561a:	fa843783          	ld	a5,-88(s0)
+    8020561e:	07a1                	addi	a5,a5,8
+    80205620:	85be                	mv	a1,a5
+    80205622:	853a                	mv	a0,a4
+    80205624:	fffff097          	auipc	ra,0xfffff
+    80205628:	04c080e7          	jalr	76(ra) # 80204670 <swtch>
         intr_off();
-    802059fc:	fffff097          	auipc	ra,0xfffff
-    80205a00:	10c080e7          	jalr	268(ra) # 80204b08 <intr_off>
+    8020562c:	fffff097          	auipc	ra,0xfffff
+    80205630:	10c080e7          	jalr	268(ra) # 80204738 <intr_off>
         p->state = RUNNING;
-    80205a04:	fc043783          	ld	a5,-64(s0)
-    80205a08:	4711                	li	a4,4
-    80205a0a:	c398                	sw	a4,0(a5)
+    80205634:	fc043783          	ld	a5,-64(s0)
+    80205638:	4711                	li	a4,4
+    8020563a:	c398                	sw	a4,0(a5)
         intr_on();
-    80205a0c:	fffff097          	auipc	ra,0xfffff
-    80205a10:	0d2080e7          	jalr	210(ra) # 80204ade <intr_on>
+    8020563c:	fffff097          	auipc	ra,0xfffff
+    80205640:	0d2080e7          	jalr	210(ra) # 8020470e <intr_on>
     while (1) {
-    80205a14:	bd91                	j	80205868 <wait_proc+0x32>
+    80205644:	bd91                	j	80205498 <wait_proc+0x32>
     }
 }
-    80205a16:	853e                	mv	a0,a5
-    80205a18:	70a6                	ld	ra,104(sp)
-    80205a1a:	7406                	ld	s0,96(sp)
-    80205a1c:	6165                	addi	sp,sp,112
-    80205a1e:	8082                	ret
+    80205646:	853e                	mv	a0,a5
+    80205648:	70a6                	ld	ra,104(sp)
+    8020564a:	7406                	ld	s0,96(sp)
+    8020564c:	6165                	addi	sp,sp,112
+    8020564e:	8082                	ret
 
-0000000080205a20 <print_proc_table>:
+0000000080205650 <print_proc_table>:
 
 void print_proc_table(void) {
-    80205a20:	715d                	addi	sp,sp,-80
-    80205a22:	e486                	sd	ra,72(sp)
-    80205a24:	e0a2                	sd	s0,64(sp)
-    80205a26:	0880                	addi	s0,sp,80
+    80205650:	715d                	addi	sp,sp,-80
+    80205652:	e486                	sd	ra,72(sp)
+    80205654:	e0a2                	sd	s0,64(sp)
+    80205656:	0880                	addi	s0,sp,80
     int count = 0;
-    80205a28:	fe042623          	sw	zero,-20(s0)
+    80205658:	fe042623          	sw	zero,-20(s0)
     printf("PID  TYPE STATUS     PPID   FUNC_ADDR      STACK_ADDR    \n");
-    80205a2c:	00003517          	auipc	a0,0x3
-    80205a30:	5bc50513          	addi	a0,a0,1468 # 80208fe8 <etext+0x1fe8>
-    80205a34:	ffffb097          	auipc	ra,0xffffb
-    80205a38:	24e080e7          	jalr	590(ra) # 80200c82 <printf>
+    8020565c:	00003517          	auipc	a0,0x3
+    80205660:	54c50513          	addi	a0,a0,1356 # 80208ba8 <etext+0x1ba8>
+    80205664:	ffffb097          	auipc	ra,0xffffb
+    80205668:	61e080e7          	jalr	1566(ra) # 80200c82 <printf>
     printf("----------------------------------------------------------\n");
-    80205a3c:	00003517          	auipc	a0,0x3
-    80205a40:	5ec50513          	addi	a0,a0,1516 # 80209028 <etext+0x2028>
-    80205a44:	ffffb097          	auipc	ra,0xffffb
-    80205a48:	23e080e7          	jalr	574(ra) # 80200c82 <printf>
+    8020566c:	00003517          	auipc	a0,0x3
+    80205670:	57c50513          	addi	a0,a0,1404 # 80208be8 <etext+0x1be8>
+    80205674:	ffffb097          	auipc	ra,0xffffb
+    80205678:	60e080e7          	jalr	1550(ra) # 80200c82 <printf>
     for(int i = 0; i < PROC; i++) {
-    80205a4c:	fe042423          	sw	zero,-24(s0)
-    80205a50:	a2a9                	j	80205b9a <print_proc_table+0x17a>
+    8020567c:	fe042423          	sw	zero,-24(s0)
+    80205680:	a2a9                	j	802057ca <print_proc_table+0x17a>
         struct proc *p = proc_table[i];
-    80205a52:	00007717          	auipc	a4,0x7
-    80205a56:	a2670713          	addi	a4,a4,-1498 # 8020c478 <proc_table>
-    80205a5a:	fe842783          	lw	a5,-24(s0)
-    80205a5e:	078e                	slli	a5,a5,0x3
-    80205a60:	97ba                	add	a5,a5,a4
-    80205a62:	639c                	ld	a5,0(a5)
-    80205a64:	fcf43c23          	sd	a5,-40(s0)
+    80205682:	00007717          	auipc	a4,0x7
+    80205686:	e0670713          	addi	a4,a4,-506 # 8020c488 <proc_table>
+    8020568a:	fe842783          	lw	a5,-24(s0)
+    8020568e:	078e                	slli	a5,a5,0x3
+    80205690:	97ba                	add	a5,a5,a4
+    80205692:	639c                	ld	a5,0(a5)
+    80205694:	fcf43c23          	sd	a5,-40(s0)
         if(p->state != UNUSED) {
-    80205a68:	fd843783          	ld	a5,-40(s0)
-    80205a6c:	439c                	lw	a5,0(a5)
-    80205a6e:	12078163          	beqz	a5,80205b90 <print_proc_table+0x170>
+    80205698:	fd843783          	ld	a5,-40(s0)
+    8020569c:	439c                	lw	a5,0(a5)
+    8020569e:	12078163          	beqz	a5,802057c0 <print_proc_table+0x170>
             count++;
-    80205a72:	fec42783          	lw	a5,-20(s0)
-    80205a76:	2785                	addiw	a5,a5,1
-    80205a78:	fef42623          	sw	a5,-20(s0)
+    802056a2:	fec42783          	lw	a5,-20(s0)
+    802056a6:	2785                	addiw	a5,a5,1
+    802056a8:	fef42623          	sw	a5,-20(s0)
             const char *type = (p->is_user ? "USR" : "SYS");
-    80205a7c:	fd843783          	ld	a5,-40(s0)
-    80205a80:	0a87a783          	lw	a5,168(a5)
-    80205a84:	c791                	beqz	a5,80205a90 <print_proc_table+0x70>
-    80205a86:	00003797          	auipc	a5,0x3
-    80205a8a:	5e278793          	addi	a5,a5,1506 # 80209068 <etext+0x2068>
-    80205a8e:	a029                	j	80205a98 <print_proc_table+0x78>
-    80205a90:	00003797          	auipc	a5,0x3
-    80205a94:	5e078793          	addi	a5,a5,1504 # 80209070 <etext+0x2070>
-    80205a98:	fcf43823          	sd	a5,-48(s0)
+    802056ac:	fd843783          	ld	a5,-40(s0)
+    802056b0:	0a87a783          	lw	a5,168(a5)
+    802056b4:	c791                	beqz	a5,802056c0 <print_proc_table+0x70>
+    802056b6:	00003797          	auipc	a5,0x3
+    802056ba:	57278793          	addi	a5,a5,1394 # 80208c28 <etext+0x1c28>
+    802056be:	a029                	j	802056c8 <print_proc_table+0x78>
+    802056c0:	00003797          	auipc	a5,0x3
+    802056c4:	57078793          	addi	a5,a5,1392 # 80208c30 <etext+0x1c30>
+    802056c8:	fcf43823          	sd	a5,-48(s0)
             const char *status;
             switch(p->state) {
-    80205a9c:	fd843783          	ld	a5,-40(s0)
-    80205aa0:	439c                	lw	a5,0(a5)
-    80205aa2:	86be                	mv	a3,a5
-    80205aa4:	4715                	li	a4,5
-    80205aa6:	06d76c63          	bltu	a4,a3,80205b1e <print_proc_table+0xfe>
-    80205aaa:	00279713          	slli	a4,a5,0x2
-    80205aae:	00003797          	auipc	a5,0x3
-    80205ab2:	64a78793          	addi	a5,a5,1610 # 802090f8 <etext+0x20f8>
-    80205ab6:	97ba                	add	a5,a5,a4
-    80205ab8:	439c                	lw	a5,0(a5)
-    80205aba:	0007871b          	sext.w	a4,a5
-    80205abe:	00003797          	auipc	a5,0x3
-    80205ac2:	63a78793          	addi	a5,a5,1594 # 802090f8 <etext+0x20f8>
-    80205ac6:	97ba                	add	a5,a5,a4
-    80205ac8:	8782                	jr	a5
+    802056cc:	fd843783          	ld	a5,-40(s0)
+    802056d0:	439c                	lw	a5,0(a5)
+    802056d2:	86be                	mv	a3,a5
+    802056d4:	4715                	li	a4,5
+    802056d6:	06d76c63          	bltu	a4,a3,8020574e <print_proc_table+0xfe>
+    802056da:	00279713          	slli	a4,a5,0x2
+    802056de:	00003797          	auipc	a5,0x3
+    802056e2:	5da78793          	addi	a5,a5,1498 # 80208cb8 <etext+0x1cb8>
+    802056e6:	97ba                	add	a5,a5,a4
+    802056e8:	439c                	lw	a5,0(a5)
+    802056ea:	0007871b          	sext.w	a4,a5
+    802056ee:	00003797          	auipc	a5,0x3
+    802056f2:	5ca78793          	addi	a5,a5,1482 # 80208cb8 <etext+0x1cb8>
+    802056f6:	97ba                	add	a5,a5,a4
+    802056f8:	8782                	jr	a5
                 case UNUSED:   status = "UNUSED"; break;
-    80205aca:	00003797          	auipc	a5,0x3
-    80205ace:	5ae78793          	addi	a5,a5,1454 # 80209078 <etext+0x2078>
-    80205ad2:	fef43023          	sd	a5,-32(s0)
-    80205ad6:	a899                	j	80205b2c <print_proc_table+0x10c>
+    802056fa:	00003797          	auipc	a5,0x3
+    802056fe:	53e78793          	addi	a5,a5,1342 # 80208c38 <etext+0x1c38>
+    80205702:	fef43023          	sd	a5,-32(s0)
+    80205706:	a899                	j	8020575c <print_proc_table+0x10c>
                 case USED:     status = "USED"; break;
-    80205ad8:	00003797          	auipc	a5,0x3
-    80205adc:	5a878793          	addi	a5,a5,1448 # 80209080 <etext+0x2080>
-    80205ae0:	fef43023          	sd	a5,-32(s0)
-    80205ae4:	a0a1                	j	80205b2c <print_proc_table+0x10c>
+    80205708:	00003797          	auipc	a5,0x3
+    8020570c:	53878793          	addi	a5,a5,1336 # 80208c40 <etext+0x1c40>
+    80205710:	fef43023          	sd	a5,-32(s0)
+    80205714:	a0a1                	j	8020575c <print_proc_table+0x10c>
                 case SLEEPING: status = "SLEEP"; break;
-    80205ae6:	00003797          	auipc	a5,0x3
-    80205aea:	5a278793          	addi	a5,a5,1442 # 80209088 <etext+0x2088>
-    80205aee:	fef43023          	sd	a5,-32(s0)
-    80205af2:	a82d                	j	80205b2c <print_proc_table+0x10c>
+    80205716:	00003797          	auipc	a5,0x3
+    8020571a:	53278793          	addi	a5,a5,1330 # 80208c48 <etext+0x1c48>
+    8020571e:	fef43023          	sd	a5,-32(s0)
+    80205722:	a82d                	j	8020575c <print_proc_table+0x10c>
                 case RUNNABLE: status = "RUNNABLE"; break;
-    80205af4:	00003797          	auipc	a5,0x3
-    80205af8:	59c78793          	addi	a5,a5,1436 # 80209090 <etext+0x2090>
-    80205afc:	fef43023          	sd	a5,-32(s0)
-    80205b00:	a035                	j	80205b2c <print_proc_table+0x10c>
+    80205724:	00003797          	auipc	a5,0x3
+    80205728:	52c78793          	addi	a5,a5,1324 # 80208c50 <etext+0x1c50>
+    8020572c:	fef43023          	sd	a5,-32(s0)
+    80205730:	a035                	j	8020575c <print_proc_table+0x10c>
                 case RUNNING:  status = "RUNNING"; break;
-    80205b02:	00003797          	auipc	a5,0x3
-    80205b06:	59e78793          	addi	a5,a5,1438 # 802090a0 <etext+0x20a0>
-    80205b0a:	fef43023          	sd	a5,-32(s0)
-    80205b0e:	a839                	j	80205b2c <print_proc_table+0x10c>
+    80205732:	00003797          	auipc	a5,0x3
+    80205736:	52e78793          	addi	a5,a5,1326 # 80208c60 <etext+0x1c60>
+    8020573a:	fef43023          	sd	a5,-32(s0)
+    8020573e:	a839                	j	8020575c <print_proc_table+0x10c>
                 case ZOMBIE:   status = "ZOMBIE"; break;
-    80205b10:	00003797          	auipc	a5,0x3
-    80205b14:	59878793          	addi	a5,a5,1432 # 802090a8 <etext+0x20a8>
-    80205b18:	fef43023          	sd	a5,-32(s0)
-    80205b1c:	a801                	j	80205b2c <print_proc_table+0x10c>
+    80205740:	00003797          	auipc	a5,0x3
+    80205744:	52878793          	addi	a5,a5,1320 # 80208c68 <etext+0x1c68>
+    80205748:	fef43023          	sd	a5,-32(s0)
+    8020574c:	a801                	j	8020575c <print_proc_table+0x10c>
                 default:       status = "UNKNOWN"; break;
-    80205b1e:	00003797          	auipc	a5,0x3
-    80205b22:	59278793          	addi	a5,a5,1426 # 802090b0 <etext+0x20b0>
-    80205b26:	fef43023          	sd	a5,-32(s0)
-    80205b2a:	0001                	nop
+    8020574e:	00003797          	auipc	a5,0x3
+    80205752:	52278793          	addi	a5,a5,1314 # 80208c70 <etext+0x1c70>
+    80205756:	fef43023          	sd	a5,-32(s0)
+    8020575a:	0001                	nop
             }
             int ppid = p->parent ? p->parent->pid : -1;
-    80205b2c:	fd843783          	ld	a5,-40(s0)
-    80205b30:	6fdc                	ld	a5,152(a5)
-    80205b32:	c791                	beqz	a5,80205b3e <print_proc_table+0x11e>
-    80205b34:	fd843783          	ld	a5,-40(s0)
-    80205b38:	6fdc                	ld	a5,152(a5)
-    80205b3a:	43dc                	lw	a5,4(a5)
-    80205b3c:	a011                	j	80205b40 <print_proc_table+0x120>
-    80205b3e:	57fd                	li	a5,-1
-    80205b40:	fcf42623          	sw	a5,-52(s0)
+    8020575c:	fd843783          	ld	a5,-40(s0)
+    80205760:	6fdc                	ld	a5,152(a5)
+    80205762:	c791                	beqz	a5,8020576e <print_proc_table+0x11e>
+    80205764:	fd843783          	ld	a5,-40(s0)
+    80205768:	6fdc                	ld	a5,152(a5)
+    8020576a:	43dc                	lw	a5,4(a5)
+    8020576c:	a011                	j	80205770 <print_proc_table+0x120>
+    8020576e:	57fd                	li	a5,-1
+    80205770:	fcf42623          	sw	a5,-52(s0)
             unsigned long func_addr = p->trapframe ? p->trapframe->epc : 0;
-    80205b44:	fd843783          	ld	a5,-40(s0)
-    80205b48:	63fc                	ld	a5,192(a5)
-    80205b4a:	c791                	beqz	a5,80205b56 <print_proc_table+0x136>
-    80205b4c:	fd843783          	ld	a5,-40(s0)
-    80205b50:	63fc                	ld	a5,192(a5)
-    80205b52:	739c                	ld	a5,32(a5)
-    80205b54:	a011                	j	80205b58 <print_proc_table+0x138>
-    80205b56:	4781                	li	a5,0
-    80205b58:	fcf43023          	sd	a5,-64(s0)
+    80205774:	fd843783          	ld	a5,-40(s0)
+    80205778:	63fc                	ld	a5,192(a5)
+    8020577a:	c791                	beqz	a5,80205786 <print_proc_table+0x136>
+    8020577c:	fd843783          	ld	a5,-40(s0)
+    80205780:	63fc                	ld	a5,192(a5)
+    80205782:	739c                	ld	a5,32(a5)
+    80205784:	a011                	j	80205788 <print_proc_table+0x138>
+    80205786:	4781                	li	a5,0
+    80205788:	fcf43023          	sd	a5,-64(s0)
             unsigned long stack_addr = p->kstack;
-    80205b5c:	fd843783          	ld	a5,-40(s0)
-    80205b60:	679c                	ld	a5,8(a5)
-    80205b62:	faf43c23          	sd	a5,-72(s0)
+    8020578c:	fd843783          	ld	a5,-40(s0)
+    80205790:	679c                	ld	a5,8(a5)
+    80205792:	faf43c23          	sd	a5,-72(s0)
             printf("%2d  %3s %8s %4d 0x%012lx 0x%012lx\n",
-    80205b66:	fd843783          	ld	a5,-40(s0)
-    80205b6a:	43cc                	lw	a1,4(a5)
-    80205b6c:	fcc42703          	lw	a4,-52(s0)
-    80205b70:	fb843803          	ld	a6,-72(s0)
-    80205b74:	fc043783          	ld	a5,-64(s0)
-    80205b78:	fe043683          	ld	a3,-32(s0)
-    80205b7c:	fd043603          	ld	a2,-48(s0)
-    80205b80:	00003517          	auipc	a0,0x3
-    80205b84:	53850513          	addi	a0,a0,1336 # 802090b8 <etext+0x20b8>
-    80205b88:	ffffb097          	auipc	ra,0xffffb
-    80205b8c:	0fa080e7          	jalr	250(ra) # 80200c82 <printf>
+    80205796:	fd843783          	ld	a5,-40(s0)
+    8020579a:	43cc                	lw	a1,4(a5)
+    8020579c:	fcc42703          	lw	a4,-52(s0)
+    802057a0:	fb843803          	ld	a6,-72(s0)
+    802057a4:	fc043783          	ld	a5,-64(s0)
+    802057a8:	fe043683          	ld	a3,-32(s0)
+    802057ac:	fd043603          	ld	a2,-48(s0)
+    802057b0:	00003517          	auipc	a0,0x3
+    802057b4:	4c850513          	addi	a0,a0,1224 # 80208c78 <etext+0x1c78>
+    802057b8:	ffffb097          	auipc	ra,0xffffb
+    802057bc:	4ca080e7          	jalr	1226(ra) # 80200c82 <printf>
     for(int i = 0; i < PROC; i++) {
-    80205b90:	fe842783          	lw	a5,-24(s0)
-    80205b94:	2785                	addiw	a5,a5,1
-    80205b96:	fef42423          	sw	a5,-24(s0)
-    80205b9a:	fe842783          	lw	a5,-24(s0)
-    80205b9e:	0007871b          	sext.w	a4,a5
-    80205ba2:	03f00793          	li	a5,63
-    80205ba6:	eae7d6e3          	bge	a5,a4,80205a52 <print_proc_table+0x32>
+    802057c0:	fe842783          	lw	a5,-24(s0)
+    802057c4:	2785                	addiw	a5,a5,1
+    802057c6:	fef42423          	sw	a5,-24(s0)
+    802057ca:	fe842783          	lw	a5,-24(s0)
+    802057ce:	0007871b          	sext.w	a4,a5
+    802057d2:	03f00793          	li	a5,63
+    802057d6:	eae7d6e3          	bge	a5,a4,80205682 <print_proc_table+0x32>
                 p->pid, type, status, ppid, func_addr, stack_addr);
         }
     }
     printf("----------------------------------------------------------\n");
-    80205baa:	00003517          	auipc	a0,0x3
-    80205bae:	47e50513          	addi	a0,a0,1150 # 80209028 <etext+0x2028>
-    80205bb2:	ffffb097          	auipc	ra,0xffffb
-    80205bb6:	0d0080e7          	jalr	208(ra) # 80200c82 <printf>
+    802057da:	00003517          	auipc	a0,0x3
+    802057de:	40e50513          	addi	a0,a0,1038 # 80208be8 <etext+0x1be8>
+    802057e2:	ffffb097          	auipc	ra,0xffffb
+    802057e6:	4a0080e7          	jalr	1184(ra) # 80200c82 <printf>
     printf("%d active processes\n", count);
-    80205bba:	fec42783          	lw	a5,-20(s0)
-    80205bbe:	85be                	mv	a1,a5
-    80205bc0:	00003517          	auipc	a0,0x3
-    80205bc4:	52050513          	addi	a0,a0,1312 # 802090e0 <etext+0x20e0>
-    80205bc8:	ffffb097          	auipc	ra,0xffffb
-    80205bcc:	0ba080e7          	jalr	186(ra) # 80200c82 <printf>
+    802057ea:	fec42783          	lw	a5,-20(s0)
+    802057ee:	85be                	mv	a1,a5
+    802057f0:	00003517          	auipc	a0,0x3
+    802057f4:	4b050513          	addi	a0,a0,1200 # 80208ca0 <etext+0x1ca0>
+    802057f8:	ffffb097          	auipc	ra,0xffffb
+    802057fc:	48a080e7          	jalr	1162(ra) # 80200c82 <printf>
 }
-    80205bd0:	0001                	nop
-    80205bd2:	60a6                	ld	ra,72(sp)
-    80205bd4:	6406                	ld	s0,64(sp)
-    80205bd6:	6161                	addi	sp,sp,80
-    80205bd8:	8082                	ret
+    80205800:	0001                	nop
+    80205802:	60a6                	ld	ra,72(sp)
+    80205804:	6406                	ld	s0,64(sp)
+    80205806:	6161                	addi	sp,sp,80
+    80205808:	8082                	ret
 
-0000000080205bda <strlen>:
+000000008020580a <strlen>:
 #include "defs.h"
 
 // 计算字符串长度
 int strlen(const char *s) {
-    80205bda:	7179                	addi	sp,sp,-48
-    80205bdc:	f422                	sd	s0,40(sp)
-    80205bde:	1800                	addi	s0,sp,48
-    80205be0:	fca43c23          	sd	a0,-40(s0)
+    8020580a:	7179                	addi	sp,sp,-48
+    8020580c:	f422                	sd	s0,40(sp)
+    8020580e:	1800                	addi	s0,sp,48
+    80205810:	fca43c23          	sd	a0,-40(s0)
     int n;
     for(n = 0; s[n]; n++)
-    80205be4:	fe042623          	sw	zero,-20(s0)
-    80205be8:	a031                	j	80205bf4 <strlen+0x1a>
-    80205bea:	fec42783          	lw	a5,-20(s0)
-    80205bee:	2785                	addiw	a5,a5,1
-    80205bf0:	fef42623          	sw	a5,-20(s0)
-    80205bf4:	fec42783          	lw	a5,-20(s0)
-    80205bf8:	fd843703          	ld	a4,-40(s0)
-    80205bfc:	97ba                	add	a5,a5,a4
-    80205bfe:	0007c783          	lbu	a5,0(a5)
-    80205c02:	f7e5                	bnez	a5,80205bea <strlen+0x10>
+    80205814:	fe042623          	sw	zero,-20(s0)
+    80205818:	a031                	j	80205824 <strlen+0x1a>
+    8020581a:	fec42783          	lw	a5,-20(s0)
+    8020581e:	2785                	addiw	a5,a5,1
+    80205820:	fef42623          	sw	a5,-20(s0)
+    80205824:	fec42783          	lw	a5,-20(s0)
+    80205828:	fd843703          	ld	a4,-40(s0)
+    8020582c:	97ba                	add	a5,a5,a4
+    8020582e:	0007c783          	lbu	a5,0(a5)
+    80205832:	f7e5                	bnez	a5,8020581a <strlen+0x10>
         ;
     return n;
-    80205c04:	fec42783          	lw	a5,-20(s0)
+    80205834:	fec42783          	lw	a5,-20(s0)
 }
-    80205c08:	853e                	mv	a0,a5
-    80205c0a:	7422                	ld	s0,40(sp)
-    80205c0c:	6145                	addi	sp,sp,48
-    80205c0e:	8082                	ret
+    80205838:	853e                	mv	a0,a5
+    8020583a:	7422                	ld	s0,40(sp)
+    8020583c:	6145                	addi	sp,sp,48
+    8020583e:	8082                	ret
 
-0000000080205c10 <strcmp>:
+0000000080205840 <strcmp>:
 
 // 字符串比较
 int strcmp(const char *p, const char *q) {
-    80205c10:	1101                	addi	sp,sp,-32
-    80205c12:	ec22                	sd	s0,24(sp)
-    80205c14:	1000                	addi	s0,sp,32
-    80205c16:	fea43423          	sd	a0,-24(s0)
-    80205c1a:	feb43023          	sd	a1,-32(s0)
+    80205840:	1101                	addi	sp,sp,-32
+    80205842:	ec22                	sd	s0,24(sp)
+    80205844:	1000                	addi	s0,sp,32
+    80205846:	fea43423          	sd	a0,-24(s0)
+    8020584a:	feb43023          	sd	a1,-32(s0)
     while(*p && *p == *q)
-    80205c1e:	a819                	j	80205c34 <strcmp+0x24>
+    8020584e:	a819                	j	80205864 <strcmp+0x24>
         p++, q++;
-    80205c20:	fe843783          	ld	a5,-24(s0)
-    80205c24:	0785                	addi	a5,a5,1
-    80205c26:	fef43423          	sd	a5,-24(s0)
-    80205c2a:	fe043783          	ld	a5,-32(s0)
-    80205c2e:	0785                	addi	a5,a5,1
-    80205c30:	fef43023          	sd	a5,-32(s0)
+    80205850:	fe843783          	ld	a5,-24(s0)
+    80205854:	0785                	addi	a5,a5,1
+    80205856:	fef43423          	sd	a5,-24(s0)
+    8020585a:	fe043783          	ld	a5,-32(s0)
+    8020585e:	0785                	addi	a5,a5,1
+    80205860:	fef43023          	sd	a5,-32(s0)
     while(*p && *p == *q)
-    80205c34:	fe843783          	ld	a5,-24(s0)
-    80205c38:	0007c783          	lbu	a5,0(a5)
-    80205c3c:	cb99                	beqz	a5,80205c52 <strcmp+0x42>
-    80205c3e:	fe843783          	ld	a5,-24(s0)
-    80205c42:	0007c703          	lbu	a4,0(a5)
-    80205c46:	fe043783          	ld	a5,-32(s0)
-    80205c4a:	0007c783          	lbu	a5,0(a5)
-    80205c4e:	fcf709e3          	beq	a4,a5,80205c20 <strcmp+0x10>
+    80205864:	fe843783          	ld	a5,-24(s0)
+    80205868:	0007c783          	lbu	a5,0(a5)
+    8020586c:	cb99                	beqz	a5,80205882 <strcmp+0x42>
+    8020586e:	fe843783          	ld	a5,-24(s0)
+    80205872:	0007c703          	lbu	a4,0(a5)
+    80205876:	fe043783          	ld	a5,-32(s0)
+    8020587a:	0007c783          	lbu	a5,0(a5)
+    8020587e:	fcf709e3          	beq	a4,a5,80205850 <strcmp+0x10>
     return (uchar)*p - (uchar)*q;
-    80205c52:	fe843783          	ld	a5,-24(s0)
-    80205c56:	0007c783          	lbu	a5,0(a5)
-    80205c5a:	0007871b          	sext.w	a4,a5
-    80205c5e:	fe043783          	ld	a5,-32(s0)
-    80205c62:	0007c783          	lbu	a5,0(a5)
-    80205c66:	2781                	sext.w	a5,a5
-    80205c68:	40f707bb          	subw	a5,a4,a5
-    80205c6c:	2781                	sext.w	a5,a5
+    80205882:	fe843783          	ld	a5,-24(s0)
+    80205886:	0007c783          	lbu	a5,0(a5)
+    8020588a:	0007871b          	sext.w	a4,a5
+    8020588e:	fe043783          	ld	a5,-32(s0)
+    80205892:	0007c783          	lbu	a5,0(a5)
+    80205896:	2781                	sext.w	a5,a5
+    80205898:	40f707bb          	subw	a5,a4,a5
+    8020589c:	2781                	sext.w	a5,a5
 }
-    80205c6e:	853e                	mv	a0,a5
-    80205c70:	6462                	ld	s0,24(sp)
-    80205c72:	6105                	addi	sp,sp,32
-    80205c74:	8082                	ret
+    8020589e:	853e                	mv	a0,a5
+    802058a0:	6462                	ld	s0,24(sp)
+    802058a2:	6105                	addi	sp,sp,32
+    802058a4:	8082                	ret
 
-0000000080205c76 <strcpy>:
+00000000802058a6 <strcpy>:
 
 // 字符串复制
 char* strcpy(char *s, const char *t) {
-    80205c76:	7179                	addi	sp,sp,-48
-    80205c78:	f422                	sd	s0,40(sp)
-    80205c7a:	1800                	addi	s0,sp,48
-    80205c7c:	fca43c23          	sd	a0,-40(s0)
-    80205c80:	fcb43823          	sd	a1,-48(s0)
+    802058a6:	7179                	addi	sp,sp,-48
+    802058a8:	f422                	sd	s0,40(sp)
+    802058aa:	1800                	addi	s0,sp,48
+    802058ac:	fca43c23          	sd	a0,-40(s0)
+    802058b0:	fcb43823          	sd	a1,-48(s0)
     char *os;
     
     os = s;
-    80205c84:	fd843783          	ld	a5,-40(s0)
-    80205c88:	fef43423          	sd	a5,-24(s0)
+    802058b4:	fd843783          	ld	a5,-40(s0)
+    802058b8:	fef43423          	sd	a5,-24(s0)
     while((*s++ = *t++) != 0)
-    80205c8c:	0001                	nop
-    80205c8e:	fd043703          	ld	a4,-48(s0)
-    80205c92:	00170793          	addi	a5,a4,1
-    80205c96:	fcf43823          	sd	a5,-48(s0)
-    80205c9a:	fd843783          	ld	a5,-40(s0)
-    80205c9e:	00178693          	addi	a3,a5,1
-    80205ca2:	fcd43c23          	sd	a3,-40(s0)
-    80205ca6:	00074703          	lbu	a4,0(a4)
-    80205caa:	00e78023          	sb	a4,0(a5)
-    80205cae:	0007c783          	lbu	a5,0(a5)
-    80205cb2:	fff1                	bnez	a5,80205c8e <strcpy+0x18>
+    802058bc:	0001                	nop
+    802058be:	fd043703          	ld	a4,-48(s0)
+    802058c2:	00170793          	addi	a5,a4,1
+    802058c6:	fcf43823          	sd	a5,-48(s0)
+    802058ca:	fd843783          	ld	a5,-40(s0)
+    802058ce:	00178693          	addi	a3,a5,1
+    802058d2:	fcd43c23          	sd	a3,-40(s0)
+    802058d6:	00074703          	lbu	a4,0(a4)
+    802058da:	00e78023          	sb	a4,0(a5)
+    802058de:	0007c783          	lbu	a5,0(a5)
+    802058e2:	fff1                	bnez	a5,802058be <strcpy+0x18>
         ;
     return os;
-    80205cb4:	fe843783          	ld	a5,-24(s0)
+    802058e4:	fe843783          	ld	a5,-24(s0)
 }
-    80205cb8:	853e                	mv	a0,a5
-    80205cba:	7422                	ld	s0,40(sp)
-    80205cbc:	6145                	addi	sp,sp,48
-    80205cbe:	8082                	ret
+    802058e8:	853e                	mv	a0,a5
+    802058ea:	7422                	ld	s0,40(sp)
+    802058ec:	6145                	addi	sp,sp,48
+    802058ee:	8082                	ret
 
-0000000080205cc0 <safestrcpy>:
+00000000802058f0 <safestrcpy>:
 
 // 安全的字符串复制（指定最大长度）
 char* safestrcpy(char *s, const char *t, int n) {
-    80205cc0:	7139                	addi	sp,sp,-64
-    80205cc2:	fc22                	sd	s0,56(sp)
-    80205cc4:	0080                	addi	s0,sp,64
-    80205cc6:	fca43c23          	sd	a0,-40(s0)
-    80205cca:	fcb43823          	sd	a1,-48(s0)
-    80205cce:	87b2                	mv	a5,a2
-    80205cd0:	fcf42623          	sw	a5,-52(s0)
+    802058f0:	7139                	addi	sp,sp,-64
+    802058f2:	fc22                	sd	s0,56(sp)
+    802058f4:	0080                	addi	s0,sp,64
+    802058f6:	fca43c23          	sd	a0,-40(s0)
+    802058fa:	fcb43823          	sd	a1,-48(s0)
+    802058fe:	87b2                	mv	a5,a2
+    80205900:	fcf42623          	sw	a5,-52(s0)
     char *os;
     
     os = s;
-    80205cd4:	fd843783          	ld	a5,-40(s0)
-    80205cd8:	fef43423          	sd	a5,-24(s0)
+    80205904:	fd843783          	ld	a5,-40(s0)
+    80205908:	fef43423          	sd	a5,-24(s0)
     if(n <= 0)
-    80205cdc:	fcc42783          	lw	a5,-52(s0)
-    80205ce0:	2781                	sext.w	a5,a5
-    80205ce2:	00f04563          	bgtz	a5,80205cec <safestrcpy+0x2c>
+    8020590c:	fcc42783          	lw	a5,-52(s0)
+    80205910:	2781                	sext.w	a5,a5
+    80205912:	00f04563          	bgtz	a5,8020591c <safestrcpy+0x2c>
         return os;
-    80205ce6:	fe843783          	ld	a5,-24(s0)
-    80205cea:	a0a9                	j	80205d34 <safestrcpy+0x74>
+    80205916:	fe843783          	ld	a5,-24(s0)
+    8020591a:	a0a9                	j	80205964 <safestrcpy+0x74>
     while(--n > 0 && (*s++ = *t++) != 0)
-    80205cec:	0001                	nop
-    80205cee:	fcc42783          	lw	a5,-52(s0)
-    80205cf2:	37fd                	addiw	a5,a5,-1
-    80205cf4:	fcf42623          	sw	a5,-52(s0)
-    80205cf8:	fcc42783          	lw	a5,-52(s0)
-    80205cfc:	2781                	sext.w	a5,a5
-    80205cfe:	02f05563          	blez	a5,80205d28 <safestrcpy+0x68>
-    80205d02:	fd043703          	ld	a4,-48(s0)
-    80205d06:	00170793          	addi	a5,a4,1
-    80205d0a:	fcf43823          	sd	a5,-48(s0)
-    80205d0e:	fd843783          	ld	a5,-40(s0)
-    80205d12:	00178693          	addi	a3,a5,1
-    80205d16:	fcd43c23          	sd	a3,-40(s0)
-    80205d1a:	00074703          	lbu	a4,0(a4)
-    80205d1e:	00e78023          	sb	a4,0(a5)
-    80205d22:	0007c783          	lbu	a5,0(a5)
-    80205d26:	f7e1                	bnez	a5,80205cee <safestrcpy+0x2e>
+    8020591c:	0001                	nop
+    8020591e:	fcc42783          	lw	a5,-52(s0)
+    80205922:	37fd                	addiw	a5,a5,-1
+    80205924:	fcf42623          	sw	a5,-52(s0)
+    80205928:	fcc42783          	lw	a5,-52(s0)
+    8020592c:	2781                	sext.w	a5,a5
+    8020592e:	02f05563          	blez	a5,80205958 <safestrcpy+0x68>
+    80205932:	fd043703          	ld	a4,-48(s0)
+    80205936:	00170793          	addi	a5,a4,1
+    8020593a:	fcf43823          	sd	a5,-48(s0)
+    8020593e:	fd843783          	ld	a5,-40(s0)
+    80205942:	00178693          	addi	a3,a5,1
+    80205946:	fcd43c23          	sd	a3,-40(s0)
+    8020594a:	00074703          	lbu	a4,0(a4)
+    8020594e:	00e78023          	sb	a4,0(a5)
+    80205952:	0007c783          	lbu	a5,0(a5)
+    80205956:	f7e1                	bnez	a5,8020591e <safestrcpy+0x2e>
         ;
     *s = 0;
-    80205d28:	fd843783          	ld	a5,-40(s0)
-    80205d2c:	00078023          	sb	zero,0(a5)
+    80205958:	fd843783          	ld	a5,-40(s0)
+    8020595c:	00078023          	sb	zero,0(a5)
     return os;
-    80205d30:	fe843783          	ld	a5,-24(s0)
-    80205d34:	853e                	mv	a0,a5
-    80205d36:	7462                	ld	s0,56(sp)
-    80205d38:	6121                	addi	sp,sp,64
-    80205d3a:	8082                	ret
+    80205960:	fe843783          	ld	a5,-24(s0)
+    80205964:	853e                	mv	a0,a5
+    80205966:	7462                	ld	s0,56(sp)
+    80205968:	6121                	addi	sp,sp,64
+    8020596a:	8082                	ret
 
-0000000080205d3c <assert>:
-    80205d3c:	1101                	addi	sp,sp,-32
-    80205d3e:	ec06                	sd	ra,24(sp)
-    80205d40:	e822                	sd	s0,16(sp)
-    80205d42:	1000                	addi	s0,sp,32
-    80205d44:	87aa                	mv	a5,a0
-    80205d46:	fef42623          	sw	a5,-20(s0)
-    80205d4a:	fec42783          	lw	a5,-20(s0)
-    80205d4e:	2781                	sext.w	a5,a5
-    80205d50:	e79d                	bnez	a5,80205d7e <assert+0x42>
-    80205d52:	1a200613          	li	a2,418
-    80205d56:	00003597          	auipc	a1,0x3
-    80205d5a:	3ba58593          	addi	a1,a1,954 # 80209110 <etext+0x2110>
-    80205d5e:	00003517          	auipc	a0,0x3
-    80205d62:	3c250513          	addi	a0,a0,962 # 80209120 <etext+0x2120>
-    80205d66:	ffffb097          	auipc	ra,0xffffb
-    80205d6a:	f1c080e7          	jalr	-228(ra) # 80200c82 <printf>
-    80205d6e:	00003517          	auipc	a0,0x3
-    80205d72:	3da50513          	addi	a0,a0,986 # 80209148 <etext+0x2148>
-    80205d76:	ffffc097          	auipc	ra,0xffffc
-    80205d7a:	958080e7          	jalr	-1704(ra) # 802016ce <panic>
-    80205d7e:	0001                	nop
-    80205d80:	60e2                	ld	ra,24(sp)
-    80205d82:	6442                	ld	s0,16(sp)
-    80205d84:	6105                	addi	sp,sp,32
-    80205d86:	8082                	ret
+000000008020596c <assert>:
+    8020596c:	1101                	addi	sp,sp,-32
+    8020596e:	ec06                	sd	ra,24(sp)
+    80205970:	e822                	sd	s0,16(sp)
+    80205972:	1000                	addi	s0,sp,32
+    80205974:	87aa                	mv	a5,a0
+    80205976:	fef42623          	sw	a5,-20(s0)
+    8020597a:	fec42783          	lw	a5,-20(s0)
+    8020597e:	2781                	sext.w	a5,a5
+    80205980:	e79d                	bnez	a5,802059ae <assert+0x42>
+    80205982:	19900613          	li	a2,409
+    80205986:	00003597          	auipc	a1,0x3
+    8020598a:	34a58593          	addi	a1,a1,842 # 80208cd0 <etext+0x1cd0>
+    8020598e:	00003517          	auipc	a0,0x3
+    80205992:	35250513          	addi	a0,a0,850 # 80208ce0 <etext+0x1ce0>
+    80205996:	ffffb097          	auipc	ra,0xffffb
+    8020599a:	2ec080e7          	jalr	748(ra) # 80200c82 <printf>
+    8020599e:	00003517          	auipc	a0,0x3
+    802059a2:	36a50513          	addi	a0,a0,874 # 80208d08 <etext+0x1d08>
+    802059a6:	ffffc097          	auipc	ra,0xffffc
+    802059aa:	d28080e7          	jalr	-728(ra) # 802016ce <panic>
+    802059ae:	0001                	nop
+    802059b0:	60e2                	ld	ra,24(sp)
+    802059b2:	6442                	ld	s0,16(sp)
+    802059b4:	6105                	addi	sp,sp,32
+    802059b6:	8082                	ret
 
-0000000080205d88 <simple_task>:
-void simple_task(void) {
-    80205d88:	1141                	addi	sp,sp,-16
-    80205d8a:	e406                	sd	ra,8(sp)
-    80205d8c:	e022                	sd	s0,0(sp)
-    80205d8e:	0800                	addi	s0,sp,16
-    printf("Simple task running in PID %d\n", myproc()->pid);
-    80205d90:	fffff097          	auipc	ra,0xfffff
-    80205d94:	de4080e7          	jalr	-540(ra) # 80204b74 <myproc>
-    80205d98:	87aa                	mv	a5,a0
-    80205d9a:	43dc                	lw	a5,4(a5)
-    80205d9c:	85be                	mv	a1,a5
-    80205d9e:	00003517          	auipc	a0,0x3
-    80205da2:	3b250513          	addi	a0,a0,946 # 80209150 <etext+0x2150>
-    80205da6:	ffffb097          	auipc	ra,0xffffb
-    80205daa:	edc080e7          	jalr	-292(ra) # 80200c82 <printf>
+00000000802059b8 <get_time>:
+uint64 get_time(void) {
+    802059b8:	1141                	addi	sp,sp,-16
+    802059ba:	e406                	sd	ra,8(sp)
+    802059bc:	e022                	sd	s0,0(sp)
+    802059be:	0800                	addi	s0,sp,16
+    return sbi_get_time();
+    802059c0:	ffffe097          	auipc	ra,0xffffe
+    802059c4:	ae0080e7          	jalr	-1312(ra) # 802034a0 <sbi_get_time>
+    802059c8:	87aa                	mv	a5,a0
 }
-    80205dae:	0001                	nop
-    80205db0:	60a2                	ld	ra,8(sp)
-    80205db2:	6402                	ld	s0,0(sp)
-    80205db4:	0141                	addi	sp,sp,16
-    80205db6:	8082                	ret
+    802059ca:	853e                	mv	a0,a5
+    802059cc:	60a2                	ld	ra,8(sp)
+    802059ce:	6402                	ld	s0,0(sp)
+    802059d0:	0141                	addi	sp,sp,16
+    802059d2:	8082                	ret
 
-0000000080205db8 <test_process_creation>:
-void test_process_creation(void) {
-    80205db8:	7139                	addi	sp,sp,-64
-    80205dba:	fc06                	sd	ra,56(sp)
-    80205dbc:	f822                	sd	s0,48(sp)
-    80205dbe:	0080                	addi	s0,sp,64
-    printf("===== 测试开始: 进程创建与管理测试 =====\n");
-    80205dc0:	00003517          	auipc	a0,0x3
-    80205dc4:	3b050513          	addi	a0,a0,944 # 80209170 <etext+0x2170>
-    80205dc8:	ffffb097          	auipc	ra,0xffffb
-    80205dcc:	eba080e7          	jalr	-326(ra) # 80200c82 <printf>
-    int pid = create_kernel_proc(simple_task);
-    80205dd0:	00000517          	auipc	a0,0x0
-    80205dd4:	fb850513          	addi	a0,a0,-72 # 80205d88 <simple_task>
-    80205dd8:	fffff097          	auipc	ra,0xfffff
-    80205ddc:	3ce080e7          	jalr	974(ra) # 802051a6 <create_kernel_proc>
-    80205de0:	87aa                	mv	a5,a0
-    80205de2:	fcf42823          	sw	a5,-48(s0)
-    assert(pid > 0);
-    80205de6:	fd042783          	lw	a5,-48(s0)
-    80205dea:	2781                	sext.w	a5,a5
-    80205dec:	00f027b3          	sgtz	a5,a5
-    80205df0:	0ff7f793          	zext.b	a5,a5
-    80205df4:	2781                	sext.w	a5,a5
-    80205df6:	853e                	mv	a0,a5
-    80205df8:	00000097          	auipc	ra,0x0
-    80205dfc:	f44080e7          	jalr	-188(ra) # 80205d3c <assert>
-    printf("【测试结果】: 基本进程创建成功，PID: %d，正常退出\n", pid);
-    80205e00:	fd042783          	lw	a5,-48(s0)
-    80205e04:	85be                	mv	a1,a5
-    80205e06:	00003517          	auipc	a0,0x3
-    80205e0a:	3a250513          	addi	a0,a0,930 # 802091a8 <etext+0x21a8>
-    80205e0e:	ffffb097          	auipc	ra,0xffffb
-    80205e12:	e74080e7          	jalr	-396(ra) # 80200c82 <printf>
-    int count = 1;
-    80205e16:	4785                	li	a5,1
-    80205e18:	fef42623          	sw	a5,-20(s0)
-    printf("\n----- 测试进程表容量限制 -----\n");
-    80205e1c:	00003517          	auipc	a0,0x3
-    80205e20:	3d450513          	addi	a0,a0,980 # 802091f0 <etext+0x21f0>
-    80205e24:	ffffb097          	auipc	ra,0xffffb
-    80205e28:	e5e080e7          	jalr	-418(ra) # 80200c82 <printf>
-    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
-    80205e2c:	fe042423          	sw	zero,-24(s0)
-    80205e30:	a0a9                	j	80205e7a <test_process_creation+0xc2>
-        int pid = create_kernel_proc(simple_task);
-    80205e32:	00000517          	auipc	a0,0x0
-    80205e36:	f5650513          	addi	a0,a0,-170 # 80205d88 <simple_task>
-    80205e3a:	fffff097          	auipc	ra,0xfffff
-    80205e3e:	36c080e7          	jalr	876(ra) # 802051a6 <create_kernel_proc>
-    80205e42:	87aa                	mv	a5,a0
-    80205e44:	fcf42623          	sw	a5,-52(s0)
-        if (pid > 0) {
-    80205e48:	fcc42783          	lw	a5,-52(s0)
-    80205e4c:	2781                	sext.w	a5,a5
-    80205e4e:	00f05863          	blez	a5,80205e5e <test_process_creation+0xa6>
-            count++; 
-    80205e52:	fec42783          	lw	a5,-20(s0)
-    80205e56:	2785                	addiw	a5,a5,1
-    80205e58:	fef42623          	sw	a5,-20(s0)
-    80205e5c:	a811                	j	80205e70 <test_process_creation+0xb8>
-			warning("process table was full\n");
-    80205e5e:	00003517          	auipc	a0,0x3
-    80205e62:	3c250513          	addi	a0,a0,962 # 80209220 <etext+0x2220>
-    80205e66:	ffffc097          	auipc	ra,0xffffc
-    80205e6a:	89c080e7          	jalr	-1892(ra) # 80201702 <warning>
-            break;
-    80205e6e:	a831                	j	80205e8a <test_process_creation+0xd2>
-    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
-    80205e70:	fe842783          	lw	a5,-24(s0)
-    80205e74:	2785                	addiw	a5,a5,1
-    80205e76:	fef42423          	sw	a5,-24(s0)
-    80205e7a:	fe842783          	lw	a5,-24(s0)
-    80205e7e:	0007871b          	sext.w	a4,a5
-    80205e82:	04400793          	li	a5,68
-    80205e86:	fae7d6e3          	bge	a5,a4,80205e32 <test_process_creation+0x7a>
-    printf("【测试结果】: 成功创建 %d 个进程 (最大限制: %d)\n", count, PROC);
-    80205e8a:	fec42783          	lw	a5,-20(s0)
-    80205e8e:	04000613          	li	a2,64
-    80205e92:	85be                	mv	a1,a5
-    80205e94:	00003517          	auipc	a0,0x3
-    80205e98:	3a450513          	addi	a0,a0,932 # 80209238 <etext+0x2238>
-    80205e9c:	ffffb097          	auipc	ra,0xffffb
-    80205ea0:	de6080e7          	jalr	-538(ra) # 80200c82 <printf>
-	print_proc_table();
-    80205ea4:	00000097          	auipc	ra,0x0
-    80205ea8:	b7c080e7          	jalr	-1156(ra) # 80205a20 <print_proc_table>
-    printf("\n----- 测试进程等待与清理 -----\n");
-    80205eac:	00003517          	auipc	a0,0x3
-    80205eb0:	3d450513          	addi	a0,a0,980 # 80209280 <etext+0x2280>
-    80205eb4:	ffffb097          	auipc	ra,0xffffb
-    80205eb8:	dce080e7          	jalr	-562(ra) # 80200c82 <printf>
-    int success_count = 0;
-    80205ebc:	fe042223          	sw	zero,-28(s0)
-    for (int i = 0; i < count; i++) {
-    80205ec0:	fe042023          	sw	zero,-32(s0)
-    80205ec4:	a0a1                	j	80205f0c <test_process_creation+0x154>
-        int waited_pid = wait_proc(NULL);
-    80205ec6:	4501                	li	a0,0
-    80205ec8:	00000097          	auipc	ra,0x0
-    80205ecc:	96e080e7          	jalr	-1682(ra) # 80205836 <wait_proc>
-    80205ed0:	87aa                	mv	a5,a0
-    80205ed2:	fcf42023          	sw	a5,-64(s0)
-        if (waited_pid > 0) {
-    80205ed6:	fc042783          	lw	a5,-64(s0)
-    80205eda:	2781                	sext.w	a5,a5
-    80205edc:	00f05863          	blez	a5,80205eec <test_process_creation+0x134>
-            success_count++;
-    80205ee0:	fe442783          	lw	a5,-28(s0)
-    80205ee4:	2785                	addiw	a5,a5,1
-    80205ee6:	fef42223          	sw	a5,-28(s0)
-    80205eea:	a821                	j	80205f02 <test_process_creation+0x14a>
-            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
-    80205eec:	fc042783          	lw	a5,-64(s0)
-    80205ef0:	85be                	mv	a1,a5
-    80205ef2:	00003517          	auipc	a0,0x3
-    80205ef6:	3be50513          	addi	a0,a0,958 # 802092b0 <etext+0x22b0>
-    80205efa:	ffffb097          	auipc	ra,0xffffb
-    80205efe:	d88080e7          	jalr	-632(ra) # 80200c82 <printf>
-    for (int i = 0; i < count; i++) {
-    80205f02:	fe042783          	lw	a5,-32(s0)
-    80205f06:	2785                	addiw	a5,a5,1
-    80205f08:	fef42023          	sw	a5,-32(s0)
-    80205f0c:	fe042783          	lw	a5,-32(s0)
-    80205f10:	873e                	mv	a4,a5
-    80205f12:	fec42783          	lw	a5,-20(s0)
-    80205f16:	2701                	sext.w	a4,a4
-    80205f18:	2781                	sext.w	a5,a5
-    80205f1a:	faf746e3          	blt	a4,a5,80205ec6 <test_process_creation+0x10e>
-    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
-    80205f1e:	fec42703          	lw	a4,-20(s0)
-    80205f22:	fe442783          	lw	a5,-28(s0)
-    80205f26:	863a                	mv	a2,a4
-    80205f28:	85be                	mv	a1,a5
-    80205f2a:	00003517          	auipc	a0,0x3
-    80205f2e:	3be50513          	addi	a0,a0,958 # 802092e8 <etext+0x22e8>
-    80205f32:	ffffb097          	auipc	ra,0xffffb
-    80205f36:	d50080e7          	jalr	-688(ra) # 80200c82 <printf>
-	print_proc_table();
-    80205f3a:	00000097          	auipc	ra,0x0
-    80205f3e:	ae6080e7          	jalr	-1306(ra) # 80205a20 <print_proc_table>
-	printf("\n----- 清理后尝试重新填满进程表 -----\n");
-    80205f42:	00003517          	auipc	a0,0x3
-    80205f46:	3d650513          	addi	a0,a0,982 # 80209318 <etext+0x2318>
-    80205f4a:	ffffb097          	auipc	ra,0xffffb
-    80205f4e:	d38080e7          	jalr	-712(ra) # 80200c82 <printf>
-	int refill_count = 0;
-    80205f52:	fc042e23          	sw	zero,-36(s0)
-	for (int i = 0; i < PROC; i++) {
-    80205f56:	fc042c23          	sw	zero,-40(s0)
-    80205f5a:	a0a9                	j	80205fa4 <test_process_creation+0x1ec>
-		int pid = create_kernel_proc(simple_task);
-    80205f5c:	00000517          	auipc	a0,0x0
-    80205f60:	e2c50513          	addi	a0,a0,-468 # 80205d88 <simple_task>
-    80205f64:	fffff097          	auipc	ra,0xfffff
-    80205f68:	242080e7          	jalr	578(ra) # 802051a6 <create_kernel_proc>
-    80205f6c:	87aa                	mv	a5,a0
-    80205f6e:	fcf42423          	sw	a5,-56(s0)
-		if (pid > 0) {
-    80205f72:	fc842783          	lw	a5,-56(s0)
-    80205f76:	2781                	sext.w	a5,a5
-    80205f78:	00f05863          	blez	a5,80205f88 <test_process_creation+0x1d0>
-			refill_count++;
-    80205f7c:	fdc42783          	lw	a5,-36(s0)
-    80205f80:	2785                	addiw	a5,a5,1
-    80205f82:	fcf42e23          	sw	a5,-36(s0)
-    80205f86:	a811                	j	80205f9a <test_process_creation+0x1e2>
-			warning("process table was full\n");
-    80205f88:	00003517          	auipc	a0,0x3
-    80205f8c:	29850513          	addi	a0,a0,664 # 80209220 <etext+0x2220>
-    80205f90:	ffffb097          	auipc	ra,0xffffb
-    80205f94:	772080e7          	jalr	1906(ra) # 80201702 <warning>
-			break;
-    80205f98:	a831                	j	80205fb4 <test_process_creation+0x1fc>
-	for (int i = 0; i < PROC; i++) {
-    80205f9a:	fd842783          	lw	a5,-40(s0)
-    80205f9e:	2785                	addiw	a5,a5,1
-    80205fa0:	fcf42c23          	sw	a5,-40(s0)
-    80205fa4:	fd842783          	lw	a5,-40(s0)
-    80205fa8:	0007871b          	sext.w	a4,a5
-    80205fac:	03f00793          	li	a5,63
-    80205fb0:	fae7d6e3          	bge	a5,a4,80205f5c <test_process_creation+0x1a4>
-	printf("【测试结果】: 清理后成功重新创建 %d 个进程\n", refill_count);
-    80205fb4:	fdc42783          	lw	a5,-36(s0)
-    80205fb8:	85be                	mv	a1,a5
-    80205fba:	00003517          	auipc	a0,0x3
-    80205fbe:	39650513          	addi	a0,a0,918 # 80209350 <etext+0x2350>
-    80205fc2:	ffffb097          	auipc	ra,0xffffb
-    80205fc6:	cc0080e7          	jalr	-832(ra) # 80200c82 <printf>
-	print_proc_table();
-    80205fca:	00000097          	auipc	ra,0x0
-    80205fce:	a56080e7          	jalr	-1450(ra) # 80205a20 <print_proc_table>
-	printf("\n----- 测试进程等待与清理 -----\n");
-    80205fd2:	00003517          	auipc	a0,0x3
-    80205fd6:	2ae50513          	addi	a0,a0,686 # 80209280 <etext+0x2280>
-    80205fda:	ffffb097          	auipc	ra,0xffffb
-    80205fde:	ca8080e7          	jalr	-856(ra) # 80200c82 <printf>
-    success_count = 0;
-    80205fe2:	fe042223          	sw	zero,-28(s0)
-    for (int i = 0; i < count; i++) {
-    80205fe6:	fc042a23          	sw	zero,-44(s0)
-    80205fea:	a0a1                	j	80206032 <test_process_creation+0x27a>
-        int waited_pid = wait_proc(NULL);
-    80205fec:	4501                	li	a0,0
-    80205fee:	00000097          	auipc	ra,0x0
-    80205ff2:	848080e7          	jalr	-1976(ra) # 80205836 <wait_proc>
-    80205ff6:	87aa                	mv	a5,a0
-    80205ff8:	fcf42223          	sw	a5,-60(s0)
-        if (waited_pid > 0) {
-    80205ffc:	fc442783          	lw	a5,-60(s0)
-    80206000:	2781                	sext.w	a5,a5
-    80206002:	00f05863          	blez	a5,80206012 <test_process_creation+0x25a>
-            success_count++;
-    80206006:	fe442783          	lw	a5,-28(s0)
-    8020600a:	2785                	addiw	a5,a5,1
-    8020600c:	fef42223          	sw	a5,-28(s0)
-    80206010:	a821                	j	80206028 <test_process_creation+0x270>
-            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
-    80206012:	fc442783          	lw	a5,-60(s0)
-    80206016:	85be                	mv	a1,a5
-    80206018:	00003517          	auipc	a0,0x3
-    8020601c:	29850513          	addi	a0,a0,664 # 802092b0 <etext+0x22b0>
-    80206020:	ffffb097          	auipc	ra,0xffffb
-    80206024:	c62080e7          	jalr	-926(ra) # 80200c82 <printf>
-    for (int i = 0; i < count; i++) {
-    80206028:	fd442783          	lw	a5,-44(s0)
-    8020602c:	2785                	addiw	a5,a5,1
-    8020602e:	fcf42a23          	sw	a5,-44(s0)
-    80206032:	fd442783          	lw	a5,-44(s0)
-    80206036:	873e                	mv	a4,a5
-    80206038:	fec42783          	lw	a5,-20(s0)
-    8020603c:	2701                	sext.w	a4,a4
-    8020603e:	2781                	sext.w	a5,a5
-    80206040:	faf746e3          	blt	a4,a5,80205fec <test_process_creation+0x234>
-    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
-    80206044:	fec42703          	lw	a4,-20(s0)
-    80206048:	fe442783          	lw	a5,-28(s0)
-    8020604c:	863a                	mv	a2,a4
-    8020604e:	85be                	mv	a1,a5
-    80206050:	00003517          	auipc	a0,0x3
-    80206054:	29850513          	addi	a0,a0,664 # 802092e8 <etext+0x22e8>
-    80206058:	ffffb097          	auipc	ra,0xffffb
-    8020605c:	c2a080e7          	jalr	-982(ra) # 80200c82 <printf>
-	print_proc_table();
-    80206060:	00000097          	auipc	ra,0x0
-    80206064:	9c0080e7          	jalr	-1600(ra) # 80205a20 <print_proc_table>
-    printf("===== 测试结束: 进程创建与管理测试 =====\n");
-    80206068:	00003517          	auipc	a0,0x3
-    8020606c:	32850513          	addi	a0,a0,808 # 80209390 <etext+0x2390>
-    80206070:	ffffb097          	auipc	ra,0xffffb
-    80206074:	c12080e7          	jalr	-1006(ra) # 80200c82 <printf>
-}
-    80206078:	0001                	nop
-    8020607a:	70e2                	ld	ra,56(sp)
-    8020607c:	7442                	ld	s0,48(sp)
-    8020607e:	6121                	addi	sp,sp,64
-    80206080:	8082                	ret
-
-0000000080206082 <cpu_intensive_task>:
-void cpu_intensive_task(void) {
-    80206082:	1101                	addi	sp,sp,-32
-    80206084:	ec06                	sd	ra,24(sp)
-    80206086:	e822                	sd	s0,16(sp)
-    80206088:	1000                	addi	s0,sp,32
-    uint64 sum = 0;
-    8020608a:	fe043423          	sd	zero,-24(s0)
-    for (uint64 i = 0; i < 10000000; i++) {
-    8020608e:	fe043023          	sd	zero,-32(s0)
-    80206092:	a829                	j	802060ac <cpu_intensive_task+0x2a>
-        sum += i;
-    80206094:	fe843703          	ld	a4,-24(s0)
-    80206098:	fe043783          	ld	a5,-32(s0)
-    8020609c:	97ba                	add	a5,a5,a4
-    8020609e:	fef43423          	sd	a5,-24(s0)
-    for (uint64 i = 0; i < 10000000; i++) {
-    802060a2:	fe043783          	ld	a5,-32(s0)
-    802060a6:	0785                	addi	a5,a5,1
-    802060a8:	fef43023          	sd	a5,-32(s0)
-    802060ac:	fe043703          	ld	a4,-32(s0)
-    802060b0:	009897b7          	lui	a5,0x989
-    802060b4:	67f78793          	addi	a5,a5,1663 # 98967f <_entry-0x7f876981>
-    802060b8:	fce7fee3          	bgeu	a5,a4,80206094 <cpu_intensive_task+0x12>
-    printf("CPU intensive task done in PID %d, sum=%lu\n", myproc()->pid, sum);
-    802060bc:	fffff097          	auipc	ra,0xfffff
-    802060c0:	ab8080e7          	jalr	-1352(ra) # 80204b74 <myproc>
-    802060c4:	87aa                	mv	a5,a0
-    802060c6:	43dc                	lw	a5,4(a5)
-    802060c8:	fe843603          	ld	a2,-24(s0)
-    802060cc:	85be                	mv	a1,a5
-    802060ce:	00003517          	auipc	a0,0x3
-    802060d2:	2fa50513          	addi	a0,a0,762 # 802093c8 <etext+0x23c8>
-    802060d6:	ffffb097          	auipc	ra,0xffffb
-    802060da:	bac080e7          	jalr	-1108(ra) # 80200c82 <printf>
-    exit_proc(0);
-    802060de:	4501                	li	a0,0
-    802060e0:	fffff097          	auipc	ra,0xfffff
-    802060e4:	684080e7          	jalr	1668(ra) # 80205764 <exit_proc>
-}
-    802060e8:	0001                	nop
-    802060ea:	60e2                	ld	ra,24(sp)
-    802060ec:	6442                	ld	s0,16(sp)
-    802060ee:	6105                	addi	sp,sp,32
-    802060f0:	8082                	ret
-
-00000000802060f2 <test_scheduler>:
-void test_scheduler(void) {
-    802060f2:	7179                	addi	sp,sp,-48
-    802060f4:	f406                	sd	ra,40(sp)
-    802060f6:	f022                	sd	s0,32(sp)
-    802060f8:	1800                	addi	s0,sp,48
-    printf("===== 测试开始: 调度器测试 =====\n");
-    802060fa:	00003517          	auipc	a0,0x3
-    802060fe:	2fe50513          	addi	a0,a0,766 # 802093f8 <etext+0x23f8>
-    80206102:	ffffb097          	auipc	ra,0xffffb
-    80206106:	b80080e7          	jalr	-1152(ra) # 80200c82 <printf>
-    for (int i = 0; i < 3; i++) {
-    8020610a:	fe042623          	sw	zero,-20(s0)
-    8020610e:	a831                	j	8020612a <test_scheduler+0x38>
-        create_kernel_proc(cpu_intensive_task);
-    80206110:	00000517          	auipc	a0,0x0
-    80206114:	f7250513          	addi	a0,a0,-142 # 80206082 <cpu_intensive_task>
-    80206118:	fffff097          	auipc	ra,0xfffff
-    8020611c:	08e080e7          	jalr	142(ra) # 802051a6 <create_kernel_proc>
-    for (int i = 0; i < 3; i++) {
-    80206120:	fec42783          	lw	a5,-20(s0)
-    80206124:	2785                	addiw	a5,a5,1
-    80206126:	fef42623          	sw	a5,-20(s0)
-    8020612a:	fec42783          	lw	a5,-20(s0)
-    8020612e:	0007871b          	sext.w	a4,a5
-    80206132:	4789                	li	a5,2
-    80206134:	fce7dee3          	bge	a5,a4,80206110 <test_scheduler+0x1e>
+00000000802059d4 <test_timer_interrupt>:
+void test_timer_interrupt(void) {
+    802059d4:	7179                	addi	sp,sp,-48
+    802059d6:	f406                	sd	ra,40(sp)
+    802059d8:	f022                	sd	s0,32(sp)
+    802059da:	1800                	addi	s0,sp,48
+    printf("Testing timer interrupt...\n");
+    802059dc:	00003517          	auipc	a0,0x3
+    802059e0:	33450513          	addi	a0,a0,820 # 80208d10 <etext+0x1d10>
+    802059e4:	ffffb097          	auipc	ra,0xffffb
+    802059e8:	29e080e7          	jalr	670(ra) # 80200c82 <printf>
     uint64 start_time = get_time();
-    80206138:	ffffe097          	auipc	ra,0xffffe
-    8020613c:	f5c080e7          	jalr	-164(ra) # 80204094 <get_time>
-    80206140:	fea43023          	sd	a0,-32(s0)
-	for (int i = 0; i < 3; i++) {
-    80206144:	fe042423          	sw	zero,-24(s0)
-    80206148:	a819                	j	8020615e <test_scheduler+0x6c>
-    	wait_proc(NULL); // 等待所有子进程结束
-    8020614a:	4501                	li	a0,0
-    8020614c:	fffff097          	auipc	ra,0xfffff
-    80206150:	6ea080e7          	jalr	1770(ra) # 80205836 <wait_proc>
-	for (int i = 0; i < 3; i++) {
-    80206154:	fe842783          	lw	a5,-24(s0)
-    80206158:	2785                	addiw	a5,a5,1
-    8020615a:	fef42423          	sw	a5,-24(s0)
-    8020615e:	fe842783          	lw	a5,-24(s0)
-    80206162:	0007871b          	sext.w	a4,a5
-    80206166:	4789                	li	a5,2
-    80206168:	fee7d1e3          	bge	a5,a4,8020614a <test_scheduler+0x58>
+    802059ec:	00000097          	auipc	ra,0x0
+    802059f0:	fcc080e7          	jalr	-52(ra) # 802059b8 <get_time>
+    802059f4:	fea43023          	sd	a0,-32(s0)
+    int interrupt_count = 0;
+    802059f8:	fc042a23          	sw	zero,-44(s0)
+	int last_count = interrupt_count;
+    802059fc:	fd442783          	lw	a5,-44(s0)
+    80205a00:	fef42623          	sw	a5,-20(s0)
+    interrupt_test_flag = &interrupt_count;
+    80205a04:	00006797          	auipc	a5,0x6
+    80205a08:	6d478793          	addi	a5,a5,1748 # 8020c0d8 <interrupt_test_flag>
+    80205a0c:	fd440713          	addi	a4,s0,-44
+    80205a10:	e398                	sd	a4,0(a5)
+    while (interrupt_count < 5) {
+    80205a12:	a899                	j	80205a68 <test_timer_interrupt+0x94>
+        if(last_count != interrupt_count) {
+    80205a14:	fd442703          	lw	a4,-44(s0)
+    80205a18:	fec42783          	lw	a5,-20(s0)
+    80205a1c:	2781                	sext.w	a5,a5
+    80205a1e:	02e78163          	beq	a5,a4,80205a40 <test_timer_interrupt+0x6c>
+			last_count = interrupt_count;
+    80205a22:	fd442783          	lw	a5,-44(s0)
+    80205a26:	fef42623          	sw	a5,-20(s0)
+			printf("Received interrupt %d\n", interrupt_count);
+    80205a2a:	fd442783          	lw	a5,-44(s0)
+    80205a2e:	85be                	mv	a1,a5
+    80205a30:	00003517          	auipc	a0,0x3
+    80205a34:	30050513          	addi	a0,a0,768 # 80208d30 <etext+0x1d30>
+    80205a38:	ffffb097          	auipc	ra,0xffffb
+    80205a3c:	24a080e7          	jalr	586(ra) # 80200c82 <printf>
+        for (volatile int i = 0; i < 1000000; i++);
+    80205a40:	fc042823          	sw	zero,-48(s0)
+    80205a44:	a801                	j	80205a54 <test_timer_interrupt+0x80>
+    80205a46:	fd042783          	lw	a5,-48(s0)
+    80205a4a:	2781                	sext.w	a5,a5
+    80205a4c:	2785                	addiw	a5,a5,1
+    80205a4e:	2781                	sext.w	a5,a5
+    80205a50:	fcf42823          	sw	a5,-48(s0)
+    80205a54:	fd042783          	lw	a5,-48(s0)
+    80205a58:	2781                	sext.w	a5,a5
+    80205a5a:	873e                	mv	a4,a5
+    80205a5c:	000f47b7          	lui	a5,0xf4
+    80205a60:	23f78793          	addi	a5,a5,575 # f423f <_entry-0x8010bdc1>
+    80205a64:	fee7d1e3          	bge	a5,a4,80205a46 <test_timer_interrupt+0x72>
+    while (interrupt_count < 5) {
+    80205a68:	fd442783          	lw	a5,-44(s0)
+    80205a6c:	873e                	mv	a4,a5
+    80205a6e:	4791                	li	a5,4
+    80205a70:	fae7d2e3          	bge	a5,a4,80205a14 <test_timer_interrupt+0x40>
+    interrupt_test_flag = 0;
+    80205a74:	00006797          	auipc	a5,0x6
+    80205a78:	66478793          	addi	a5,a5,1636 # 8020c0d8 <interrupt_test_flag>
+    80205a7c:	0007b023          	sd	zero,0(a5)
     uint64 end_time = get_time();
-    8020616c:	ffffe097          	auipc	ra,0xffffe
-    80206170:	f28080e7          	jalr	-216(ra) # 80204094 <get_time>
-    80206174:	fca43c23          	sd	a0,-40(s0)
+    80205a80:	00000097          	auipc	ra,0x0
+    80205a84:	f38080e7          	jalr	-200(ra) # 802059b8 <get_time>
+    80205a88:	fca43c23          	sd	a0,-40(s0)
+    printf("Timer test completed: %d interrupts in %lu cycles\n", 
+    80205a8c:	fd442683          	lw	a3,-44(s0)
+    80205a90:	fd843703          	ld	a4,-40(s0)
+    80205a94:	fe043783          	ld	a5,-32(s0)
+    80205a98:	40f707b3          	sub	a5,a4,a5
+    80205a9c:	863e                	mv	a2,a5
+    80205a9e:	85b6                	mv	a1,a3
+    80205aa0:	00003517          	auipc	a0,0x3
+    80205aa4:	2a850513          	addi	a0,a0,680 # 80208d48 <etext+0x1d48>
+    80205aa8:	ffffb097          	auipc	ra,0xffffb
+    80205aac:	1da080e7          	jalr	474(ra) # 80200c82 <printf>
+}
+    80205ab0:	0001                	nop
+    80205ab2:	70a2                	ld	ra,40(sp)
+    80205ab4:	7402                	ld	s0,32(sp)
+    80205ab6:	6145                	addi	sp,sp,48
+    80205ab8:	8082                	ret
+
+0000000080205aba <test_exception>:
+void test_exception(void) {
+    80205aba:	715d                	addi	sp,sp,-80
+    80205abc:	e486                	sd	ra,72(sp)
+    80205abe:	e0a2                	sd	s0,64(sp)
+    80205ac0:	0880                	addi	s0,sp,80
+    printf("\n===== 开始全面异常处理测试 =====\n\n");
+    80205ac2:	00003517          	auipc	a0,0x3
+    80205ac6:	2be50513          	addi	a0,a0,702 # 80208d80 <etext+0x1d80>
+    80205aca:	ffffb097          	auipc	ra,0xffffb
+    80205ace:	1b8080e7          	jalr	440(ra) # 80200c82 <printf>
+    printf("1. 测试非法指令异常...\n");
+    80205ad2:	00003517          	auipc	a0,0x3
+    80205ad6:	2de50513          	addi	a0,a0,734 # 80208db0 <etext+0x1db0>
+    80205ada:	ffffb097          	auipc	ra,0xffffb
+    80205ade:	1a8080e7          	jalr	424(ra) # 80200c82 <printf>
+    80205ae2:	ffffffff          	.word	0xffffffff
+    printf("✓ 非法指令异常处理成功\n\n");
+    80205ae6:	00003517          	auipc	a0,0x3
+    80205aea:	2ea50513          	addi	a0,a0,746 # 80208dd0 <etext+0x1dd0>
+    80205aee:	ffffb097          	auipc	ra,0xffffb
+    80205af2:	194080e7          	jalr	404(ra) # 80200c82 <printf>
+    printf("2. 测试存储页故障异常...\n");
+    80205af6:	00003517          	auipc	a0,0x3
+    80205afa:	30250513          	addi	a0,a0,770 # 80208df8 <etext+0x1df8>
+    80205afe:	ffffb097          	auipc	ra,0xffffb
+    80205b02:	184080e7          	jalr	388(ra) # 80200c82 <printf>
+    volatile uint64 *invalid_ptr = 0;
+    80205b06:	fe043423          	sd	zero,-24(s0)
+    for (uint64 addr = 0x90000000; addr < 0x98000000; addr += 0x1000) {
+    80205b0a:	47a5                	li	a5,9
+    80205b0c:	07f2                	slli	a5,a5,0x1c
+    80205b0e:	fef43023          	sd	a5,-32(s0)
+    80205b12:	a835                	j	80205b4e <test_exception+0x94>
+        if (check_is_mapped(addr) == 0) {
+    80205b14:	fe043503          	ld	a0,-32(s0)
+    80205b18:	ffffd097          	auipc	ra,0xffffd
+    80205b1c:	4a0080e7          	jalr	1184(ra) # 80202fb8 <check_is_mapped>
+    80205b20:	87aa                	mv	a5,a0
+    80205b22:	e385                	bnez	a5,80205b42 <test_exception+0x88>
+            invalid_ptr = (uint64*)addr;
+    80205b24:	fe043783          	ld	a5,-32(s0)
+    80205b28:	fef43423          	sd	a5,-24(s0)
+            printf("找到未映射地址: 0x%lx\n", addr);
+    80205b2c:	fe043583          	ld	a1,-32(s0)
+    80205b30:	00003517          	auipc	a0,0x3
+    80205b34:	2f050513          	addi	a0,a0,752 # 80208e20 <etext+0x1e20>
+    80205b38:	ffffb097          	auipc	ra,0xffffb
+    80205b3c:	14a080e7          	jalr	330(ra) # 80200c82 <printf>
+            break;
+    80205b40:	a829                	j	80205b5a <test_exception+0xa0>
+    for (uint64 addr = 0x90000000; addr < 0x98000000; addr += 0x1000) {
+    80205b42:	fe043703          	ld	a4,-32(s0)
+    80205b46:	6785                	lui	a5,0x1
+    80205b48:	97ba                	add	a5,a5,a4
+    80205b4a:	fef43023          	sd	a5,-32(s0)
+    80205b4e:	fe043703          	ld	a4,-32(s0)
+    80205b52:	47cd                	li	a5,19
+    80205b54:	07ee                	slli	a5,a5,0x1b
+    80205b56:	faf76fe3          	bltu	a4,a5,80205b14 <test_exception+0x5a>
+    if (invalid_ptr != 0) {
+    80205b5a:	fe843783          	ld	a5,-24(s0)
+    80205b5e:	cb95                	beqz	a5,80205b92 <test_exception+0xd8>
+        printf("尝试写入未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
+    80205b60:	fe843783          	ld	a5,-24(s0)
+    80205b64:	85be                	mv	a1,a5
+    80205b66:	00003517          	auipc	a0,0x3
+    80205b6a:	2da50513          	addi	a0,a0,730 # 80208e40 <etext+0x1e40>
+    80205b6e:	ffffb097          	auipc	ra,0xffffb
+    80205b72:	114080e7          	jalr	276(ra) # 80200c82 <printf>
+        *invalid_ptr = 42;  // 触发存储页故障
+    80205b76:	fe843783          	ld	a5,-24(s0)
+    80205b7a:	02a00713          	li	a4,42
+    80205b7e:	e398                	sd	a4,0(a5)
+        printf("✓ 存储页故障异常处理成功\n\n");
+    80205b80:	00003517          	auipc	a0,0x3
+    80205b84:	2f050513          	addi	a0,a0,752 # 80208e70 <etext+0x1e70>
+    80205b88:	ffffb097          	auipc	ra,0xffffb
+    80205b8c:	0fa080e7          	jalr	250(ra) # 80200c82 <printf>
+    80205b90:	a809                	j	80205ba2 <test_exception+0xe8>
+        printf("警告: 无法找到未映射地址进行测试!\n\n");
+    80205b92:	00003517          	auipc	a0,0x3
+    80205b96:	30650513          	addi	a0,a0,774 # 80208e98 <etext+0x1e98>
+    80205b9a:	ffffb097          	auipc	ra,0xffffb
+    80205b9e:	0e8080e7          	jalr	232(ra) # 80200c82 <printf>
+    printf("3. 测试加载页故障异常...\n");
+    80205ba2:	00003517          	auipc	a0,0x3
+    80205ba6:	32e50513          	addi	a0,a0,814 # 80208ed0 <etext+0x1ed0>
+    80205baa:	ffffb097          	auipc	ra,0xffffb
+    80205bae:	0d8080e7          	jalr	216(ra) # 80200c82 <printf>
+    invalid_ptr = 0;
+    80205bb2:	fe043423          	sd	zero,-24(s0)
+    for (uint64 addr = 0xA0000000; addr < 0xA8000000; addr += 0x1000) {
+    80205bb6:	4795                	li	a5,5
+    80205bb8:	07f6                	slli	a5,a5,0x1d
+    80205bba:	fcf43c23          	sd	a5,-40(s0)
+    80205bbe:	a835                	j	80205bfa <test_exception+0x140>
+        if (check_is_mapped(addr) == 0) {
+    80205bc0:	fd843503          	ld	a0,-40(s0)
+    80205bc4:	ffffd097          	auipc	ra,0xffffd
+    80205bc8:	3f4080e7          	jalr	1012(ra) # 80202fb8 <check_is_mapped>
+    80205bcc:	87aa                	mv	a5,a0
+    80205bce:	e385                	bnez	a5,80205bee <test_exception+0x134>
+            invalid_ptr = (uint64*)addr;
+    80205bd0:	fd843783          	ld	a5,-40(s0)
+    80205bd4:	fef43423          	sd	a5,-24(s0)
+            printf("找到未映射地址: 0x%lx\n", addr);
+    80205bd8:	fd843583          	ld	a1,-40(s0)
+    80205bdc:	00003517          	auipc	a0,0x3
+    80205be0:	24450513          	addi	a0,a0,580 # 80208e20 <etext+0x1e20>
+    80205be4:	ffffb097          	auipc	ra,0xffffb
+    80205be8:	09e080e7          	jalr	158(ra) # 80200c82 <printf>
+            break;
+    80205bec:	a829                	j	80205c06 <test_exception+0x14c>
+    for (uint64 addr = 0xA0000000; addr < 0xA8000000; addr += 0x1000) {
+    80205bee:	fd843703          	ld	a4,-40(s0)
+    80205bf2:	6785                	lui	a5,0x1
+    80205bf4:	97ba                	add	a5,a5,a4
+    80205bf6:	fcf43c23          	sd	a5,-40(s0)
+    80205bfa:	fd843703          	ld	a4,-40(s0)
+    80205bfe:	47d5                	li	a5,21
+    80205c00:	07ee                	slli	a5,a5,0x1b
+    80205c02:	faf76fe3          	bltu	a4,a5,80205bc0 <test_exception+0x106>
+    if (invalid_ptr != 0) {
+    80205c06:	fe843783          	ld	a5,-24(s0)
+    80205c0a:	c7a9                	beqz	a5,80205c54 <test_exception+0x19a>
+        printf("尝试读取未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
+    80205c0c:	fe843783          	ld	a5,-24(s0)
+    80205c10:	85be                	mv	a1,a5
+    80205c12:	00003517          	auipc	a0,0x3
+    80205c16:	2e650513          	addi	a0,a0,742 # 80208ef8 <etext+0x1ef8>
+    80205c1a:	ffffb097          	auipc	ra,0xffffb
+    80205c1e:	068080e7          	jalr	104(ra) # 80200c82 <printf>
+        volatile uint64 value = *invalid_ptr;  // 触发加载页故障
+    80205c22:	fe843783          	ld	a5,-24(s0)
+    80205c26:	639c                	ld	a5,0(a5)
+    80205c28:	faf43823          	sd	a5,-80(s0)
+        printf("读取的值: %lu\n", value);  // 不太可能执行到这里，除非故障被处理
+    80205c2c:	fb043783          	ld	a5,-80(s0)
+    80205c30:	85be                	mv	a1,a5
+    80205c32:	00003517          	auipc	a0,0x3
+    80205c36:	2f650513          	addi	a0,a0,758 # 80208f28 <etext+0x1f28>
+    80205c3a:	ffffb097          	auipc	ra,0xffffb
+    80205c3e:	048080e7          	jalr	72(ra) # 80200c82 <printf>
+        printf("✓ 加载页故障异常处理成功\n\n");
+    80205c42:	00003517          	auipc	a0,0x3
+    80205c46:	2fe50513          	addi	a0,a0,766 # 80208f40 <etext+0x1f40>
+    80205c4a:	ffffb097          	auipc	ra,0xffffb
+    80205c4e:	038080e7          	jalr	56(ra) # 80200c82 <printf>
+    80205c52:	a809                	j	80205c64 <test_exception+0x1aa>
+        printf("警告: 无法找到未映射地址进行测试!\n\n");
+    80205c54:	00003517          	auipc	a0,0x3
+    80205c58:	24450513          	addi	a0,a0,580 # 80208e98 <etext+0x1e98>
+    80205c5c:	ffffb097          	auipc	ra,0xffffb
+    80205c60:	026080e7          	jalr	38(ra) # 80200c82 <printf>
+    printf("4. 测试存储地址未对齐异常...\n");
+    80205c64:	00003517          	auipc	a0,0x3
+    80205c68:	30450513          	addi	a0,a0,772 # 80208f68 <etext+0x1f68>
+    80205c6c:	ffffb097          	auipc	ra,0xffffb
+    80205c70:	016080e7          	jalr	22(ra) # 80200c82 <printf>
+    uint64 aligned_addr = (uint64)alloc_page();
+    80205c74:	ffffd097          	auipc	ra,0xffffd
+    80205c78:	58c080e7          	jalr	1420(ra) # 80203200 <alloc_page>
+    80205c7c:	87aa                	mv	a5,a0
+    80205c7e:	fcf43823          	sd	a5,-48(s0)
+    if (aligned_addr != 0) {
+    80205c82:	fd043783          	ld	a5,-48(s0)
+    80205c86:	c3a1                	beqz	a5,80205cc6 <test_exception+0x20c>
+        uint64 misaligned_addr = aligned_addr + 1;  // 制造未对齐地址
+    80205c88:	fd043783          	ld	a5,-48(s0)
+    80205c8c:	0785                	addi	a5,a5,1 # 1001 <_entry-0x801fefff>
+    80205c8e:	fcf43423          	sd	a5,-56(s0)
+        printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
+    80205c92:	fc843583          	ld	a1,-56(s0)
+    80205c96:	00003517          	auipc	a0,0x3
+    80205c9a:	30250513          	addi	a0,a0,770 # 80208f98 <etext+0x1f98>
+    80205c9e:	ffffb097          	auipc	ra,0xffffb
+    80205ca2:	fe4080e7          	jalr	-28(ra) # 80200c82 <printf>
+        asm volatile (
+    80205ca6:	deadc7b7          	lui	a5,0xdeadc
+    80205caa:	eef7879b          	addiw	a5,a5,-273 # ffffffffdeadbeef <_bss_end+0xffffffff5e8cf5cf>
+    80205cae:	fc843703          	ld	a4,-56(s0)
+    80205cb2:	e31c                	sd	a5,0(a4)
+        printf("✓ 存储地址未对齐异常处理成功\n\n");
+    80205cb4:	00003517          	auipc	a0,0x3
+    80205cb8:	30450513          	addi	a0,a0,772 # 80208fb8 <etext+0x1fb8>
+    80205cbc:	ffffb097          	auipc	ra,0xffffb
+    80205cc0:	fc6080e7          	jalr	-58(ra) # 80200c82 <printf>
+    80205cc4:	a809                	j	80205cd6 <test_exception+0x21c>
+        printf("警告: 无法分配内存进行未对齐访问测试!\n\n");
+    80205cc6:	00003517          	auipc	a0,0x3
+    80205cca:	32250513          	addi	a0,a0,802 # 80208fe8 <etext+0x1fe8>
+    80205cce:	ffffb097          	auipc	ra,0xffffb
+    80205cd2:	fb4080e7          	jalr	-76(ra) # 80200c82 <printf>
+    printf("5. 测试加载地址未对齐异常...\n");
+    80205cd6:	00003517          	auipc	a0,0x3
+    80205cda:	35250513          	addi	a0,a0,850 # 80209028 <etext+0x2028>
+    80205cde:	ffffb097          	auipc	ra,0xffffb
+    80205ce2:	fa4080e7          	jalr	-92(ra) # 80200c82 <printf>
+    if (aligned_addr != 0) {
+    80205ce6:	fd043783          	ld	a5,-48(s0)
+    80205cea:	cbb1                	beqz	a5,80205d3e <test_exception+0x284>
+        uint64 misaligned_addr = aligned_addr + 1;
+    80205cec:	fd043783          	ld	a5,-48(s0)
+    80205cf0:	0785                	addi	a5,a5,1
+    80205cf2:	fcf43023          	sd	a5,-64(s0)
+        printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
+    80205cf6:	fc043583          	ld	a1,-64(s0)
+    80205cfa:	00003517          	auipc	a0,0x3
+    80205cfe:	29e50513          	addi	a0,a0,670 # 80208f98 <etext+0x1f98>
+    80205d02:	ffffb097          	auipc	ra,0xffffb
+    80205d06:	f80080e7          	jalr	-128(ra) # 80200c82 <printf>
+        uint64 value = 0;
+    80205d0a:	fa043c23          	sd	zero,-72(s0)
+        asm volatile (
+    80205d0e:	fc043783          	ld	a5,-64(s0)
+    80205d12:	639c                	ld	a5,0(a5)
+    80205d14:	faf43c23          	sd	a5,-72(s0)
+        printf("读取的值: 0x%lx\n", value);
+    80205d18:	fb843583          	ld	a1,-72(s0)
+    80205d1c:	00003517          	auipc	a0,0x3
+    80205d20:	33c50513          	addi	a0,a0,828 # 80209058 <etext+0x2058>
+    80205d24:	ffffb097          	auipc	ra,0xffffb
+    80205d28:	f5e080e7          	jalr	-162(ra) # 80200c82 <printf>
+        printf("✓ 加载地址未对齐异常处理成功\n\n");
+    80205d2c:	00003517          	auipc	a0,0x3
+    80205d30:	34450513          	addi	a0,a0,836 # 80209070 <etext+0x2070>
+    80205d34:	ffffb097          	auipc	ra,0xffffb
+    80205d38:	f4e080e7          	jalr	-178(ra) # 80200c82 <printf>
+    80205d3c:	a809                	j	80205d4e <test_exception+0x294>
+        printf("警告: 无法分配内存进行未对齐访问测试!\n\n");
+    80205d3e:	00003517          	auipc	a0,0x3
+    80205d42:	2aa50513          	addi	a0,a0,682 # 80208fe8 <etext+0x1fe8>
+    80205d46:	ffffb097          	auipc	ra,0xffffb
+    80205d4a:	f3c080e7          	jalr	-196(ra) # 80200c82 <printf>
+	printf("6. 测试断点异常...\n");
+    80205d4e:	00003517          	auipc	a0,0x3
+    80205d52:	35250513          	addi	a0,a0,850 # 802090a0 <etext+0x20a0>
+    80205d56:	ffffb097          	auipc	ra,0xffffb
+    80205d5a:	f2c080e7          	jalr	-212(ra) # 80200c82 <printf>
+	asm volatile (
+    80205d5e:	0001                	nop
+    80205d60:	9002                	ebreak
+    80205d62:	0001                	nop
+	printf("✓ 断点异常处理成功\n\n");
+    80205d64:	00003517          	auipc	a0,0x3
+    80205d68:	35c50513          	addi	a0,a0,860 # 802090c0 <etext+0x20c0>
+    80205d6c:	ffffb097          	auipc	ra,0xffffb
+    80205d70:	f16080e7          	jalr	-234(ra) # 80200c82 <printf>
+    printf("7. 测试环境调用异常...\n");
+    80205d74:	00003517          	auipc	a0,0x3
+    80205d78:	36c50513          	addi	a0,a0,876 # 802090e0 <etext+0x20e0>
+    80205d7c:	ffffb097          	auipc	ra,0xffffb
+    80205d80:	f06080e7          	jalr	-250(ra) # 80200c82 <printf>
+    asm volatile ("ecall");  // 从S模式生成环境调用
+    80205d84:	00000073          	ecall
+    printf("✓ 环境调用异常处理成功\n\n");
+    80205d88:	00003517          	auipc	a0,0x3
+    80205d8c:	37850513          	addi	a0,a0,888 # 80209100 <etext+0x2100>
+    80205d90:	ffffb097          	auipc	ra,0xffffb
+    80205d94:	ef2080e7          	jalr	-270(ra) # 80200c82 <printf>
+    printf("===== 异常处理测试完成 =====\n\n");
+    80205d98:	00003517          	auipc	a0,0x3
+    80205d9c:	39050513          	addi	a0,a0,912 # 80209128 <etext+0x2128>
+    80205da0:	ffffb097          	auipc	ra,0xffffb
+    80205da4:	ee2080e7          	jalr	-286(ra) # 80200c82 <printf>
+}
+    80205da8:	0001                	nop
+    80205daa:	60a6                	ld	ra,72(sp)
+    80205dac:	6406                	ld	s0,64(sp)
+    80205dae:	6161                	addi	sp,sp,80
+    80205db0:	8082                	ret
+
+0000000080205db2 <simple_task>:
+void simple_task(void) {
+    80205db2:	1141                	addi	sp,sp,-16
+    80205db4:	e406                	sd	ra,8(sp)
+    80205db6:	e022                	sd	s0,0(sp)
+    80205db8:	0800                	addi	s0,sp,16
+    printf("Simple task running in PID %d\n", myproc()->pid);
+    80205dba:	fffff097          	auipc	ra,0xfffff
+    80205dbe:	9ea080e7          	jalr	-1558(ra) # 802047a4 <myproc>
+    80205dc2:	87aa                	mv	a5,a0
+    80205dc4:	43dc                	lw	a5,4(a5)
+    80205dc6:	85be                	mv	a1,a5
+    80205dc8:	00003517          	auipc	a0,0x3
+    80205dcc:	38850513          	addi	a0,a0,904 # 80209150 <etext+0x2150>
+    80205dd0:	ffffb097          	auipc	ra,0xffffb
+    80205dd4:	eb2080e7          	jalr	-334(ra) # 80200c82 <printf>
+}
+    80205dd8:	0001                	nop
+    80205dda:	60a2                	ld	ra,8(sp)
+    80205ddc:	6402                	ld	s0,0(sp)
+    80205dde:	0141                	addi	sp,sp,16
+    80205de0:	8082                	ret
+
+0000000080205de2 <test_process_creation>:
+void test_process_creation(void) {
+    80205de2:	7139                	addi	sp,sp,-64
+    80205de4:	fc06                	sd	ra,56(sp)
+    80205de6:	f822                	sd	s0,48(sp)
+    80205de8:	0080                	addi	s0,sp,64
+    printf("===== 测试开始: 进程创建与管理测试 =====\n");
+    80205dea:	00003517          	auipc	a0,0x3
+    80205dee:	38650513          	addi	a0,a0,902 # 80209170 <etext+0x2170>
+    80205df2:	ffffb097          	auipc	ra,0xffffb
+    80205df6:	e90080e7          	jalr	-368(ra) # 80200c82 <printf>
+    int pid = create_kernel_proc(simple_task);
+    80205dfa:	00000517          	auipc	a0,0x0
+    80205dfe:	fb850513          	addi	a0,a0,-72 # 80205db2 <simple_task>
+    80205e02:	fffff097          	auipc	ra,0xfffff
+    80205e06:	fd4080e7          	jalr	-44(ra) # 80204dd6 <create_kernel_proc>
+    80205e0a:	87aa                	mv	a5,a0
+    80205e0c:	fcf42823          	sw	a5,-48(s0)
+    assert(pid > 0);
+    80205e10:	fd042783          	lw	a5,-48(s0)
+    80205e14:	2781                	sext.w	a5,a5
+    80205e16:	00f027b3          	sgtz	a5,a5
+    80205e1a:	0ff7f793          	zext.b	a5,a5
+    80205e1e:	2781                	sext.w	a5,a5
+    80205e20:	853e                	mv	a0,a5
+    80205e22:	00000097          	auipc	ra,0x0
+    80205e26:	b4a080e7          	jalr	-1206(ra) # 8020596c <assert>
+    printf("【测试结果】: 基本进程创建成功，PID: %d，正常退出\n", pid);
+    80205e2a:	fd042783          	lw	a5,-48(s0)
+    80205e2e:	85be                	mv	a1,a5
+    80205e30:	00003517          	auipc	a0,0x3
+    80205e34:	37850513          	addi	a0,a0,888 # 802091a8 <etext+0x21a8>
+    80205e38:	ffffb097          	auipc	ra,0xffffb
+    80205e3c:	e4a080e7          	jalr	-438(ra) # 80200c82 <printf>
+    int count = 1;
+    80205e40:	4785                	li	a5,1
+    80205e42:	fef42623          	sw	a5,-20(s0)
+    printf("\n----- 测试进程表容量限制 -----\n");
+    80205e46:	00003517          	auipc	a0,0x3
+    80205e4a:	3aa50513          	addi	a0,a0,938 # 802091f0 <etext+0x21f0>
+    80205e4e:	ffffb097          	auipc	ra,0xffffb
+    80205e52:	e34080e7          	jalr	-460(ra) # 80200c82 <printf>
+    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
+    80205e56:	fe042423          	sw	zero,-24(s0)
+    80205e5a:	a0a9                	j	80205ea4 <test_process_creation+0xc2>
+        int pid = create_kernel_proc(simple_task);
+    80205e5c:	00000517          	auipc	a0,0x0
+    80205e60:	f5650513          	addi	a0,a0,-170 # 80205db2 <simple_task>
+    80205e64:	fffff097          	auipc	ra,0xfffff
+    80205e68:	f72080e7          	jalr	-142(ra) # 80204dd6 <create_kernel_proc>
+    80205e6c:	87aa                	mv	a5,a0
+    80205e6e:	fcf42623          	sw	a5,-52(s0)
+        if (pid > 0) {
+    80205e72:	fcc42783          	lw	a5,-52(s0)
+    80205e76:	2781                	sext.w	a5,a5
+    80205e78:	00f05863          	blez	a5,80205e88 <test_process_creation+0xa6>
+            count++; 
+    80205e7c:	fec42783          	lw	a5,-20(s0)
+    80205e80:	2785                	addiw	a5,a5,1
+    80205e82:	fef42623          	sw	a5,-20(s0)
+    80205e86:	a811                	j	80205e9a <test_process_creation+0xb8>
+			warning("process table was full\n");
+    80205e88:	00003517          	auipc	a0,0x3
+    80205e8c:	39850513          	addi	a0,a0,920 # 80209220 <etext+0x2220>
+    80205e90:	ffffc097          	auipc	ra,0xffffc
+    80205e94:	872080e7          	jalr	-1934(ra) # 80201702 <warning>
+            break;
+    80205e98:	a831                	j	80205eb4 <test_process_creation+0xd2>
+    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
+    80205e9a:	fe842783          	lw	a5,-24(s0)
+    80205e9e:	2785                	addiw	a5,a5,1
+    80205ea0:	fef42423          	sw	a5,-24(s0)
+    80205ea4:	fe842783          	lw	a5,-24(s0)
+    80205ea8:	0007871b          	sext.w	a4,a5
+    80205eac:	04400793          	li	a5,68
+    80205eb0:	fae7d6e3          	bge	a5,a4,80205e5c <test_process_creation+0x7a>
+    printf("【测试结果】: 成功创建 %d 个进程 (最大限制: %d)\n", count, PROC);
+    80205eb4:	fec42783          	lw	a5,-20(s0)
+    80205eb8:	04000613          	li	a2,64
+    80205ebc:	85be                	mv	a1,a5
+    80205ebe:	00003517          	auipc	a0,0x3
+    80205ec2:	37a50513          	addi	a0,a0,890 # 80209238 <etext+0x2238>
+    80205ec6:	ffffb097          	auipc	ra,0xffffb
+    80205eca:	dbc080e7          	jalr	-580(ra) # 80200c82 <printf>
+	print_proc_table();
+    80205ece:	fffff097          	auipc	ra,0xfffff
+    80205ed2:	782080e7          	jalr	1922(ra) # 80205650 <print_proc_table>
+    printf("\n----- 测试进程等待与清理 -----\n");
+    80205ed6:	00003517          	auipc	a0,0x3
+    80205eda:	3aa50513          	addi	a0,a0,938 # 80209280 <etext+0x2280>
+    80205ede:	ffffb097          	auipc	ra,0xffffb
+    80205ee2:	da4080e7          	jalr	-604(ra) # 80200c82 <printf>
+    int success_count = 0;
+    80205ee6:	fe042223          	sw	zero,-28(s0)
+    for (int i = 0; i < count; i++) {
+    80205eea:	fe042023          	sw	zero,-32(s0)
+    80205eee:	a0a1                	j	80205f36 <test_process_creation+0x154>
+        int waited_pid = wait_proc(NULL);
+    80205ef0:	4501                	li	a0,0
+    80205ef2:	fffff097          	auipc	ra,0xfffff
+    80205ef6:	574080e7          	jalr	1396(ra) # 80205466 <wait_proc>
+    80205efa:	87aa                	mv	a5,a0
+    80205efc:	fcf42023          	sw	a5,-64(s0)
+        if (waited_pid > 0) {
+    80205f00:	fc042783          	lw	a5,-64(s0)
+    80205f04:	2781                	sext.w	a5,a5
+    80205f06:	00f05863          	blez	a5,80205f16 <test_process_creation+0x134>
+            success_count++;
+    80205f0a:	fe442783          	lw	a5,-28(s0)
+    80205f0e:	2785                	addiw	a5,a5,1
+    80205f10:	fef42223          	sw	a5,-28(s0)
+    80205f14:	a821                	j	80205f2c <test_process_creation+0x14a>
+            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+    80205f16:	fc042783          	lw	a5,-64(s0)
+    80205f1a:	85be                	mv	a1,a5
+    80205f1c:	00003517          	auipc	a0,0x3
+    80205f20:	39450513          	addi	a0,a0,916 # 802092b0 <etext+0x22b0>
+    80205f24:	ffffb097          	auipc	ra,0xffffb
+    80205f28:	d5e080e7          	jalr	-674(ra) # 80200c82 <printf>
+    for (int i = 0; i < count; i++) {
+    80205f2c:	fe042783          	lw	a5,-32(s0)
+    80205f30:	2785                	addiw	a5,a5,1
+    80205f32:	fef42023          	sw	a5,-32(s0)
+    80205f36:	fe042783          	lw	a5,-32(s0)
+    80205f3a:	873e                	mv	a4,a5
+    80205f3c:	fec42783          	lw	a5,-20(s0)
+    80205f40:	2701                	sext.w	a4,a4
+    80205f42:	2781                	sext.w	a5,a5
+    80205f44:	faf746e3          	blt	a4,a5,80205ef0 <test_process_creation+0x10e>
+    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
+    80205f48:	fec42703          	lw	a4,-20(s0)
+    80205f4c:	fe442783          	lw	a5,-28(s0)
+    80205f50:	863a                	mv	a2,a4
+    80205f52:	85be                	mv	a1,a5
+    80205f54:	00003517          	auipc	a0,0x3
+    80205f58:	39450513          	addi	a0,a0,916 # 802092e8 <etext+0x22e8>
+    80205f5c:	ffffb097          	auipc	ra,0xffffb
+    80205f60:	d26080e7          	jalr	-730(ra) # 80200c82 <printf>
+	print_proc_table();
+    80205f64:	fffff097          	auipc	ra,0xfffff
+    80205f68:	6ec080e7          	jalr	1772(ra) # 80205650 <print_proc_table>
+	printf("\n----- 清理后尝试重新填满进程表 -----\n");
+    80205f6c:	00003517          	auipc	a0,0x3
+    80205f70:	3ac50513          	addi	a0,a0,940 # 80209318 <etext+0x2318>
+    80205f74:	ffffb097          	auipc	ra,0xffffb
+    80205f78:	d0e080e7          	jalr	-754(ra) # 80200c82 <printf>
+	int refill_count = 0;
+    80205f7c:	fc042e23          	sw	zero,-36(s0)
+	for (int i = 0; i < PROC; i++) {
+    80205f80:	fc042c23          	sw	zero,-40(s0)
+    80205f84:	a0a9                	j	80205fce <test_process_creation+0x1ec>
+		int pid = create_kernel_proc(simple_task);
+    80205f86:	00000517          	auipc	a0,0x0
+    80205f8a:	e2c50513          	addi	a0,a0,-468 # 80205db2 <simple_task>
+    80205f8e:	fffff097          	auipc	ra,0xfffff
+    80205f92:	e48080e7          	jalr	-440(ra) # 80204dd6 <create_kernel_proc>
+    80205f96:	87aa                	mv	a5,a0
+    80205f98:	fcf42423          	sw	a5,-56(s0)
+		if (pid > 0) {
+    80205f9c:	fc842783          	lw	a5,-56(s0)
+    80205fa0:	2781                	sext.w	a5,a5
+    80205fa2:	00f05863          	blez	a5,80205fb2 <test_process_creation+0x1d0>
+			refill_count++;
+    80205fa6:	fdc42783          	lw	a5,-36(s0)
+    80205faa:	2785                	addiw	a5,a5,1
+    80205fac:	fcf42e23          	sw	a5,-36(s0)
+    80205fb0:	a811                	j	80205fc4 <test_process_creation+0x1e2>
+			warning("process table was full\n");
+    80205fb2:	00003517          	auipc	a0,0x3
+    80205fb6:	26e50513          	addi	a0,a0,622 # 80209220 <etext+0x2220>
+    80205fba:	ffffb097          	auipc	ra,0xffffb
+    80205fbe:	748080e7          	jalr	1864(ra) # 80201702 <warning>
+			break;
+    80205fc2:	a831                	j	80205fde <test_process_creation+0x1fc>
+	for (int i = 0; i < PROC; i++) {
+    80205fc4:	fd842783          	lw	a5,-40(s0)
+    80205fc8:	2785                	addiw	a5,a5,1
+    80205fca:	fcf42c23          	sw	a5,-40(s0)
+    80205fce:	fd842783          	lw	a5,-40(s0)
+    80205fd2:	0007871b          	sext.w	a4,a5
+    80205fd6:	03f00793          	li	a5,63
+    80205fda:	fae7d6e3          	bge	a5,a4,80205f86 <test_process_creation+0x1a4>
+	printf("【测试结果】: 清理后成功重新创建 %d 个进程\n", refill_count);
+    80205fde:	fdc42783          	lw	a5,-36(s0)
+    80205fe2:	85be                	mv	a1,a5
+    80205fe4:	00003517          	auipc	a0,0x3
+    80205fe8:	36c50513          	addi	a0,a0,876 # 80209350 <etext+0x2350>
+    80205fec:	ffffb097          	auipc	ra,0xffffb
+    80205ff0:	c96080e7          	jalr	-874(ra) # 80200c82 <printf>
+	print_proc_table();
+    80205ff4:	fffff097          	auipc	ra,0xfffff
+    80205ff8:	65c080e7          	jalr	1628(ra) # 80205650 <print_proc_table>
+	printf("\n----- 测试进程等待与清理 -----\n");
+    80205ffc:	00003517          	auipc	a0,0x3
+    80206000:	28450513          	addi	a0,a0,644 # 80209280 <etext+0x2280>
+    80206004:	ffffb097          	auipc	ra,0xffffb
+    80206008:	c7e080e7          	jalr	-898(ra) # 80200c82 <printf>
+    success_count = 0;
+    8020600c:	fe042223          	sw	zero,-28(s0)
+    for (int i = 0; i < count; i++) {
+    80206010:	fc042a23          	sw	zero,-44(s0)
+    80206014:	a0a1                	j	8020605c <test_process_creation+0x27a>
+        int waited_pid = wait_proc(NULL);
+    80206016:	4501                	li	a0,0
+    80206018:	fffff097          	auipc	ra,0xfffff
+    8020601c:	44e080e7          	jalr	1102(ra) # 80205466 <wait_proc>
+    80206020:	87aa                	mv	a5,a0
+    80206022:	fcf42223          	sw	a5,-60(s0)
+        if (waited_pid > 0) {
+    80206026:	fc442783          	lw	a5,-60(s0)
+    8020602a:	2781                	sext.w	a5,a5
+    8020602c:	00f05863          	blez	a5,8020603c <test_process_creation+0x25a>
+            success_count++;
+    80206030:	fe442783          	lw	a5,-28(s0)
+    80206034:	2785                	addiw	a5,a5,1
+    80206036:	fef42223          	sw	a5,-28(s0)
+    8020603a:	a821                	j	80206052 <test_process_creation+0x270>
+            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+    8020603c:	fc442783          	lw	a5,-60(s0)
+    80206040:	85be                	mv	a1,a5
+    80206042:	00003517          	auipc	a0,0x3
+    80206046:	26e50513          	addi	a0,a0,622 # 802092b0 <etext+0x22b0>
+    8020604a:	ffffb097          	auipc	ra,0xffffb
+    8020604e:	c38080e7          	jalr	-968(ra) # 80200c82 <printf>
+    for (int i = 0; i < count; i++) {
+    80206052:	fd442783          	lw	a5,-44(s0)
+    80206056:	2785                	addiw	a5,a5,1
+    80206058:	fcf42a23          	sw	a5,-44(s0)
+    8020605c:	fd442783          	lw	a5,-44(s0)
+    80206060:	873e                	mv	a4,a5
+    80206062:	fec42783          	lw	a5,-20(s0)
+    80206066:	2701                	sext.w	a4,a4
+    80206068:	2781                	sext.w	a5,a5
+    8020606a:	faf746e3          	blt	a4,a5,80206016 <test_process_creation+0x234>
+    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
+    8020606e:	fec42703          	lw	a4,-20(s0)
+    80206072:	fe442783          	lw	a5,-28(s0)
+    80206076:	863a                	mv	a2,a4
+    80206078:	85be                	mv	a1,a5
+    8020607a:	00003517          	auipc	a0,0x3
+    8020607e:	26e50513          	addi	a0,a0,622 # 802092e8 <etext+0x22e8>
+    80206082:	ffffb097          	auipc	ra,0xffffb
+    80206086:	c00080e7          	jalr	-1024(ra) # 80200c82 <printf>
+	print_proc_table();
+    8020608a:	fffff097          	auipc	ra,0xfffff
+    8020608e:	5c6080e7          	jalr	1478(ra) # 80205650 <print_proc_table>
+    printf("===== 测试结束: 进程创建与管理测试 =====\n");
+    80206092:	00003517          	auipc	a0,0x3
+    80206096:	2fe50513          	addi	a0,a0,766 # 80209390 <etext+0x2390>
+    8020609a:	ffffb097          	auipc	ra,0xffffb
+    8020609e:	be8080e7          	jalr	-1048(ra) # 80200c82 <printf>
+}
+    802060a2:	0001                	nop
+    802060a4:	70e2                	ld	ra,56(sp)
+    802060a6:	7442                	ld	s0,48(sp)
+    802060a8:	6121                	addi	sp,sp,64
+    802060aa:	8082                	ret
+
+00000000802060ac <cpu_intensive_task>:
+void cpu_intensive_task(void) {
+    802060ac:	1101                	addi	sp,sp,-32
+    802060ae:	ec06                	sd	ra,24(sp)
+    802060b0:	e822                	sd	s0,16(sp)
+    802060b2:	1000                	addi	s0,sp,32
+    uint64 sum = 0;
+    802060b4:	fe043423          	sd	zero,-24(s0)
+    for (uint64 i = 0; i < 10000000; i++) {
+    802060b8:	fe043023          	sd	zero,-32(s0)
+    802060bc:	a829                	j	802060d6 <cpu_intensive_task+0x2a>
+        sum += i;
+    802060be:	fe843703          	ld	a4,-24(s0)
+    802060c2:	fe043783          	ld	a5,-32(s0)
+    802060c6:	97ba                	add	a5,a5,a4
+    802060c8:	fef43423          	sd	a5,-24(s0)
+    for (uint64 i = 0; i < 10000000; i++) {
+    802060cc:	fe043783          	ld	a5,-32(s0)
+    802060d0:	0785                	addi	a5,a5,1
+    802060d2:	fef43023          	sd	a5,-32(s0)
+    802060d6:	fe043703          	ld	a4,-32(s0)
+    802060da:	009897b7          	lui	a5,0x989
+    802060de:	67f78793          	addi	a5,a5,1663 # 98967f <_entry-0x7f876981>
+    802060e2:	fce7fee3          	bgeu	a5,a4,802060be <cpu_intensive_task+0x12>
+    printf("CPU intensive task done in PID %d, sum=%lu\n", myproc()->pid, sum);
+    802060e6:	ffffe097          	auipc	ra,0xffffe
+    802060ea:	6be080e7          	jalr	1726(ra) # 802047a4 <myproc>
+    802060ee:	87aa                	mv	a5,a0
+    802060f0:	43dc                	lw	a5,4(a5)
+    802060f2:	fe843603          	ld	a2,-24(s0)
+    802060f6:	85be                	mv	a1,a5
+    802060f8:	00003517          	auipc	a0,0x3
+    802060fc:	2d050513          	addi	a0,a0,720 # 802093c8 <etext+0x23c8>
+    80206100:	ffffb097          	auipc	ra,0xffffb
+    80206104:	b82080e7          	jalr	-1150(ra) # 80200c82 <printf>
+    exit_proc(0);
+    80206108:	4501                	li	a0,0
+    8020610a:	fffff097          	auipc	ra,0xfffff
+    8020610e:	28a080e7          	jalr	650(ra) # 80205394 <exit_proc>
+}
+    80206112:	0001                	nop
+    80206114:	60e2                	ld	ra,24(sp)
+    80206116:	6442                	ld	s0,16(sp)
+    80206118:	6105                	addi	sp,sp,32
+    8020611a:	8082                	ret
+
+000000008020611c <test_scheduler>:
+void test_scheduler(void) {
+    8020611c:	7179                	addi	sp,sp,-48
+    8020611e:	f406                	sd	ra,40(sp)
+    80206120:	f022                	sd	s0,32(sp)
+    80206122:	1800                	addi	s0,sp,48
+    printf("===== 测试开始: 调度器测试 =====\n");
+    80206124:	00003517          	auipc	a0,0x3
+    80206128:	2d450513          	addi	a0,a0,724 # 802093f8 <etext+0x23f8>
+    8020612c:	ffffb097          	auipc	ra,0xffffb
+    80206130:	b56080e7          	jalr	-1194(ra) # 80200c82 <printf>
+    for (int i = 0; i < 3; i++) {
+    80206134:	fe042623          	sw	zero,-20(s0)
+    80206138:	a831                	j	80206154 <test_scheduler+0x38>
+        create_kernel_proc(cpu_intensive_task);
+    8020613a:	00000517          	auipc	a0,0x0
+    8020613e:	f7250513          	addi	a0,a0,-142 # 802060ac <cpu_intensive_task>
+    80206142:	fffff097          	auipc	ra,0xfffff
+    80206146:	c94080e7          	jalr	-876(ra) # 80204dd6 <create_kernel_proc>
+    for (int i = 0; i < 3; i++) {
+    8020614a:	fec42783          	lw	a5,-20(s0)
+    8020614e:	2785                	addiw	a5,a5,1
+    80206150:	fef42623          	sw	a5,-20(s0)
+    80206154:	fec42783          	lw	a5,-20(s0)
+    80206158:	0007871b          	sext.w	a4,a5
+    8020615c:	4789                	li	a5,2
+    8020615e:	fce7dee3          	bge	a5,a4,8020613a <test_scheduler+0x1e>
+    uint64 start_time = get_time();
+    80206162:	00000097          	auipc	ra,0x0
+    80206166:	856080e7          	jalr	-1962(ra) # 802059b8 <get_time>
+    8020616a:	fea43023          	sd	a0,-32(s0)
+	for (int i = 0; i < 3; i++) {
+    8020616e:	fe042423          	sw	zero,-24(s0)
+    80206172:	a819                	j	80206188 <test_scheduler+0x6c>
+    	wait_proc(NULL); // 等待所有子进程结束
+    80206174:	4501                	li	a0,0
+    80206176:	fffff097          	auipc	ra,0xfffff
+    8020617a:	2f0080e7          	jalr	752(ra) # 80205466 <wait_proc>
+	for (int i = 0; i < 3; i++) {
+    8020617e:	fe842783          	lw	a5,-24(s0)
+    80206182:	2785                	addiw	a5,a5,1
+    80206184:	fef42423          	sw	a5,-24(s0)
+    80206188:	fe842783          	lw	a5,-24(s0)
+    8020618c:	0007871b          	sext.w	a4,a5
+    80206190:	4789                	li	a5,2
+    80206192:	fee7d1e3          	bge	a5,a4,80206174 <test_scheduler+0x58>
+    uint64 end_time = get_time();
+    80206196:	00000097          	auipc	ra,0x0
+    8020619a:	822080e7          	jalr	-2014(ra) # 802059b8 <get_time>
+    8020619e:	fca43c23          	sd	a0,-40(s0)
     printf("Scheduler test completed in %lu cycles\n", end_time - start_time);
-    80206178:	fd843703          	ld	a4,-40(s0)
-    8020617c:	fe043783          	ld	a5,-32(s0)
-    80206180:	40f707b3          	sub	a5,a4,a5
-    80206184:	85be                	mv	a1,a5
-    80206186:	00003517          	auipc	a0,0x3
-    8020618a:	2a250513          	addi	a0,a0,674 # 80209428 <etext+0x2428>
-    8020618e:	ffffb097          	auipc	ra,0xffffb
-    80206192:	af4080e7          	jalr	-1292(ra) # 80200c82 <printf>
+    802061a2:	fd843703          	ld	a4,-40(s0)
+    802061a6:	fe043783          	ld	a5,-32(s0)
+    802061aa:	40f707b3          	sub	a5,a4,a5
+    802061ae:	85be                	mv	a1,a5
+    802061b0:	00003517          	auipc	a0,0x3
+    802061b4:	27850513          	addi	a0,a0,632 # 80209428 <etext+0x2428>
+    802061b8:	ffffb097          	auipc	ra,0xffffb
+    802061bc:	aca080e7          	jalr	-1334(ra) # 80200c82 <printf>
     printf("===== 测试结束 =====\n");
-    80206196:	00003517          	auipc	a0,0x3
-    8020619a:	2ba50513          	addi	a0,a0,698 # 80209450 <etext+0x2450>
-    8020619e:	ffffb097          	auipc	ra,0xffffb
-    802061a2:	ae4080e7          	jalr	-1308(ra) # 80200c82 <printf>
+    802061c0:	00003517          	auipc	a0,0x3
+    802061c4:	29050513          	addi	a0,a0,656 # 80209450 <etext+0x2450>
+    802061c8:	ffffb097          	auipc	ra,0xffffb
+    802061cc:	aba080e7          	jalr	-1350(ra) # 80200c82 <printf>
 }
-    802061a6:	0001                	nop
-    802061a8:	70a2                	ld	ra,40(sp)
-    802061aa:	7402                	ld	s0,32(sp)
-    802061ac:	6145                	addi	sp,sp,48
-    802061ae:	8082                	ret
+    802061d0:	0001                	nop
+    802061d2:	70a2                	ld	ra,40(sp)
+    802061d4:	7402                	ld	s0,32(sp)
+    802061d6:	6145                	addi	sp,sp,48
+    802061d8:	8082                	ret
 
-00000000802061b0 <shared_buffer_init>:
+00000000802061da <shared_buffer_init>:
 void shared_buffer_init() {
-    802061b0:	1141                	addi	sp,sp,-16
-    802061b2:	e422                	sd	s0,8(sp)
-    802061b4:	0800                	addi	s0,sp,16
+    802061da:	1141                	addi	sp,sp,-16
+    802061dc:	e422                	sd	s0,8(sp)
+    802061de:	0800                	addi	s0,sp,16
     proc_buffer = 0;
-    802061b6:	00006797          	auipc	a5,0x6
-    802061ba:	74678793          	addi	a5,a5,1862 # 8020c8fc <proc_buffer>
-    802061be:	0007a023          	sw	zero,0(a5)
+    802061e0:	00006797          	auipc	a5,0x6
+    802061e4:	72c78793          	addi	a5,a5,1836 # 8020c90c <proc_buffer>
+    802061e8:	0007a023          	sw	zero,0(a5)
     proc_produced = 0;
-    802061c2:	00006797          	auipc	a5,0x6
-    802061c6:	73e78793          	addi	a5,a5,1854 # 8020c900 <proc_produced>
-    802061ca:	0007a023          	sw	zero,0(a5)
-}
-    802061ce:	0001                	nop
-    802061d0:	6422                	ld	s0,8(sp)
-    802061d2:	0141                	addi	sp,sp,16
-    802061d4:	8082                	ret
-
-00000000802061d6 <producer_task>:
-void producer_task(void) {
-    802061d6:	1141                	addi	sp,sp,-16
-    802061d8:	e406                	sd	ra,8(sp)
-    802061da:	e022                	sd	s0,0(sp)
-    802061dc:	0800                	addi	s0,sp,16
-    proc_buffer = 42;
-    802061de:	00006797          	auipc	a5,0x6
-    802061e2:	71e78793          	addi	a5,a5,1822 # 8020c8fc <proc_buffer>
-    802061e6:	02a00713          	li	a4,42
-    802061ea:	c398                	sw	a4,0(a5)
-    proc_produced = 1;
     802061ec:	00006797          	auipc	a5,0x6
-    802061f0:	71478793          	addi	a5,a5,1812 # 8020c900 <proc_produced>
-    802061f4:	4705                	li	a4,1
-    802061f6:	c398                	sw	a4,0(a5)
-    wakeup(&proc_produced); // 唤醒消费者
-    802061f8:	00006517          	auipc	a0,0x6
-    802061fc:	70850513          	addi	a0,a0,1800 # 8020c900 <proc_produced>
-    80206200:	fffff097          	auipc	ra,0xfffff
-    80206204:	4f6080e7          	jalr	1270(ra) # 802056f6 <wakeup>
-    printf("Producer: produced value %d\n", proc_buffer);
+    802061f0:	72478793          	addi	a5,a5,1828 # 8020c910 <proc_produced>
+    802061f4:	0007a023          	sw	zero,0(a5)
+}
+    802061f8:	0001                	nop
+    802061fa:	6422                	ld	s0,8(sp)
+    802061fc:	0141                	addi	sp,sp,16
+    802061fe:	8082                	ret
+
+0000000080206200 <producer_task>:
+void producer_task(void) {
+    80206200:	1141                	addi	sp,sp,-16
+    80206202:	e406                	sd	ra,8(sp)
+    80206204:	e022                	sd	s0,0(sp)
+    80206206:	0800                	addi	s0,sp,16
+    proc_buffer = 42;
     80206208:	00006797          	auipc	a5,0x6
-    8020620c:	6f478793          	addi	a5,a5,1780 # 8020c8fc <proc_buffer>
-    80206210:	439c                	lw	a5,0(a5)
-    80206212:	85be                	mv	a1,a5
-    80206214:	00003517          	auipc	a0,0x3
-    80206218:	25c50513          	addi	a0,a0,604 # 80209470 <etext+0x2470>
-    8020621c:	ffffb097          	auipc	ra,0xffffb
-    80206220:	a66080e7          	jalr	-1434(ra) # 80200c82 <printf>
+    8020620c:	70478793          	addi	a5,a5,1796 # 8020c90c <proc_buffer>
+    80206210:	02a00713          	li	a4,42
+    80206214:	c398                	sw	a4,0(a5)
+    proc_produced = 1;
+    80206216:	00006797          	auipc	a5,0x6
+    8020621a:	6fa78793          	addi	a5,a5,1786 # 8020c910 <proc_produced>
+    8020621e:	4705                	li	a4,1
+    80206220:	c398                	sw	a4,0(a5)
+    wakeup(&proc_produced); // 唤醒消费者
+    80206222:	00006517          	auipc	a0,0x6
+    80206226:	6ee50513          	addi	a0,a0,1774 # 8020c910 <proc_produced>
+    8020622a:	fffff097          	auipc	ra,0xfffff
+    8020622e:	0fc080e7          	jalr	252(ra) # 80205326 <wakeup>
+    printf("Producer: produced value %d\n", proc_buffer);
+    80206232:	00006797          	auipc	a5,0x6
+    80206236:	6da78793          	addi	a5,a5,1754 # 8020c90c <proc_buffer>
+    8020623a:	439c                	lw	a5,0(a5)
+    8020623c:	85be                	mv	a1,a5
+    8020623e:	00003517          	auipc	a0,0x3
+    80206242:	23250513          	addi	a0,a0,562 # 80209470 <etext+0x2470>
+    80206246:	ffffb097          	auipc	ra,0xffffb
+    8020624a:	a3c080e7          	jalr	-1476(ra) # 80200c82 <printf>
     exit_proc(0);
-    80206224:	4501                	li	a0,0
-    80206226:	fffff097          	auipc	ra,0xfffff
-    8020622a:	53e080e7          	jalr	1342(ra) # 80205764 <exit_proc>
+    8020624e:	4501                	li	a0,0
+    80206250:	fffff097          	auipc	ra,0xfffff
+    80206254:	144080e7          	jalr	324(ra) # 80205394 <exit_proc>
 }
-    8020622e:	0001                	nop
-    80206230:	60a2                	ld	ra,8(sp)
-    80206232:	6402                	ld	s0,0(sp)
-    80206234:	0141                	addi	sp,sp,16
-    80206236:	8082                	ret
+    80206258:	0001                	nop
+    8020625a:	60a2                	ld	ra,8(sp)
+    8020625c:	6402                	ld	s0,0(sp)
+    8020625e:	0141                	addi	sp,sp,16
+    80206260:	8082                	ret
 
-0000000080206238 <consumer_task>:
+0000000080206262 <consumer_task>:
 void consumer_task(void) {
-    80206238:	1141                	addi	sp,sp,-16
-    8020623a:	e406                	sd	ra,8(sp)
-    8020623c:	e022                	sd	s0,0(sp)
-    8020623e:	0800                	addi	s0,sp,16
+    80206262:	1141                	addi	sp,sp,-16
+    80206264:	e406                	sd	ra,8(sp)
+    80206266:	e022                	sd	s0,0(sp)
+    80206268:	0800                	addi	s0,sp,16
     while (!proc_produced) {
-    80206240:	a809                	j	80206252 <consumer_task+0x1a>
+    8020626a:	a809                	j	8020627c <consumer_task+0x1a>
         sleep(&proc_produced); // 等待生产者
-    80206242:	00006517          	auipc	a0,0x6
-    80206246:	6be50513          	addi	a0,a0,1726 # 8020c900 <proc_produced>
-    8020624a:	fffff097          	auipc	ra,0xfffff
-    8020624e:	442080e7          	jalr	1090(ra) # 8020568c <sleep>
+    8020626c:	00006517          	auipc	a0,0x6
+    80206270:	6a450513          	addi	a0,a0,1700 # 8020c910 <proc_produced>
+    80206274:	fffff097          	auipc	ra,0xfffff
+    80206278:	048080e7          	jalr	72(ra) # 802052bc <sleep>
     while (!proc_produced) {
-    80206252:	00006797          	auipc	a5,0x6
-    80206256:	6ae78793          	addi	a5,a5,1710 # 8020c900 <proc_produced>
-    8020625a:	439c                	lw	a5,0(a5)
-    8020625c:	d3fd                	beqz	a5,80206242 <consumer_task+0xa>
+    8020627c:	00006797          	auipc	a5,0x6
+    80206280:	69478793          	addi	a5,a5,1684 # 8020c910 <proc_produced>
+    80206284:	439c                	lw	a5,0(a5)
+    80206286:	d3fd                	beqz	a5,8020626c <consumer_task+0xa>
     printf("Consumer: consumed value %d\n", proc_buffer);
-    8020625e:	00006797          	auipc	a5,0x6
-    80206262:	69e78793          	addi	a5,a5,1694 # 8020c8fc <proc_buffer>
-    80206266:	439c                	lw	a5,0(a5)
-    80206268:	85be                	mv	a1,a5
-    8020626a:	00003517          	auipc	a0,0x3
-    8020626e:	22650513          	addi	a0,a0,550 # 80209490 <etext+0x2490>
-    80206272:	ffffb097          	auipc	ra,0xffffb
-    80206276:	a10080e7          	jalr	-1520(ra) # 80200c82 <printf>
+    80206288:	00006797          	auipc	a5,0x6
+    8020628c:	68478793          	addi	a5,a5,1668 # 8020c90c <proc_buffer>
+    80206290:	439c                	lw	a5,0(a5)
+    80206292:	85be                	mv	a1,a5
+    80206294:	00003517          	auipc	a0,0x3
+    80206298:	1fc50513          	addi	a0,a0,508 # 80209490 <etext+0x2490>
+    8020629c:	ffffb097          	auipc	ra,0xffffb
+    802062a0:	9e6080e7          	jalr	-1562(ra) # 80200c82 <printf>
     exit_proc(0);
-    8020627a:	4501                	li	a0,0
-    8020627c:	fffff097          	auipc	ra,0xfffff
-    80206280:	4e8080e7          	jalr	1256(ra) # 80205764 <exit_proc>
+    802062a4:	4501                	li	a0,0
+    802062a6:	fffff097          	auipc	ra,0xfffff
+    802062aa:	0ee080e7          	jalr	238(ra) # 80205394 <exit_proc>
 }
-    80206284:	0001                	nop
-    80206286:	60a2                	ld	ra,8(sp)
-    80206288:	6402                	ld	s0,0(sp)
-    8020628a:	0141                	addi	sp,sp,16
-    8020628c:	8082                	ret
+    802062ae:	0001                	nop
+    802062b0:	60a2                	ld	ra,8(sp)
+    802062b2:	6402                	ld	s0,0(sp)
+    802062b4:	0141                	addi	sp,sp,16
+    802062b6:	8082                	ret
 
-000000008020628e <test_synchronization>:
+00000000802062b8 <test_synchronization>:
 void test_synchronization(void) {
-    8020628e:	1141                	addi	sp,sp,-16
-    80206290:	e406                	sd	ra,8(sp)
-    80206292:	e022                	sd	s0,0(sp)
-    80206294:	0800                	addi	s0,sp,16
+    802062b8:	1141                	addi	sp,sp,-16
+    802062ba:	e406                	sd	ra,8(sp)
+    802062bc:	e022                	sd	s0,0(sp)
+    802062be:	0800                	addi	s0,sp,16
     printf("===== 测试开始: 同步机制测试 =====\n");
-    80206296:	00003517          	auipc	a0,0x3
-    8020629a:	21a50513          	addi	a0,a0,538 # 802094b0 <etext+0x24b0>
-    8020629e:	ffffb097          	auipc	ra,0xffffb
-    802062a2:	9e4080e7          	jalr	-1564(ra) # 80200c82 <printf>
+    802062c0:	00003517          	auipc	a0,0x3
+    802062c4:	1f050513          	addi	a0,a0,496 # 802094b0 <etext+0x24b0>
+    802062c8:	ffffb097          	auipc	ra,0xffffb
+    802062cc:	9ba080e7          	jalr	-1606(ra) # 80200c82 <printf>
     shared_buffer_init();
-    802062a6:	00000097          	auipc	ra,0x0
-    802062aa:	f0a080e7          	jalr	-246(ra) # 802061b0 <shared_buffer_init>
+    802062d0:	00000097          	auipc	ra,0x0
+    802062d4:	f0a080e7          	jalr	-246(ra) # 802061da <shared_buffer_init>
     create_kernel_proc(producer_task);
-    802062ae:	00000517          	auipc	a0,0x0
-    802062b2:	f2850513          	addi	a0,a0,-216 # 802061d6 <producer_task>
-    802062b6:	fffff097          	auipc	ra,0xfffff
-    802062ba:	ef0080e7          	jalr	-272(ra) # 802051a6 <create_kernel_proc>
+    802062d8:	00000517          	auipc	a0,0x0
+    802062dc:	f2850513          	addi	a0,a0,-216 # 80206200 <producer_task>
+    802062e0:	fffff097          	auipc	ra,0xfffff
+    802062e4:	af6080e7          	jalr	-1290(ra) # 80204dd6 <create_kernel_proc>
     create_kernel_proc(consumer_task);
-    802062be:	00000517          	auipc	a0,0x0
-    802062c2:	f7a50513          	addi	a0,a0,-134 # 80206238 <consumer_task>
-    802062c6:	fffff097          	auipc	ra,0xfffff
-    802062ca:	ee0080e7          	jalr	-288(ra) # 802051a6 <create_kernel_proc>
+    802062e8:	00000517          	auipc	a0,0x0
+    802062ec:	f7a50513          	addi	a0,a0,-134 # 80206262 <consumer_task>
+    802062f0:	fffff097          	auipc	ra,0xfffff
+    802062f4:	ae6080e7          	jalr	-1306(ra) # 80204dd6 <create_kernel_proc>
     wait_proc(NULL);
-    802062ce:	4501                	li	a0,0
-    802062d0:	fffff097          	auipc	ra,0xfffff
-    802062d4:	566080e7          	jalr	1382(ra) # 80205836 <wait_proc>
+    802062f8:	4501                	li	a0,0
+    802062fa:	fffff097          	auipc	ra,0xfffff
+    802062fe:	16c080e7          	jalr	364(ra) # 80205466 <wait_proc>
     wait_proc(NULL);
-    802062d8:	4501                	li	a0,0
-    802062da:	fffff097          	auipc	ra,0xfffff
-    802062de:	55c080e7          	jalr	1372(ra) # 80205836 <wait_proc>
+    80206302:	4501                	li	a0,0
+    80206304:	fffff097          	auipc	ra,0xfffff
+    80206308:	162080e7          	jalr	354(ra) # 80205466 <wait_proc>
     printf("===== 测试结束 =====\n");
-    802062e2:	00003517          	auipc	a0,0x3
-    802062e6:	16e50513          	addi	a0,a0,366 # 80209450 <etext+0x2450>
-    802062ea:	ffffb097          	auipc	ra,0xffffb
-    802062ee:	998080e7          	jalr	-1640(ra) # 80200c82 <printf>
+    8020630c:	00003517          	auipc	a0,0x3
+    80206310:	14450513          	addi	a0,a0,324 # 80209450 <etext+0x2450>
+    80206314:	ffffb097          	auipc	ra,0xffffb
+    80206318:	96e080e7          	jalr	-1682(ra) # 80200c82 <printf>
 }
-    802062f2:	0001                	nop
-    802062f4:	60a2                	ld	ra,8(sp)
-    802062f6:	6402                	ld	s0,0(sp)
-    802062f8:	0141                	addi	sp,sp,16
-    802062fa:	8082                	ret
+    8020631c:	0001                	nop
+    8020631e:	60a2                	ld	ra,8(sp)
+    80206320:	6402                	ld	s0,0(sp)
+    80206322:	0141                	addi	sp,sp,16
+    80206324:	8082                	ret
 
-00000000802062fc <sys_access_task>:
+0000000080206326 <sys_access_task>:
 void sys_access_task(void) {
-    802062fc:	1101                	addi	sp,sp,-32
-    802062fe:	ec06                	sd	ra,24(sp)
-    80206300:	e822                	sd	s0,16(sp)
-    80206302:	1000                	addi	s0,sp,32
+    80206326:	1101                	addi	sp,sp,-32
+    80206328:	ec06                	sd	ra,24(sp)
+    8020632a:	e822                	sd	s0,16(sp)
+    8020632c:	1000                	addi	s0,sp,32
     volatile int *ptr = (int*)0x80200000; // 内核空间地址
-    80206304:	40100793          	li	a5,1025
-    80206308:	07d6                	slli	a5,a5,0x15
-    8020630a:	fef43423          	sd	a5,-24(s0)
+    8020632e:	40100793          	li	a5,1025
+    80206332:	07d6                	slli	a5,a5,0x15
+    80206334:	fef43423          	sd	a5,-24(s0)
     printf("SYS: try read kernel addr 0x80200000\n");
-    8020630e:	00003517          	auipc	a0,0x3
-    80206312:	1d250513          	addi	a0,a0,466 # 802094e0 <etext+0x24e0>
-    80206316:	ffffb097          	auipc	ra,0xffffb
-    8020631a:	96c080e7          	jalr	-1684(ra) # 80200c82 <printf>
+    80206338:	00003517          	auipc	a0,0x3
+    8020633c:	1a850513          	addi	a0,a0,424 # 802094e0 <etext+0x24e0>
+    80206340:	ffffb097          	auipc	ra,0xffffb
+    80206344:	942080e7          	jalr	-1726(ra) # 80200c82 <printf>
     int val = *ptr;
-    8020631e:	fe843783          	ld	a5,-24(s0)
-    80206322:	439c                	lw	a5,0(a5)
-    80206324:	fef42223          	sw	a5,-28(s0)
+    80206348:	fe843783          	ld	a5,-24(s0)
+    8020634c:	439c                	lw	a5,0(a5)
+    8020634e:	fef42223          	sw	a5,-28(s0)
     printf("SYS: read success, value=%d\n", val);
-    80206328:	fe442783          	lw	a5,-28(s0)
-    8020632c:	85be                	mv	a1,a5
-    8020632e:	00003517          	auipc	a0,0x3
-    80206332:	1da50513          	addi	a0,a0,474 # 80209508 <etext+0x2508>
-    80206336:	ffffb097          	auipc	ra,0xffffb
-    8020633a:	94c080e7          	jalr	-1716(ra) # 80200c82 <printf>
+    80206352:	fe442783          	lw	a5,-28(s0)
+    80206356:	85be                	mv	a1,a5
+    80206358:	00003517          	auipc	a0,0x3
+    8020635c:	1b050513          	addi	a0,a0,432 # 80209508 <etext+0x2508>
+    80206360:	ffffb097          	auipc	ra,0xffffb
+    80206364:	922080e7          	jalr	-1758(ra) # 80200c82 <printf>
     exit_proc(0);
-    8020633e:	4501                	li	a0,0
-    80206340:	fffff097          	auipc	ra,0xfffff
-    80206344:	424080e7          	jalr	1060(ra) # 80205764 <exit_proc>
+    80206368:	4501                	li	a0,0
+    8020636a:	fffff097          	auipc	ra,0xfffff
+    8020636e:	02a080e7          	jalr	42(ra) # 80205394 <exit_proc>
 }
-    80206348:	0001                	nop
-    8020634a:	60e2                	ld	ra,24(sp)
-    8020634c:	6442                	ld	s0,16(sp)
-    8020634e:	6105                	addi	sp,sp,32
-    80206350:	8082                	ret
+    80206372:	0001                	nop
+    80206374:	60e2                	ld	ra,24(sp)
+    80206376:	6442                	ld	s0,16(sp)
+    80206378:	6105                	addi	sp,sp,32
+    8020637a:	8082                	ret
 
-0000000080206352 <test_sys_usr>:
+000000008020637c <test_sys_usr>:
 void test_sys_usr(void) {
-    80206352:	1101                	addi	sp,sp,-32
-    80206354:	ec06                	sd	ra,24(sp)
-    80206356:	e822                	sd	s0,16(sp)
-    80206358:	1000                	addi	s0,sp,32
+    8020637c:	1101                	addi	sp,sp,-32
+    8020637e:	ec06                	sd	ra,24(sp)
+    80206380:	e822                	sd	s0,16(sp)
+    80206382:	1000                	addi	s0,sp,32
     printf("===== 测试: 用户/系统进程访问内核空间 =====\n");
-    8020635a:	00003517          	auipc	a0,0x3
-    8020635e:	1ce50513          	addi	a0,a0,462 # 80209528 <etext+0x2528>
-    80206362:	ffffb097          	auipc	ra,0xffffb
-    80206366:	920080e7          	jalr	-1760(ra) # 80200c82 <printf>
+    80206384:	00003517          	auipc	a0,0x3
+    80206388:	1a450513          	addi	a0,a0,420 # 80209528 <etext+0x2528>
+    8020638c:	ffffb097          	auipc	ra,0xffffb
+    80206390:	8f6080e7          	jalr	-1802(ra) # 80200c82 <printf>
     int sys_pid = create_kernel_proc(sys_access_task); // 系统进程
-    8020636a:	00000517          	auipc	a0,0x0
-    8020636e:	f9250513          	addi	a0,a0,-110 # 802062fc <sys_access_task>
-    80206372:	fffff097          	auipc	ra,0xfffff
-    80206376:	e34080e7          	jalr	-460(ra) # 802051a6 <create_kernel_proc>
-    8020637a:	87aa                	mv	a5,a0
-    8020637c:	fef42623          	sw	a5,-20(s0)
+    80206394:	00000517          	auipc	a0,0x0
+    80206398:	f9250513          	addi	a0,a0,-110 # 80206326 <sys_access_task>
+    8020639c:	fffff097          	auipc	ra,0xfffff
+    802063a0:	a3a080e7          	jalr	-1478(ra) # 80204dd6 <create_kernel_proc>
+    802063a4:	87aa                	mv	a5,a0
+    802063a6:	fef42623          	sw	a5,-20(s0)
 	printf("创建系统进程：%d成功\n",sys_pid);
-    80206380:	fec42783          	lw	a5,-20(s0)
-    80206384:	85be                	mv	a1,a5
-    80206386:	00003517          	auipc	a0,0x3
-    8020638a:	1e250513          	addi	a0,a0,482 # 80209568 <etext+0x2568>
-    8020638e:	ffffb097          	auipc	ra,0xffffb
-    80206392:	8f4080e7          	jalr	-1804(ra) # 80200c82 <printf>
+    802063aa:	fec42783          	lw	a5,-20(s0)
+    802063ae:	85be                	mv	a1,a5
+    802063b0:	00003517          	auipc	a0,0x3
+    802063b4:	1b850513          	addi	a0,a0,440 # 80209568 <etext+0x2568>
+    802063b8:	ffffb097          	auipc	ra,0xffffb
+    802063bc:	8ca080e7          	jalr	-1846(ra) # 80200c82 <printf>
 	int status =0;
-    80206396:	fe042023          	sw	zero,-32(s0)
+    802063c0:	fe042023          	sw	zero,-32(s0)
 	int ret_val = wait_proc(&status); // 等待系统进程
-    8020639a:	fe040793          	addi	a5,s0,-32
-    8020639e:	853e                	mv	a0,a5
-    802063a0:	fffff097          	auipc	ra,0xfffff
-    802063a4:	496080e7          	jalr	1174(ra) # 80205836 <wait_proc>
-    802063a8:	87aa                	mv	a5,a0
-    802063aa:	fef42423          	sw	a5,-24(s0)
+    802063c4:	fe040793          	addi	a5,s0,-32
+    802063c8:	853e                	mv	a0,a5
+    802063ca:	fffff097          	auipc	ra,0xfffff
+    802063ce:	09c080e7          	jalr	156(ra) # 80205466 <wait_proc>
+    802063d2:	87aa                	mv	a5,a0
+    802063d4:	fef42423          	sw	a5,-24(s0)
 	printf("系统进程%d退出，退出码为%d\n",ret_val,status);
-    802063ae:	fe042703          	lw	a4,-32(s0)
-    802063b2:	fe842783          	lw	a5,-24(s0)
-    802063b6:	863a                	mv	a2,a4
-    802063b8:	85be                	mv	a1,a5
-    802063ba:	00003517          	auipc	a0,0x3
-    802063be:	1ce50513          	addi	a0,a0,462 # 80209588 <etext+0x2588>
-    802063c2:	ffffb097          	auipc	ra,0xffffb
-    802063c6:	8c0080e7          	jalr	-1856(ra) # 80200c82 <printf>
-    int usr_pid = create_user_proc(user_test_bin, user_test_bin_len);
-    802063ca:	00004797          	auipc	a5,0x4
-    802063ce:	c3678793          	addi	a5,a5,-970 # 8020a000 <user_test_bin_len>
-    802063d2:	439c                	lw	a5,0(a5)
-    802063d4:	2781                	sext.w	a5,a5
-    802063d6:	85be                	mv	a1,a5
-    802063d8:	00006517          	auipc	a0,0x6
-    802063dc:	cb850513          	addi	a0,a0,-840 # 8020c090 <user_test_bin>
-    802063e0:	fffff097          	auipc	ra,0xfffff
-    802063e4:	e34080e7          	jalr	-460(ra) # 80205214 <create_user_proc>
-    802063e8:	87aa                	mv	a5,a0
-    802063ea:	fef42223          	sw	a5,-28(s0)
-    printf("创建用户进程：%d成功\n", usr_pid);
-    802063ee:	fe442783          	lw	a5,-28(s0)
-    802063f2:	85be                	mv	a1,a5
-    802063f4:	00003517          	auipc	a0,0x3
-    802063f8:	1bc50513          	addi	a0,a0,444 # 802095b0 <etext+0x25b0>
-    802063fc:	ffffb097          	auipc	ra,0xffffb
-    80206400:	886080e7          	jalr	-1914(ra) # 80200c82 <printf>
-    ret_val = wait_proc(&status); // 等待用户进程
-    80206404:	fe040793          	addi	a5,s0,-32
-    80206408:	853e                	mv	a0,a5
+    802063d8:	fe042703          	lw	a4,-32(s0)
+    802063dc:	fe842783          	lw	a5,-24(s0)
+    802063e0:	863a                	mv	a2,a4
+    802063e2:	85be                	mv	a1,a5
+    802063e4:	00003517          	auipc	a0,0x3
+    802063e8:	1a450513          	addi	a0,a0,420 # 80209588 <etext+0x2588>
+    802063ec:	ffffb097          	auipc	ra,0xffffb
+    802063f0:	896080e7          	jalr	-1898(ra) # 80200c82 <printf>
+    int usr_pid = create_user_proc(min_test_bin, min_test_bin_len);
+    802063f4:	00004797          	auipc	a5,0x4
+    802063f8:	c0c78793          	addi	a5,a5,-1012 # 8020a000 <min_test_bin_len>
+    802063fc:	439c                	lw	a5,0(a5)
+    802063fe:	2781                	sext.w	a5,a5
+    80206400:	85be                	mv	a1,a5
+    80206402:	00006517          	auipc	a0,0x6
+    80206406:	c8e50513          	addi	a0,a0,-882 # 8020c090 <min_test_bin>
     8020640a:	fffff097          	auipc	ra,0xfffff
-    8020640e:	42c080e7          	jalr	1068(ra) # 80205836 <wait_proc>
+    8020640e:	a3a080e7          	jalr	-1478(ra) # 80204e44 <create_user_proc>
     80206412:	87aa                	mv	a5,a0
-    80206414:	fef42423          	sw	a5,-24(s0)
+    80206414:	fef42223          	sw	a5,-28(s0)
+    printf("创建用户进程：%d成功\n", usr_pid);
+    80206418:	fe442783          	lw	a5,-28(s0)
+    8020641c:	85be                	mv	a1,a5
+    8020641e:	00003517          	auipc	a0,0x3
+    80206422:	19250513          	addi	a0,a0,402 # 802095b0 <etext+0x25b0>
+    80206426:	ffffb097          	auipc	ra,0xffffb
+    8020642a:	85c080e7          	jalr	-1956(ra) # 80200c82 <printf>
+    ret_val = wait_proc(&status); // 等待用户进程
+    8020642e:	fe040793          	addi	a5,s0,-32
+    80206432:	853e                	mv	a0,a5
+    80206434:	fffff097          	auipc	ra,0xfffff
+    80206438:	032080e7          	jalr	50(ra) # 80205466 <wait_proc>
+    8020643c:	87aa                	mv	a5,a0
+    8020643e:	fef42423          	sw	a5,-24(s0)
     printf("用户进程%d退出，退出码为%d\n", ret_val,status);
-    80206418:	fe042703          	lw	a4,-32(s0)
-    8020641c:	fe842783          	lw	a5,-24(s0)
-    80206420:	863a                	mv	a2,a4
-    80206422:	85be                	mv	a1,a5
-    80206424:	00003517          	auipc	a0,0x3
-    80206428:	1ac50513          	addi	a0,a0,428 # 802095d0 <etext+0x25d0>
-    8020642c:	ffffb097          	auipc	ra,0xffffb
-    80206430:	856080e7          	jalr	-1962(ra) # 80200c82 <printf>
+    80206442:	fe042703          	lw	a4,-32(s0)
+    80206446:	fe842783          	lw	a5,-24(s0)
+    8020644a:	863a                	mv	a2,a4
+    8020644c:	85be                	mv	a1,a5
+    8020644e:	00003517          	auipc	a0,0x3
+    80206452:	18250513          	addi	a0,a0,386 # 802095d0 <etext+0x25d0>
+    80206456:	ffffb097          	auipc	ra,0xffffb
+    8020645a:	82c080e7          	jalr	-2004(ra) # 80200c82 <printf>
     printf("===== 测试结束 =====\n");
-    80206434:	00003517          	auipc	a0,0x3
-    80206438:	01c50513          	addi	a0,a0,28 # 80209450 <etext+0x2450>
-    8020643c:	ffffb097          	auipc	ra,0xffffb
-    80206440:	846080e7          	jalr	-1978(ra) # 80200c82 <printf>
-    80206444:	0001                	nop
-    80206446:	60e2                	ld	ra,24(sp)
-    80206448:	6442                	ld	s0,16(sp)
-    8020644a:	6105                	addi	sp,sp,32
-    8020644c:	8082                	ret
+    8020645e:	00003517          	auipc	a0,0x3
+    80206462:	ff250513          	addi	a0,a0,-14 # 80209450 <etext+0x2450>
+    80206466:	ffffb097          	auipc	ra,0xffffb
+    8020646a:	81c080e7          	jalr	-2020(ra) # 80200c82 <printf>
+    8020646e:	0001                	nop
+    80206470:	60e2                	ld	ra,24(sp)
+    80206472:	6442                	ld	s0,16(sp)
+    80206474:	6105                	addi	sp,sp,32
+    80206476:	8082                	ret
 	...
