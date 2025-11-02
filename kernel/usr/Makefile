@@ -20,54 +20,61 @@ ASMS  := $(addprefix $(BUILD)/,$(NAMES:=.s))
 DUMPS := $(addprefix $(BUILD)/,$(NAMES:=.dump))
 ALL_HDR := $(BUILD)/user_progs.h
 
+# 静默编译选项
+QUIET = @
+
 # 总目标
 all: $(BUILD) $(ALL_HDR) $(HDRS) $(ASMS) $(DUMPS) regen-user-progs
+	$(QUIET)echo "用户程序编译完成"
 
 # 确保 build 目录存在
 $(BUILD):
-	mkdir -p $(BUILD)
+	$(QUIET)mkdir -p $(BUILD)
 
 # 先生成一个空的 user_progs.h（避免循环依赖报错）
 $(ALL_HDR): | $(BUILD)
-	@rm -f $@
-	@echo "/* 占位的空 user_progs.h */" > $@
+	$(QUIET)rm -f $@
+	$(QUIET)echo "/* 占位的空 user_progs.h */" > $@
 
 # C → 汇编
 $(BUILD)/%.s: %.c | $(BUILD) $(ALL_HDR)
-	$(CC) $(CFLAGS) -S -o $@ $<
+	$(QUIET)echo "ASM   $@"
+	$(QUIET)$(CC) $(CFLAGS) -S -o $@ $<
 
 # C → ELF
 $(BUILD)/%.elf: %.c user.ld | $(BUILD) $(ALL_HDR)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+	$(QUIET)echo "LINK  $@"
+	$(QUIET)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 # ELF → bin
 $(BUILD)/%.bin: $(BUILD)/%.elf | $(BUILD)
-	$(OBJCOPY) -O binary $< $@
+	$(QUIET)echo "BIN   $@"
+	$(QUIET)$(OBJCOPY) -O binary $< $@
 
 # bin → h（数组名去掉 build_ 前缀）
 $(BUILD)/%.h: $(BUILD)/%.bin | $(BUILD) $(ALL_HDR)
-	@echo "生成 $@"
-	xxd -i -n $*_bin $< > $@
-	# 把全局符号改成 static const
-	sed -i 's/^unsigned char/static const unsigned char/' $@
-	sed -i 's/^unsigned int/static const unsigned int/' $@
-
+	$(QUIET)echo "HDR   $@"
+	$(QUIET)xxd -i -n $*_bin $< > $@
+	$(QUIET)sed -i 's/^unsigned char/static const unsigned char/' $@
+	$(QUIET)sed -i 's/^unsigned int/static const unsigned int/' $@
 
 # ELF → dump
 $(BUILD)/%.dump: $(BUILD)/%.elf | $(BUILD)
-	$(OBJDUMP) -d -S -M no-aliases $< > $@
+	$(QUIET)echo "DUMP  $@"
+	$(QUIET)$(OBJDUMP) -d -S -M no-aliases $< > $@
 
 # 重新生成真正的聚合头文件
 regen-user-progs: $(HDRS)
-	@echo "更新 $(ALL_HDR)"
-	@rm -f $(ALL_HDR)
-	@echo "/* 自动生成的聚合头文件 */" > $(ALL_HDR)
-	@for f in $(HDRS); do \
+	$(QUIET)echo "GEN   $(ALL_HDR)"
+	$(QUIET)rm -f $(ALL_HDR)
+	$(QUIET)echo "/* 自动生成的聚合头文件 */" > $(ALL_HDR)
+	$(QUIET)for f in $(HDRS); do \
 		bn=$$(basename $$f); \
 		echo "#include \"$$bn\"" >> $(ALL_HDR); \
 	done
 
 clean:
-	rm -rf $(BUILD)
+	$(QUIET)echo "CLEAN build/"
+	$(QUIET)rm -rf $(BUILD)
 
 .PHONY: all clean regen-user-progs

@@ -1,6 +1,6 @@
 K=kernel
+USRDIR = $(K)/usr
 
-# 检测工具链
 ifndef TOOLPREFIX
 TOOLPREFIX := $(shell if riscv64-unknown-elf-objdump -i 2>&1 | grep 'elf64-big' >/dev/null 2>&1; \
 	then echo 'riscv64-unknown-elf-'; \
@@ -55,6 +55,11 @@ MINIMAL_OBJS = \
   $K/string.o \
   $K/test.o 
 
+all: userprog $(K)/kernel
+
+userprog:
+	$(MAKE) -C $(USRDIR)
+
 $K/kernel: $(MINIMAL_OBJS) $K/kernel.ld
 	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(MINIMAL_OBJS)
 	$(OBJDUMP) -S $K/kernel > $K/kernel.asm
@@ -105,10 +110,10 @@ $K/switch.o: $K/switch.S
 $K/proc.o: $K/proc.c
 	$(CC) $(CFLAGS) -c $K/proc.c -o $K/proc.o
 
-$k/string.o: $K/string.c
+$K/string.o: $K/string.c
 	$(CC) $(CFLAGS) -c $K/string.c -o $K/string.o
 
-$k/test.o: $K/test.c
+$K/test.o: $K/test.c
 	$(CC) $(CFLAGS) -c $K/test.c -o $K/test.o
 # 验证内存布局
 check: $K/kernel
@@ -120,12 +125,12 @@ check: $K/kernel
 	$(OBJDUMP) -f $K/kernel
 
 # 运行 QEMU
-qemu: $K/kernel
+qemu: userprog $K/kernel
 	@echo "=== 启动 QEMU ==="
 	$(QEMU) $(QEMUOPTS)
 
 # 调试模式运行 QEMU (等待 GDB 连接)
-qemu-gdb: $K/kernel
+qemu-gdb: userprog $K/kernel
 	@echo "=== 启动 QEMU 调试模式 ==="
 	@echo "使用调试器: $(GDB)"
 	@echo "在另一个终端运行: make debug"
@@ -171,6 +176,7 @@ clean-debug:
 
 # 扩展clean目标
 clean: clean-debug
+	$(MAKE) -C $(USRDIR) clean
 	rm -f $K/*.o $K/kernel $K/*.asm $K/*.sym
 
-.PHONY: check clean qemu qemu-gdb debug gdb-init clean-debug
+.PHONY: all userprog check clean qemu qemu-gdb debug gdb-init clean-debug
