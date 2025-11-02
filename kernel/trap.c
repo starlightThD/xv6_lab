@@ -232,7 +232,6 @@ int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max) {
 }
 
 void handle_syscall(struct trapframe *tf, struct trap_info *info) {
-	printf("[syscall] entry: pid=%d a7=%ld a0=%ld\n", myproc()->pid, tf->a7, tf->a0);
 	switch (tf->a7) {
 		case SYS_printint:
 			printf("[syscall] print int: %ld\n", tf->a0);

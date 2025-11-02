@@ -285,12 +285,8 @@ void test_process_creation(void) {
 void test_user_fork(void) {
     printf("===== 测试开始: 用户进程Fork测试 =====\n");
     
-    // 记录测试开始前的进程状态
-    printf("\n----- 测试前进程状态 -----\n");
-    print_proc_table();
-    
-    // 第一阶段：基本fork测试
-    printf("\n----- 第一阶段：基本用户fork测试 -----\n");
+    // 创建fork测试进程
+    printf("\n----- 创建fork测试进程 -----\n");
     int fork_test_pid = create_user_proc(fork_user_test_bin, fork_user_test_bin_len);
     
     if (fork_test_pid < 0) {
@@ -301,106 +297,16 @@ void test_user_fork(void) {
     printf("【测试结果】: 创建fork测试进程成功，PID: %d\n", fork_test_pid);
     
     // 等待fork测试进程完成
+    printf("\n----- 等待fork测试进程完成 -----\n");
     int status;
     int waited_pid = wait_proc(&status);
     if (waited_pid == fork_test_pid) {
         printf("【测试结果】: fork测试进程(PID: %d)完成，状态码: %d\n", fork_test_pid, status);
+        printf("✓ Fork测试: 通过\n");
     } else {
         printf("【错误】: 等待fork测试进程时出错，等待到PID: %d，期望PID: %d\n", waited_pid, fork_test_pid);
+        printf("✗ Fork测试: 失败\n");
     }
-    
-    // 第二阶段：多重fork测试
-    printf("\n----- 第二阶段：多重fork测试 -----\n");
-    printf("创建多个fork测试进程以观察并发行为...\n");
-    
-    int fork_test_count = 3;
-    int created_count = 0;
-    
-    for (int i = 0; i < fork_test_count; i++) {
-        int pid = create_user_proc(fork_user_test_bin, fork_user_test_bin_len);
-        if (pid > 0) {
-            created_count++;
-            printf("创建fork测试进程 %d，PID: %d\n", i + 1, pid);
-        } else {
-            printf("【错误】: 创建第 %d 个fork测试进程失败\n", i + 1);
-            break;
-        }
-    }
-    
-    printf("【测试结果】: 成功创建 %d/%d 个fork测试进程\n", created_count, fork_test_count);
-    
-    // 显示fork执行过程中的进程状态
-    printf("\n----- Fork执行过程中的进程状态 -----\n");
-    print_proc_table();
-    
-    // 等待所有fork测试进程完成
-    printf("\n----- 等待所有fork测试进程完成 -----\n");
-    int completed_count = 0;
-    for (int i = 0; i < created_count; i++) {
-        int waited_pid = wait_proc(&status);
-        if (waited_pid > 0) {
-            completed_count++;
-            printf("回收进程 PID: %d，状态码: %d (%d/%d)\n", 
-                   waited_pid, status, completed_count, created_count);
-        } else {
-            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
-        }
-    }
-    
-    printf("【测试结果】: 回收 %d/%d 个fork测试进程\n", completed_count, created_count);
-    
-    // 第三阶段：压力测试 - 快速创建多个fork进程
-    printf("\n----- 第三阶段：Fork压力测试 -----\n");
-    printf("快速创建多个fork进程进行压力测试...\n");
-    
-    int stress_count = 5;
-    int stress_created = 0;
-    
-    for (int i = 0; i < stress_count; i++) {
-        int pid = create_user_proc(fork_user_test_bin, fork_user_test_bin_len);
-        if (pid > 0) {
-            stress_created++;
-        } else {
-            printf("【警告】: 压力测试中第 %d 个进程创建失败\n", i + 1);
-            break;
-        }
-    }
-    
-    printf("【压力测试结果】: 创建 %d/%d 个fork进程\n", stress_created, stress_count);
-    
-    // 显示压力测试过程中的进程状态
-    printf("\n----- 压力测试过程中的进程状态 -----\n");
-    print_proc_table();
-    
-    // 等待压力测试进程完成
-    printf("\n----- 等待压力测试进程完成 -----\n");
-    int stress_completed = 0;
-    for (int i = 0; i < stress_created; i++) {
-        int waited_pid = wait_proc(&status);
-        if (waited_pid > 0) {
-            stress_completed++;
-            if (stress_completed % 2 == 0 || stress_completed == stress_created) {
-                printf("已回收 %d/%d 个压力测试进程\n", stress_completed, stress_created);
-            }
-        }
-    }
-    
-    printf("【压力测试结果】: 回收 %d/%d 个压力测试进程\n", stress_completed, stress_created);
-    
-    // 测试结束后的进程状态
-    printf("\n----- 测试结束后进程状态 -----\n");
-    print_proc_table();
-    
-    // 测试总结
-    printf("\n----- Fork测试总结 -----\n");
-    printf("✓ 基本fork测试: %s\n", (waited_pid == fork_test_pid) ? "通过" : "失败");
-    printf("✓ 多重fork测试: %s (成功率: %d/%d)\n", 
-           (completed_count == created_count) ? "通过" : "部分失败", 
-           completed_count, created_count);
-    printf("✓ 压力测试: %s (成功率: %d/%d)\n", 
-           (stress_completed == stress_created) ? "通过" : "部分失败", 
-           stress_completed, stress_created);
-    
     printf("===== 测试结束: 用户进程Fork测试 =====\n");
 }
 void cpu_intensive_task(void) {

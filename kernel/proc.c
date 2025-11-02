@@ -52,32 +52,6 @@ void return_to_user(void) {
         panic("return_to_user: userret outside trampoline page");
     }
 
-    // ====== 调试输出开始 ======
-    printf("[return_to_user] pid=%d\n", p->pid);
-    printf("[return_to_user] trapframe kva=%p pa=0x%lx TRAPFRAME=0x%lx\n",
-           p->trapframe, VA2PA((uint64)p->trapframe), (uint64)TRAPFRAME);
-
-    // 打印子页表里 TRAPFRAME 的 PTE
-    pte_t *pte_tf = walk_lookup(p->pagetable, TRAPFRAME);
-    if (pte_tf && (*pte_tf & PTE_V)) {
-        printf("[return_to_user] TRAPFRAME PTE=0x%lx pa=0x%lx flags=0x%lx\n",
-               *pte_tf, PTE2PA(*pte_tf), PTE_FLAGS(*pte_tf));
-    } else {
-        printf("[return_to_user] TRAPFRAME not mapped!\n");
-    }
-
-    // 打印子页表里 TRAMPOLINE 的 PTE
-    pte_t *pte_tr = walk_lookup(p->pagetable, TRAMPOLINE);
-    if (pte_tr && (*pte_tr & PTE_V)) {
-        printf("[return_to_user] TRAMPOLINE PTE=0x%lx pa=0x%lx flags=0x%lx\n",
-               *pte_tr, PTE2PA(*pte_tr), PTE_FLAGS(*pte_tr));
-    } else {
-        printf("[return_to_user] TRAMPOLINE not mapped!\n");
-    }
-
-    printf("[return_to_user] satp=0x%lx trampoline_userret=0x%lx\n",
-           satp, trampoline_userret);
-    // ====== 调试输出结束 ======
 
     // 跳到 trampoline 的 userret
     void (*userret_fn)(uint64, uint64) = (void (*)(uint64, uint64))trampoline_userret;
@@ -266,8 +240,6 @@ int fork_proc(void) {
     struct proc *parent = myproc();
     struct proc *child = alloc_proc(parent->is_user);
     if (!child) return -1;
-
-    printf("[fork] parent sz: 0x%lx\n", parent->sz);
     
     // 复制父进程的用户空间
     if (uvmcopy(parent->pagetable, child->pagetable, parent->sz) < 0) {
@@ -305,8 +277,6 @@ int fork_proc(void) {
 	assert(child->trapframe->kernel_satp = MAKE_SATP(kernel_pagetable));
     child->trapframe->epc += 4;  // 跳过 ecall 指令
     child->trapframe->a0 = 0;    // 子进程fork返回0
-
-    printf("[fork] child EPC: 0x%lx (should be 0x1000a)\n", child->trapframe->epc);
 
     child->state = RUNNABLE;
     child->parent = parent;
