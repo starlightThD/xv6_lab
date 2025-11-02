@@ -68,11 +68,8 @@ uservec:
     csrw stvec, t6
     jr   t5
 userret:
-        mv t0, a0
-        mv a0, a1
-        csrw satp, a0
+        csrw satp, a1
         sfence.vma zero, zero
-        mv a0, t0
         ld ra, 48(a0)
         ld sp, 56(a0)
         ld gp, 64(a0)
@@ -100,10 +97,10 @@ userret:
         ld s10, 248(a0)
         ld s11, 256(a0)
 
-        ld t1, 32(a0)      # 恢复 sepc
-        csrw sepc, t1
-        ld t2, 24(a0)      # 恢复 sstatus
-        csrw sstatus, t2
+        ld t3, 32(a0)      # 恢复 sepc
+        csrw sepc, t3
+        ld t3, 24(a0)      # 恢复 sstatus
+        csrw sstatus, t3
 		csrw sscratch, a0
 		ld a0, 120(a0)
         sret

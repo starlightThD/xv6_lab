@@ -217,32 +217,54 @@ int copyin(char *dst, uint64 srcva, int maxlen) {
     }
     return 0;
 }
+int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max) {
+    int i;
+    for (i = 0; i < max; i++) {
+        char c;
+        if (copyin(&c, srcva + i, 1) < 0)  // 每次拷贝 1 字节
+            return -1;
+        dst[i] = c;
+        if (c == '\0')
+            return 0;
+    }
+    dst[max-1] = '\0';
+    return -1; // 超过最大长度还没遇到 \0
+}
+
 void handle_syscall(struct trapframe *tf, struct trap_info *info) {
+	printf("[syscall] entry: pid=%d a7=%ld a0=%ld\n", myproc()->pid, tf->a7, tf->a0);
 	switch (tf->a7) {
 		case SYS_printint:
 			printf("[syscall] print int: %ld\n", tf->a0);
 			break;
 
-		case SYS_printstr: {
+		case SYS_printstr: 
 			char buf[128];
-			copyin(buf, tf->a0, sizeof(buf)-1);
-			buf[sizeof(buf)-1] = 0;
+			if (copyinstr(buf, myproc()->pagetable, tf->a0, sizeof(buf)) < 0) {
+				printf("[syscall] invalid string\n");
+				break;
+			}
 			printf("[syscall] print str: %s\n", buf);
 			break;
-		}
-
 		case SYS_exit:
 			printf("[syscall] exit(%ld)\n", tf->a0);
 			exit_proc((int)tf->a0);
 			break;
 
-		case SYS_fork: {
+		case SYS_fork:
 			int child_pid = fork_proc();
 			tf->a0 = child_pid;
 			printf("[syscall] fork -> %d\n", child_pid);
 			break;
-		}
-
+		case SYS_wait:
+			tf->a0 = wait_proc(NULL);
+			break;
+		case SYS_pid:
+			tf->a0 = myproc()->pid;
+			break;
+		case SYS_ppid:
+			tf->a0 = myproc()->parent ? myproc()->parent->pid : 0;
+			break;
 		case SYS_step:
 			tf->a0 = 0;
 			printf("[syscall] step enabled but do nothing\n");

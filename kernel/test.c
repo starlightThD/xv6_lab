@@ -1,8 +1,6 @@
 #include "defs.h"
-#include "min_test.h"
 
 // trap_test
-
 volatile int *interrupt_test_flag = 0;
 // 获取当前时间的辅助函数
 uint64 get_time(void) {
@@ -145,71 +143,266 @@ void test_exception(void) {
 // 简单测试任务，用于测试进程创建
 void simple_task(void) {
     // 简单任务，只打印并退出
-    printf("Simple task running in PID %d\n", myproc()->pid);
+    printf("Simple kernel task running in PID %d\n", myproc()->pid);
 }
 void test_process_creation(void) {
     printf("===== 测试开始: 进程创建与管理测试 =====\n");
 
-    // 测试基本的进程创建
+    // ========== 第一阶段：测试内核进程 ==========
+    printf("\n----- 第一阶段：测试内核进程创建与管理 -----\n");
+    
+    // 测试基本的内核进程创建
     int pid = create_kernel_proc(simple_task);
     assert(pid > 0);
-    printf("【测试结果】: 基本进程创建成功，PID: %d，正常退出\n", pid);
+    printf("【测试结果】: 基本内核进程创建成功，PID: %d\n", pid);
 
-    int count = 1;
-    printf("\n----- 测试进程表容量限制 -----\n");
-    for (int i = 0; i < PROC+5; i++) {// 验证超量创建进程的处理
-        int pid = create_kernel_proc(simple_task);
-        if (pid > 0) {
-            count++; 
+    // 填满进程表 - 内核进程
+    printf("\n----- 用内核进程填满进程表 -----\n");
+    int kernel_count = 1; // 已经创建了一个
+    for (int i = 1; i < PROC; i++) { // 从1开始，因为已经创建了一个
+        int new_pid = create_kernel_proc(simple_task);
+        if (new_pid > 0) {
+            kernel_count++; 
         } else {
-			warning("process table was full\n");
+            warning("process table was full at %d kernel processes\n", kernel_count);
             break;
         }
     }
-    printf("【测试结果】: 成功创建 %d 个进程 (最大限制: %d)\n", count, PROC);
-	print_proc_table();
-    // 清理测试进程
-    printf("\n----- 测试进程等待与清理 -----\n");
-    int success_count = 0;
-    for (int i = 0; i < count; i++) {
+    printf("【测试结果】: 成功创建 %d 个内核进程 (最大限制: %d)\n", kernel_count, PROC);
+    print_proc_table();
+
+    // 清理内核进程
+    printf("\n----- 等待并清理所有内核进程 -----\n");
+    int kernel_success_count = 0;
+    for (int i = 0; i < kernel_count; i++) {
         int waited_pid = wait_proc(NULL);
         if (waited_pid > 0) {
-            success_count++;
+            kernel_success_count++;
+            printf("回收内核进程 PID: %d (%d/%d)\n", waited_pid, kernel_success_count, kernel_count);
         } else {
-            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+            printf("【错误】: 等待内核进程失败，错误码: %d\n", waited_pid);
         }
     }
-    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
-	print_proc_table();
-    // 增强测试：清理后尝试重新创建进程
-	printf("\n----- 清理后尝试重新填满进程表 -----\n");
-	int refill_count = 0;
-	for (int i = 0; i < PROC; i++) {
-		int pid = create_kernel_proc(simple_task);
-		if (pid > 0) {
-			refill_count++;
-		} else {
-			warning("process table was full\n");
-			break;
-		}
-	}
-	printf("【测试结果】: 清理后成功重新创建 %d 个进程\n", refill_count);
-	print_proc_table();
-	printf("\n----- 测试进程等待与清理 -----\n");
-    success_count = 0;
-    for (int i = 0; i < count; i++) {
+    printf("【测试结果】: 回收 %d/%d 个内核进程\n", kernel_success_count, kernel_count);
+    print_proc_table();
+
+    // ========== 第二阶段：测试用户进程 ==========
+    printf("\n----- 第二阶段：测试用户进程创建与管理 -----\n");
+    
+    // 测试基本的用户进程创建
+    int user_pid = create_user_proc(simple_user_task_bin, simple_user_task_bin_len);
+    if (user_pid > 0) {
+        printf("【测试结果】: 基本用户进程创建成功，PID: %d\n", user_pid);
+    } else {
+        printf("【错误】: 基本用户进程创建失败\n");
+        return;
+    }
+
+    // 填满进程表 - 用户进程
+    printf("\n----- 用用户进程填满进程表 -----\n");
+    int user_count = 1; // 已经创建了一个
+    for (int i = 1; i < PROC; i++) { // 从1开始，因为已经创建了一个
+        int new_pid = create_user_proc(simple_user_task_bin, simple_user_task_bin_len);
+        if (new_pid > 0) {
+            user_count++;
+            if (user_count % 5 == 0) { // 每5个进程打印一次进度
+                printf("已创建 %d 个用户进程...\n", user_count);
+            }
+        } else {
+            warning("process table was full at %d user processes\n", user_count);
+            break;
+        }
+    }
+    printf("【测试结果】: 成功创建 %d 个用户进程 (最大限制: %d)\n", user_count, PROC);
+    print_proc_table();
+
+    // 清理用户进程
+    printf("\n----- 等待并清理所有用户进程 -----\n");
+    int user_success_count = 0;
+    for (int i = 0; i < user_count; i++) {
         int waited_pid = wait_proc(NULL);
         if (waited_pid > 0) {
-            success_count++;
+            user_success_count++;
+            if (user_success_count % 5 == 0) { // 每5个进程打印一次进度
+                printf("已回收 %d/%d 个用户进程...\n", user_success_count, user_count);
+            }
         } else {
-            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+            printf("【错误】: 等待用户进程失败，错误码: %d\n", waited_pid);
         }
     }
-    printf("【测试结果】: 回收 %d/%d 个进程\n", success_count, count);
-	print_proc_table();
+    printf("【测试结果】: 回收 %d/%d 个用户进程\n", user_success_count, user_count);
+    print_proc_table();
+
+    // ========== 第三阶段：混合测试 ==========
+    printf("\n----- 第三阶段：混合进程测试 -----\n");
+    
+    // 创建混合进程（一半内核，一半用户）
+    int mixed_kernel_count = 0;
+    int mixed_user_count = 0;
+    int target_count = PROC / 2;
+    
+    printf("创建 %d 个内核进程和 %d 个用户进程...\n", target_count, target_count);
+    
+    // 创建内核进程
+    for (int i = 0; i < target_count; i++) {
+        int new_pid = create_kernel_proc(simple_task);
+        if (new_pid > 0) {
+            mixed_kernel_count++;
+        } else {
+            break;
+        }
+    }
+    
+    // 创建用户进程
+    for (int i = 0; i < target_count; i++) {
+        int new_pid = create_user_proc(simple_user_task_bin, simple_user_task_bin_len);
+        if (new_pid > 0) {
+            mixed_user_count++;
+        } else {
+            break;
+        }
+    }
+    
+    printf("【混合测试结果】: 创建了 %d 个内核进程 + %d 个用户进程 = %d 个进程\n", 
+           mixed_kernel_count, mixed_user_count, mixed_kernel_count + mixed_user_count);
+    print_proc_table();
+    
+    // 清理混合进程
+    printf("\n----- 清理混合进程 -----\n");
+    int mixed_success_count = 0;
+    int total_mixed = mixed_kernel_count + mixed_user_count;
+    for (int i = 0; i < total_mixed; i++) {
+        int waited_pid = wait_proc(NULL);
+        if (waited_pid > 0) {
+            mixed_success_count++;
+        }
+    }
+    printf("【混合测试结果】: 回收 %d/%d 个混合进程\n", mixed_success_count, total_mixed);
+    print_proc_table();
+
     printf("===== 测试结束: 进程创建与管理测试 =====\n");
 }
-
+void test_user_fork(void) {
+    printf("===== 测试开始: 用户进程Fork测试 =====\n");
+    
+    // 记录测试开始前的进程状态
+    printf("\n----- 测试前进程状态 -----\n");
+    print_proc_table();
+    
+    // 第一阶段：基本fork测试
+    printf("\n----- 第一阶段：基本用户fork测试 -----\n");
+    int fork_test_pid = create_user_proc(fork_user_test_bin, fork_user_test_bin_len);
+    
+    if (fork_test_pid < 0) {
+        printf("【错误】: 创建fork测试进程失败\n");
+        return;
+    }
+    
+    printf("【测试结果】: 创建fork测试进程成功，PID: %d\n", fork_test_pid);
+    
+    // 等待fork测试进程完成
+    int status;
+    int waited_pid = wait_proc(&status);
+    if (waited_pid == fork_test_pid) {
+        printf("【测试结果】: fork测试进程(PID: %d)完成，状态码: %d\n", fork_test_pid, status);
+    } else {
+        printf("【错误】: 等待fork测试进程时出错，等待到PID: %d，期望PID: %d\n", waited_pid, fork_test_pid);
+    }
+    
+    // 第二阶段：多重fork测试
+    printf("\n----- 第二阶段：多重fork测试 -----\n");
+    printf("创建多个fork测试进程以观察并发行为...\n");
+    
+    int fork_test_count = 3;
+    int created_count = 0;
+    
+    for (int i = 0; i < fork_test_count; i++) {
+        int pid = create_user_proc(fork_user_test_bin, fork_user_test_bin_len);
+        if (pid > 0) {
+            created_count++;
+            printf("创建fork测试进程 %d，PID: %d\n", i + 1, pid);
+        } else {
+            printf("【错误】: 创建第 %d 个fork测试进程失败\n", i + 1);
+            break;
+        }
+    }
+    
+    printf("【测试结果】: 成功创建 %d/%d 个fork测试进程\n", created_count, fork_test_count);
+    
+    // 显示fork执行过程中的进程状态
+    printf("\n----- Fork执行过程中的进程状态 -----\n");
+    print_proc_table();
+    
+    // 等待所有fork测试进程完成
+    printf("\n----- 等待所有fork测试进程完成 -----\n");
+    int completed_count = 0;
+    for (int i = 0; i < created_count; i++) {
+        int waited_pid = wait_proc(&status);
+        if (waited_pid > 0) {
+            completed_count++;
+            printf("回收进程 PID: %d，状态码: %d (%d/%d)\n", 
+                   waited_pid, status, completed_count, created_count);
+        } else {
+            printf("【错误】: 等待进程失败，错误码: %d\n", waited_pid);
+        }
+    }
+    
+    printf("【测试结果】: 回收 %d/%d 个fork测试进程\n", completed_count, created_count);
+    
+    // 第三阶段：压力测试 - 快速创建多个fork进程
+    printf("\n----- 第三阶段：Fork压力测试 -----\n");
+    printf("快速创建多个fork进程进行压力测试...\n");
+    
+    int stress_count = 5;
+    int stress_created = 0;
+    
+    for (int i = 0; i < stress_count; i++) {
+        int pid = create_user_proc(fork_user_test_bin, fork_user_test_bin_len);
+        if (pid > 0) {
+            stress_created++;
+        } else {
+            printf("【警告】: 压力测试中第 %d 个进程创建失败\n", i + 1);
+            break;
+        }
+    }
+    
+    printf("【压力测试结果】: 创建 %d/%d 个fork进程\n", stress_created, stress_count);
+    
+    // 显示压力测试过程中的进程状态
+    printf("\n----- 压力测试过程中的进程状态 -----\n");
+    print_proc_table();
+    
+    // 等待压力测试进程完成
+    printf("\n----- 等待压力测试进程完成 -----\n");
+    int stress_completed = 0;
+    for (int i = 0; i < stress_created; i++) {
+        int waited_pid = wait_proc(&status);
+        if (waited_pid > 0) {
+            stress_completed++;
+            if (stress_completed % 2 == 0 || stress_completed == stress_created) {
+                printf("已回收 %d/%d 个压力测试进程\n", stress_completed, stress_created);
+            }
+        }
+    }
+    
+    printf("【压力测试结果】: 回收 %d/%d 个压力测试进程\n", stress_completed, stress_created);
+    
+    // 测试结束后的进程状态
+    printf("\n----- 测试结束后进程状态 -----\n");
+    print_proc_table();
+    
+    // 测试总结
+    printf("\n----- Fork测试总结 -----\n");
+    printf("✓ 基本fork测试: %s\n", (waited_pid == fork_test_pid) ? "通过" : "失败");
+    printf("✓ 多重fork测试: %s (成功率: %d/%d)\n", 
+           (completed_count == created_count) ? "通过" : "部分失败", 
+           completed_count, created_count);
+    printf("✓ 压力测试: %s (成功率: %d/%d)\n", 
+           (stress_completed == stress_created) ? "通过" : "部分失败", 
+           stress_completed, stress_created);
+    
+    printf("===== 测试结束: 用户进程Fork测试 =====\n");
+}
 void cpu_intensive_task(void) {
     uint64 sum = 0;
     for (uint64 i = 0; i < 10000000; i++) {
@@ -283,19 +476,4 @@ void sys_access_task(void) {
     int val = *ptr;
     printf("SYS: read success, value=%d\n", val);
     exit_proc(0);
-}
-
-void test_sys_usr(void) {
-    printf("===== 测试: 用户/系统进程访问内核空间 =====\n");
-    int sys_pid = create_kernel_proc(sys_access_task); // 系统进程
-	printf("创建系统进程：%d成功\n",sys_pid);
-	int status =0;
-	int ret_val = wait_proc(&status); // 等待系统进程
-	printf("系统进程%d退出，退出码为%d\n",ret_val,status);
-    // 创建真正的用户进程，运行 user_test_bin
-    int usr_pid = create_user_proc(min_test_bin, min_test_bin_len);
-    printf("创建用户进程：%d成功\n", usr_pid);
-    ret_val = wait_proc(&status); // 等待用户进程
-    printf("用户进程%d退出，退出码为%d\n", ret_val,status);
-    printf("===== 测试结束 =====\n");
 }

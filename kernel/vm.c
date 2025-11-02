@@ -67,10 +67,12 @@ static pte_t* walk_create(pagetable_t pt, uint64 va) {
 int map_page(pagetable_t pt, uint64 va, uint64 pa, int perm) {
     struct proc *p = myproc();
     // 如果是用户进程，禁止映射内核空间
-    if (p && p->is_user && va >= 0x80000000) {
-        warning("map_page: 用户进程禁止映射内核空间");
-        exit_proc(-1);
-    }
+	if (p && p->is_user && va >= 0x80000000
+		&& va != TRAMPOLINE
+		&& va != TRAPFRAME) {
+		warning("map_page: 用户进程禁止映射内核空间");
+		exit_proc(-1);
+	}
     if ((va % PGSIZE) != 0)
         panic("map_page: va not aligned");
 

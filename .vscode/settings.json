@@ -11,6 +11,10 @@
 		"stdarg.h": "c",
 		"defs.h": "c",
 		"user_test_bin.h": "c",
-		"syscall.h": "c"
+		"syscall.h": "c",
+		"user_progs.h": "c",
+		"min_test.h": "c",
+		"simple_user_task.h": "c",
+		"fork_user_test.h": "c"
 	}
 }

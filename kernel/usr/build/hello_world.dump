@@ -1,0 +1,15 @@
+
+build/hello_world.elf:     file format elf64-littleriscv
+
+
+Disassembly of section .text:
+
+0000000000010000 <main>:
+   10000:	00010537          	lui	a0,0x10
+   10004:	02050513          	addi	a0,a0,32 # 10020 <main+0x20>
+   10008:	4889                	c.li	a7,2
+   1000a:	00000073          	ecall
+   1000e:	4501                	c.li	a0,0
+   10010:	05d00893          	addi	a7,zero,93
+   10014:	00000073          	ecall
+   10018:	a001                	c.j	10018 <main+0x18>

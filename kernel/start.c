@@ -1,14 +1,15 @@
 #include "defs.h"
 
 void hello_world() {
-    printf("\nHello, World! This is a test process.\n\n");
+    create_user_proc(hello_world_bin,hello_world_bin_len);
+	wait_proc(NULL);
 }
 struct CommandEntry command_table[] = {
     {"hello", hello_world, "打印Hello World"},
     {"test_proc", test_process_creation, "进程创建测试"},
     {"test_sche", test_scheduler, "调度器测试"},
     {"test_sync", test_synchronization, "同步性测试"},
-	{"test_sys_usr",test_sys_usr,"用户进程测试"},
+	{"test_fork", test_user_fork, "用户进程Fork测试"},
 };
 #define COMMAND_COUNT (sizeof(command_table)/sizeof(command_table[0]))
 void kernel_main(void);

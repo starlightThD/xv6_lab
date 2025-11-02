@@ -1,6 +1,6 @@
 #define MAXVA (1L << (39))
 
-#define KERNBASE 0x80000000L
+#define KERNBASE 0x80000000UL
 #define PHYSTOP (KERNBASE + 128*1024*1024)
 #define PGSIZE 4096
 #define PLIC        0x0c000000L
@@ -22,4 +22,5 @@
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
 
-#define PA2VA(pa) ((void *)((uint64)(pa) + KERNBASE))
+#define PA2VA(pa) ((void *)(pa))
+#define VA2PA(va) ((uint64)(va))

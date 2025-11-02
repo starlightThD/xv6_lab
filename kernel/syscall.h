@@ -26,9 +26,19 @@ static __attribute__((always_inline)) inline void sys_exit(int status) {
 static __attribute__((always_inline)) inline int sys_fork(void) {
     return do_syscall(SYS_fork, 0);
 }
+static __attribute__((always_inline)) inline int sys_wait(void) {
+    return do_syscall(SYS_wait, 0);
+}
 
 static __attribute__((always_inline)) inline int sys_step(void) {
     return do_syscall(SYS_step, 0);
+}
+static __attribute__((always_inline)) inline int sys_pid(void) {
+    return do_syscall(SYS_pid, 0);
+}
+
+static __attribute__((always_inline)) inline int sys_ppid(void) {
+    return do_syscall(SYS_ppid, 0);
 }
 
 static __attribute__((always_inline)) inline void sys_printint(long x) {

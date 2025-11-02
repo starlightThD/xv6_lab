@@ -1,6 +1,6 @@
 #include "types.h"
 #include "memlayout.h"
-
+#include "./usr/build/user_progs.h"
 // ========================
 // 宏定义
 // ========================
@@ -60,13 +60,16 @@
 #define SSTATUS_SIE (1L << 1)  // Supervisor Interrupt Enable
 
 // proc.h
-#define PROC 64 // 设定64个进程，目前最多达到512个
+#define PROC 32 // 设定32个进程，目前最多达到512个
 
 // syscall.h
 #define SYS_printint   1
 #define SYS_printstr   2
 #define SYS_exit      93
+#define SYS_pid 	 172
+#define SYS_ppid     173
 #define SYS_fork     220
+#define SYS_wait	 221
 #define SYS_step    0xFFF
 // ========================
 // typedef
@@ -317,7 +320,7 @@ void test_exception(void);
 void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
-void test_sys_usr(void);
+void test_user_fork(void);
 // ========================
 // static inline 函数
 // ========================

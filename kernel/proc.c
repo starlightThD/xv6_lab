@@ -35,52 +35,77 @@ struct cpu* mycpu(void) {
 }
 void return_to_user(void) {
     struct proc *p = myproc();
-    if (p == 0) {
-        panic("return_to_user: no current process");
-    }
-    if (p->chan != 0) {
-        p->chan = 0;
-        return;
-    }
+    if (!p) panic("return_to_user: no current process");
+
     if ((uint64)trampoline == 0 || (uint64)userret == 0) {
-        panic("return_to_user: 无效的跳转地址");
+        panic("return_to_user: invalid trampoline addresses");
     }
+
+    // 设置 stvec
     w_stvec(TRAMPOLINE + (uservec - trampoline));
     uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
+
+    // satp 构造（注意要用物理地址）
     uint64 satp = MAKE_SATP(p->pagetable);
 
-	if ((trampoline_userret & ~(PGSIZE - 1)) != TRAMPOLINE) {
-		panic("return_to_user: 跳转地址超出trampoline页范围");
-	}
-    // 用函数指针调用 trampoline_userret
+    if ((trampoline_userret & ~(PGSIZE - 1)) != TRAMPOLINE) {
+        panic("return_to_user: userret outside trampoline page");
+    }
+
+    // ====== 调试输出开始 ======
+    printf("[return_to_user] pid=%d\n", p->pid);
+    printf("[return_to_user] trapframe kva=%p pa=0x%lx TRAPFRAME=0x%lx\n",
+           p->trapframe, VA2PA((uint64)p->trapframe), (uint64)TRAPFRAME);
+
+    // 打印子页表里 TRAPFRAME 的 PTE
+    pte_t *pte_tf = walk_lookup(p->pagetable, TRAPFRAME);
+    if (pte_tf && (*pte_tf & PTE_V)) {
+        printf("[return_to_user] TRAPFRAME PTE=0x%lx pa=0x%lx flags=0x%lx\n",
+               *pte_tf, PTE2PA(*pte_tf), PTE_FLAGS(*pte_tf));
+    } else {
+        printf("[return_to_user] TRAPFRAME not mapped!\n");
+    }
+
+    // 打印子页表里 TRAMPOLINE 的 PTE
+    pte_t *pte_tr = walk_lookup(p->pagetable, TRAMPOLINE);
+    if (pte_tr && (*pte_tr & PTE_V)) {
+        printf("[return_to_user] TRAMPOLINE PTE=0x%lx pa=0x%lx flags=0x%lx\n",
+               *pte_tr, PTE2PA(*pte_tr), PTE_FLAGS(*pte_tr));
+    } else {
+        printf("[return_to_user] TRAMPOLINE not mapped!\n");
+    }
+
+    printf("[return_to_user] satp=0x%lx trampoline_userret=0x%lx\n",
+           satp, trampoline_userret);
+    // ====== 调试输出结束 ======
+
+    // 跳到 trampoline 的 userret
     void (*userret_fn)(uint64, uint64) = (void (*)(uint64, uint64))trampoline_userret;
     userret_fn(TRAPFRAME, satp);
 
-    panic("return_to_user: 不应该返回到这里");
+    panic("return_to_user: should not return");
 }
-void forkret(void){
+
+
+void forkret(void) {
     struct proc *p = myproc();
     if (p == 0) {
         panic("forkret: no current process");
     }
-    
-    // 检查进程是否从睡眠中醒来
-    if (p->chan != 0) {
-        p->chan = 0;  // 清除通道标记
-        return;  // 直接返回，继续执行原来的函数
-    }
-	// 入口点是否设置，直接执行入口函数
-    uint64 entry = p->trapframe->epc;
-	if (p->is_user){
-		return_to_user();
-	}else if (entry != 0) {
-        void (*fn)(void) = (void(*)(void))entry;
-        fn();  // 调用入口函数
-        exit_proc(0);  // 如果入口函数返回，则退出进程
-    } else {
+
+    if (p->is_user) {
+        // 用户进程：直接返回用户态
         return_to_user();
+    } else {
+        // 内核线程：执行入口函数
+        if (p->trapframe->epc) {
+            void (*fn)(void) = (void(*)(void))p->trapframe->epc;
+            fn();
+        }
+        exit_proc(0);  // 内核线程函数返回则退出
     }
 }
+
 
 void init_proc(void){
     for (int i = 0; i < PROC; i++) {
@@ -204,12 +229,12 @@ int create_user_proc(const void *user_bin, int bin_size) {
     if (!page) { free_proc(p); return -1; }
     map_page(p->pagetable, user_entry, (uint64)page, PTE_R | PTE_W | PTE_X | PTE_U);
     memcpy((void*)page, user_bin, bin_size);
-
     // 分配用户栈页
     void *stack_page = alloc_page();
     if (!stack_page) { free_proc(p); return -1; }
     map_page(p->pagetable, user_stack - PGSIZE, (uint64)stack_page, PTE_R | PTE_W | PTE_U);
 
+	p->sz = user_stack; // 用户空间从 0x10000 到 0x20000
 	    // 关键：将 trapframe 映射到 TRAPFRAME 虚拟地址
     if (map_page(p->pagetable, TRAPFRAME, (uint64)p->trapframe, PTE_R | PTE_W) != 0) {
         free_proc(p);
@@ -237,25 +262,57 @@ int create_user_proc(const void *user_bin, int bin_size) {
     p->parent = parent ? parent : NULL;
     return p->pid;
 }
-
 int fork_proc(void) {
     struct proc *parent = myproc();
     struct proc *child = alloc_proc(parent->is_user);
-    if(child == 0)
-        return -1;
+    if (!child) return -1;
 
-    if(uvmcopy(parent->pagetable, child->pagetable, parent->sz) < 0){
+    printf("[fork] parent sz: 0x%lx\n", parent->sz);
+    
+    // 复制父进程的用户空间
+    if (uvmcopy(parent->pagetable, child->pagetable, parent->sz) < 0) {
         free_proc(child);
         return -1;
     }
     child->sz = parent->sz;
 
+    // 获取trapframe的物理地址
+    uint64 tf_pa = (uint64)child->trapframe;
+    
+    if ((tf_pa & (PGSIZE - 1)) != 0) {
+        printf("[fork] trapframe not aligned: 0x%lx\n", tf_pa);
+        free_proc(child);
+        return -1;
+    }
+
+    // 映射trapframe和trampoline
+    if (map_page(child->pagetable, TRAPFRAME, tf_pa, PTE_R | PTE_W) != 0) {
+        printf("[fork] map TRAPFRAME failed\n");
+        free_proc(child);
+        return -1;
+    }
+
+    extern uint64 trampoline_phys_addr;
+    if (map_page(child->pagetable, TRAMPOLINE, trampoline_phys_addr, PTE_R | PTE_X) != 0) {
+        printf("[fork] map TRAMPOLINE failed\n");
+        free_proc(child);
+        return -1;
+    }
+
+    // 复制父trapframe到子trapframe
     *(child->trapframe) = *(parent->trapframe);
-    child->trapframe->a0 = 0; // 子进程fork返回值为0
+	child->trapframe->kernel_sp = child->kstack + PGSIZE;
+	assert(child->trapframe->kernel_satp = MAKE_SATP(kernel_pagetable));
+    child->trapframe->epc += 4;  // 跳过 ecall 指令
+    child->trapframe->a0 = 0;    // 子进程fork返回0
+
+    printf("[fork] child EPC: 0x%lx (should be 0x1000a)\n", child->trapframe->epc);
+
     child->state = RUNNABLE;
     child->parent = parent;
     return child->pid;
 }
+
 
 // 调度器 - 简化版
 void schedule(void) {
@@ -332,26 +389,30 @@ void wakeup(void *chan) {
 }
 void exit_proc(int status) {
     struct proc *p = myproc();
-    p->exit_status = status;
+    
     if (p == 0) {
         panic("exit_proc: no current process");
     }
     
-    // 不parent为NULL的初始进程退出，目前表示为关机
-    if (!p->parent){
-		shutdown();
-	}
+    p->exit_status = status;
     
-    p->state = ZOMBIE;
-    void *chan = (void*)p->parent;
-    if (p->parent->state == SLEEPING && p->parent->chan == chan) {
-        wakeup(chan);
+    // 如果没有父进程的初始进程退出，表示关机
+    if (!p->parent) {
+        shutdown();
     }
+    
+    // 设置为僵尸状态
+    p->state = ZOMBIE;
+    
+    wakeup((void*)p->parent);
+    // 清除当前进程
     current_proc = 0;
     if (mycpu())
         mycpu()->proc = 0;
-        
-    schedule();
+    
+    // 让出CPU给其他进程
+    struct cpu *c = mycpu();
+    swtch(&p->context, &c->context);
     
     panic("exit_proc should not return after schedule");
 }
@@ -390,17 +451,18 @@ int wait_proc(int *status) {
                 *status = zombie_status;
 
             free_proc(zombie_child);
-			zombie_child = NULL;
+            zombie_child = NULL;
             intr_on();
             return zombie_pid;
         }
         
-        // 检查是否有任何子进程
+        // 检查是否有任何活跃的子进程（非ZOMBIE状态）
         int havekids = 0;
         for (int i = 0; i < PROC; i++) {
             struct proc *child = proc_table[i];
-            if (child->state != UNUSED && child->parent == p) {
+            if (child->state != UNUSED && child->state != ZOMBIE && child->parent == p) {
                 havekids = 1;
+                break;
             }
         }
         
@@ -408,21 +470,10 @@ int wait_proc(int *status) {
             intr_on();
             return -1;
         }
-        void *wait_chan = (void*)p;
-		register uint64 ra asm("ra");
-		p->context.ra = ra;
-        p->chan = wait_chan;
-        p->state = SLEEPING;
         
-		struct cpu *c = mycpu();
-		current_proc = 0;
-		c->proc = 0;
-        // 在睡眠前确保中断是开启的
-        intr_on();
-        swtch(&p->context,&c->context);
-        intr_off();
-        p->state = RUNNING;
-        intr_on();
+        // 有活跃子进程但没有僵尸子进程，进入睡眠等待
+		intr_on();
+        sleep((void*)p);
     }
 }
 
