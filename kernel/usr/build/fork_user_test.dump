@@ -5,353 +5,801 @@ build/fork_user_test.elf:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000010000 <main>:
-   10000:	716d                	c.addi16sp	sp,-272
-   10002:	e606                	c.sdsp	ra,264(sp)
-   10004:	4501                	c.li	a0,0
-   10006:	0dc00893          	addi	a7,zero,220
-   1000a:	00000073          	ecall
-   1000e:	0005071b          	addiw	a4,a0,0
-   10012:	c75d                	c.beqz	a4,100c0 <main+0xc0>
-   10014:	00e04f63          	blt	zero,a4,10032 <main+0x32>
-   10018:	00010537          	lui	a0,0x10
-   1001c:	43850513          	addi	a0,a0,1080 # 10438 <usr_build_string_with_two_ints+0x196>
-   10020:	4889                	c.li	a7,2
-   10022:	00000073          	ecall
-   10026:	4501                	c.li	a0,0
-   10028:	05d00893          	addi	a7,zero,93
-   1002c:	00000073          	ecall
-   10030:	a001                	c.j	10030 <main+0x30>
-   10032:	4501                	c.li	a0,0
-   10034:	0ac00893          	addi	a7,zero,172
-   10038:	00000073          	ecall
-   1003c:	000107b7          	lui	a5,0x10
-   10040:	000106b7          	lui	a3,0x10
-   10044:	000105b7          	lui	a1,0x10
-   10048:	0005061b          	addiw	a2,a0,0
-   1004c:	3c078793          	addi	a5,a5,960 # 103c0 <usr_build_string_with_two_ints+0x11e>
-   10050:	850a                	c.mv	a0,sp
-   10052:	3d868693          	addi	a3,a3,984 # 103d8 <usr_build_string_with_two_ints+0x136>
-   10056:	3e858593          	addi	a1,a1,1000 # 103e8 <usr_build_string_with_two_ints+0x146>
-   1005a:	00000097          	auipc	ra,0x0
-   1005e:	248080e7          	jalr	ra,584(ra) # 102a2 <usr_build_string_with_two_ints>
-   10062:	850a                	c.mv	a0,sp
-   10064:	4889                	c.li	a7,2
-   10066:	00000073          	ecall
-   1006a:	00010537          	lui	a0,0x10
-   1006e:	3f850513          	addi	a0,a0,1016 # 103f8 <usr_build_string_with_two_ints+0x156>
-   10072:	00000073          	ecall
-   10076:	4501                	c.li	a0,0
-   10078:	0dd00893          	addi	a7,zero,221
+   10000:	712d                	c.addi16sp	sp,-288
+   10002:	ee06                	c.sdsp	ra,280(sp)
+   10004:	ea22                	c.sdsp	s0,272(sp)
+   10006:	4501                	c.li	a0,0
+   10008:	0ac00893          	addi	a7,zero,172
+   1000c:	00000073          	ecall
+   10010:	0ad00893          	addi	a7,zero,173
+   10014:	0005061b          	addiw	a2,a0,0
+   10018:	4501                	c.li	a0,0
+   1001a:	00000073          	ecall
+   1001e:	00011437          	lui	s0,0x11
+   10022:	000117b7          	lui	a5,0x11
+   10026:	000115b7          	lui	a1,0x11
+   1002a:	0005071b          	addiw	a4,a0,0
+   1002e:	92878793          	addi	a5,a5,-1752 # 10928 <usr_build_string_with_three_ints+0x1a8>
+   10032:	850a                	c.mv	a0,sp
+   10034:	93840693          	addi	a3,s0,-1736 # 10938 <usr_build_string_with_three_ints+0x1b8>
+   10038:	94058593          	addi	a1,a1,-1728 # 10940 <usr_build_string_with_three_ints+0x1c0>
+   1003c:	00000097          	auipc	ra,0x0
+   10040:	626080e7          	jalr	ra,1574(ra) # 10662 <usr_build_string_with_two_ints>
+   10044:	850a                	c.mv	a0,sp
+   10046:	4889                	c.li	a7,2
+   10048:	00000073          	ecall
+   1004c:	4501                	c.li	a0,0
+   1004e:	0dc00893          	addi	a7,zero,220
+   10052:	00000073          	ecall
+   10056:	0005061b          	addiw	a2,a0,0
+   1005a:	c631                	c.beqz	a2,100a6 <main+0xa6>
+   1005c:	02c05863          	bge	zero,a2,1008c <main+0x8c>
+   10060:	4501                	c.li	a0,0
+   10062:	00000073          	ecall
+   10066:	0005071b          	addiw	a4,a0,0
+   1006a:	16070b63          	beq	a4,zero,101e0 <main+0x1e0>
+   1006e:	0ae04e63          	blt	zero,a4,1012a <main+0x12a>
+   10072:	00011537          	lui	a0,0x11
+   10076:	b8050513          	addi	a0,a0,-1152 # 10b80 <usr_build_string_with_three_ints+0x400>
+   1007a:	4889                	c.li	a7,2
    1007c:	00000073          	ecall
-   10080:	0005061b          	addiw	a2,a0,0
-   10084:	00010537          	lui	a0,0x10
-   10088:	40850513          	addi	a0,a0,1032 # 10408 <usr_build_string_with_two_ints+0x166>
-   1008c:	4889                	c.li	a7,2
-   1008e:	00000073          	ecall
-   10092:	000106b7          	lui	a3,0x10
-   10096:	000105b7          	lui	a1,0x10
-   1009a:	850a                	c.mv	a0,sp
-   1009c:	41868693          	addi	a3,a3,1048 # 10418 <usr_build_string_with_two_ints+0x176>
-   100a0:	42858593          	addi	a1,a1,1064 # 10428 <usr_build_string_with_two_ints+0x186>
-   100a4:	00000097          	auipc	ra,0x0
-   100a8:	168080e7          	jalr	ra,360(ra) # 1020c <usr_build_string_with_int>
-   100ac:	850a                	c.mv	a0,sp
-   100ae:	4889                	c.li	a7,2
-   100b0:	00000073          	ecall
-   100b4:	4501                	c.li	a0,0
-   100b6:	05d00893          	addi	a7,zero,93
+   10080:	4501                	c.li	a0,0
+   10082:	05d00893          	addi	a7,zero,93
+   10086:	00000073          	ecall
+   1008a:	a001                	c.j	1008a <main+0x8a>
+   1008c:	00011537          	lui	a0,0x11
+   10090:	ba050513          	addi	a0,a0,-1120 # 10ba0 <usr_build_string_with_three_ints+0x420>
+   10094:	4889                	c.li	a7,2
+   10096:	00000073          	ecall
+   1009a:	4501                	c.li	a0,0
+   1009c:	05d00893          	addi	a7,zero,93
+   100a0:	00000073          	ecall
+   100a4:	a001                	c.j	100a4 <main+0xa4>
+   100a6:	4501                	c.li	a0,0
+   100a8:	0ac00893          	addi	a7,zero,172
+   100ac:	00000073          	ecall
+   100b0:	0ad00893          	addi	a7,zero,173
+   100b4:	0005061b          	addiw	a2,a0,0
+   100b8:	4501                	c.li	a0,0
    100ba:	00000073          	ecall
-   100be:	a001                	c.j	100be <main+0xbe>
-   100c0:	4501                	c.li	a0,0
-   100c2:	0ac00893          	addi	a7,zero,172
-   100c6:	00000073          	ecall
-   100ca:	0ad00893          	addi	a7,zero,173
-   100ce:	0005061b          	addiw	a2,a0,0
-   100d2:	4501                	c.li	a0,0
-   100d4:	00000073          	ecall
-   100d8:	000107b7          	lui	a5,0x10
-   100dc:	000106b7          	lui	a3,0x10
-   100e0:	000105b7          	lui	a1,0x10
-   100e4:	0005071b          	addiw	a4,a0,0
-   100e8:	3c078793          	addi	a5,a5,960 # 103c0 <usr_build_string_with_two_ints+0x11e>
-   100ec:	850a                	c.mv	a0,sp
-   100ee:	3c868693          	addi	a3,a3,968 # 103c8 <usr_build_string_with_two_ints+0x126>
-   100f2:	3d058593          	addi	a1,a1,976 # 103d0 <usr_build_string_with_two_ints+0x12e>
-   100f6:	00000097          	auipc	ra,0x0
-   100fa:	1ac080e7          	jalr	ra,428(ra) # 102a2 <usr_build_string_with_two_ints>
-   100fe:	850a                	c.mv	a0,sp
-   10100:	4889                	c.li	a7,2
-   10102:	00000073          	ecall
-   10106:	4501                	c.li	a0,0
-   10108:	05d00893          	addi	a7,zero,93
-   1010c:	00000073          	ecall
-   10110:	a001                	c.j	10110 <main+0x110>
+   100be:	000117b7          	lui	a5,0x11
+   100c2:	000115b7          	lui	a1,0x11
+   100c6:	0005071b          	addiw	a4,a0,0
+   100ca:	96078793          	addi	a5,a5,-1696 # 10960 <usr_build_string_with_three_ints+0x1e0>
+   100ce:	850a                	c.mv	a0,sp
+   100d0:	93840693          	addi	a3,s0,-1736
+   100d4:	97058593          	addi	a1,a1,-1680 # 10970 <usr_build_string_with_three_ints+0x1f0>
+   100d8:	00000097          	auipc	ra,0x0
+   100dc:	58a080e7          	jalr	ra,1418(ra) # 10662 <usr_build_string_with_two_ints>
+   100e0:	850a                	c.mv	a0,sp
+   100e2:	4889                	c.li	a7,2
+   100e4:	00000073          	ecall
+   100e8:	4501                	c.li	a0,0
+   100ea:	0dc00893          	addi	a7,zero,220
+   100ee:	00000073          	ecall
+   100f2:	0005061b          	addiw	a2,a0,0
+   100f6:	16060563          	beq	a2,zero,10260 <main+0x260>
+   100fa:	0cc05663          	bge	zero,a2,101c6 <main+0x1c6>
+   100fe:	4501                	c.li	a0,0
+   10100:	00000073          	ecall
+   10104:	0005071b          	addiw	a4,a0,0
+   10108:	24070163          	beq	a4,zero,1034a <main+0x34a>
+   1010c:	28e04663          	blt	zero,a4,10398 <main+0x398>
+   10110:	00011537          	lui	a0,0x11
+   10114:	a1850513          	addi	a0,a0,-1512 # 10a18 <usr_build_string_with_three_ints+0x298>
+   10118:	4889                	c.li	a7,2
+   1011a:	00000073          	ecall
+   1011e:	4501                	c.li	a0,0
+   10120:	05d00893          	addi	a7,zero,93
+   10124:	00000073          	ecall
+   10128:	a001                	c.j	10128 <main+0x128>
+   1012a:	000117b7          	lui	a5,0x11
+   1012e:	000116b7          	lui	a3,0x11
+   10132:	000115b7          	lui	a1,0x11
+   10136:	850a                	c.mv	a0,sp
+   10138:	9c878793          	addi	a5,a5,-1592 # 109c8 <usr_build_string_with_three_ints+0x248>
+   1013c:	9d868693          	addi	a3,a3,-1576 # 109d8 <usr_build_string_with_three_ints+0x258>
+   10140:	b2858593          	addi	a1,a1,-1240 # 10b28 <usr_build_string_with_three_ints+0x3a8>
+   10144:	e626                	c.sdsp	s1,264(sp)
+   10146:	00000097          	auipc	ra,0x0
+   1014a:	51c080e7          	jalr	ra,1308(ra) # 10662 <usr_build_string_with_two_ints>
+   1014e:	850a                	c.mv	a0,sp
+   10150:	4889                	c.li	a7,2
+   10152:	00000073          	ecall
+   10156:	4501                	c.li	a0,0
+   10158:	0dd00893          	addi	a7,zero,221
+   1015c:	00000073          	ecall
+   10160:	000114b7          	lui	s1,0x11
+   10164:	00011437          	lui	s0,0x11
+   10168:	0005061b          	addiw	a2,a0,0
+   1016c:	a0848693          	addi	a3,s1,-1528 # 10a08 <usr_build_string_with_three_ints+0x288>
+   10170:	850a                	c.mv	a0,sp
+   10172:	a1040593          	addi	a1,s0,-1520 # 10a10 <usr_build_string_with_three_ints+0x290>
+   10176:	00000097          	auipc	ra,0x0
+   1017a:	456080e7          	jalr	ra,1110(ra) # 105cc <usr_build_string_with_int>
+   1017e:	850a                	c.mv	a0,sp
+   10180:	4889                	c.li	a7,2
+   10182:	00000073          	ecall
+   10186:	4501                	c.li	a0,0
+   10188:	0dd00893          	addi	a7,zero,221
+   1018c:	00000073          	ecall
+   10190:	0005061b          	addiw	a2,a0,0
+   10194:	a0848693          	addi	a3,s1,-1528
+   10198:	850a                	c.mv	a0,sp
+   1019a:	a1040593          	addi	a1,s0,-1520
+   1019e:	00000097          	auipc	ra,0x0
+   101a2:	42e080e7          	jalr	ra,1070(ra) # 105cc <usr_build_string_with_int>
+   101a6:	850a                	c.mv	a0,sp
+   101a8:	4889                	c.li	a7,2
+   101aa:	00000073          	ecall
+   101ae:	00011537          	lui	a0,0x11
+   101b2:	b4850513          	addi	a0,a0,-1208 # 10b48 <usr_build_string_with_three_ints+0x3c8>
+   101b6:	00000073          	ecall
+   101ba:	4501                	c.li	a0,0
+   101bc:	05d00893          	addi	a7,zero,93
+   101c0:	00000073          	ecall
+   101c4:	a001                	c.j	101c4 <main+0x1c4>
+   101c6:	00011537          	lui	a0,0x11
+   101ca:	a4050513          	addi	a0,a0,-1472 # 10a40 <usr_build_string_with_three_ints+0x2c0>
+   101ce:	4889                	c.li	a7,2
+   101d0:	00000073          	ecall
+   101d4:	4501                	c.li	a0,0
+   101d6:	05d00893          	addi	a7,zero,93
+   101da:	00000073          	ecall
+   101de:	a001                	c.j	101de <main+0x1de>
+   101e0:	4501                	c.li	a0,0
+   101e2:	0ac00893          	addi	a7,zero,172
+   101e6:	00000073          	ecall
+   101ea:	0ad00893          	addi	a7,zero,173
+   101ee:	0005061b          	addiw	a2,a0,0
+   101f2:	4501                	c.li	a0,0
+   101f4:	00000073          	ecall
+   101f8:	000117b7          	lui	a5,0x11
+   101fc:	000115b7          	lui	a1,0x11
+   10200:	0005071b          	addiw	a4,a0,0
+   10204:	96078793          	addi	a5,a5,-1696 # 10960 <usr_build_string_with_three_ints+0x1e0>
+   10208:	850a                	c.mv	a0,sp
+   1020a:	93840693          	addi	a3,s0,-1736
+   1020e:	a6858593          	addi	a1,a1,-1432 # 10a68 <usr_build_string_with_three_ints+0x2e8>
+   10212:	00000097          	auipc	ra,0x0
+   10216:	450080e7          	jalr	ra,1104(ra) # 10662 <usr_build_string_with_two_ints>
+   1021a:	850a                	c.mv	a0,sp
+   1021c:	4889                	c.li	a7,2
+   1021e:	00000073          	ecall
+   10222:	4501                	c.li	a0,0
+   10224:	0dc00893          	addi	a7,zero,220
+   10228:	00000073          	ecall
+   1022c:	0005061b          	addiw	a2,a0,0
+   10230:	c671                	c.beqz	a2,102fc <main+0x2fc>
+   10232:	1ec05b63          	bge	zero,a2,10428 <main+0x428>
+   10236:	4501                	c.li	a0,0
+   10238:	00000073          	ecall
+   1023c:	0005071b          	addiw	a4,a0,0
+   10240:	c73d                	c.beqz	a4,102ae <main+0x2ae>
+   10242:	20e04063          	blt	zero,a4,10442 <main+0x442>
+   10246:	00011537          	lui	a0,0x11
+   1024a:	ad850513          	addi	a0,a0,-1320 # 10ad8 <usr_build_string_with_three_ints+0x358>
+   1024e:	4889                	c.li	a7,2
+   10250:	00000073          	ecall
+   10254:	4501                	c.li	a0,0
+   10256:	05d00893          	addi	a7,zero,93
+   1025a:	00000073          	ecall
+   1025e:	a001                	c.j	1025e <main+0x25e>
+   10260:	4501                	c.li	a0,0
+   10262:	0ac00893          	addi	a7,zero,172
+   10266:	00000073          	ecall
+   1026a:	0ad00893          	addi	a7,zero,173
+   1026e:	0005061b          	addiw	a2,a0,0
+   10272:	4501                	c.li	a0,0
+   10274:	00000073          	ecall
+   10278:	000117b7          	lui	a5,0x11
+   1027c:	000115b7          	lui	a1,0x11
+   10280:	0005071b          	addiw	a4,a0,0
+   10284:	98878793          	addi	a5,a5,-1656 # 10988 <usr_build_string_with_three_ints+0x208>
+   10288:	850a                	c.mv	a0,sp
+   1028a:	93840693          	addi	a3,s0,-1736
+   1028e:	99858593          	addi	a1,a1,-1640 # 10998 <usr_build_string_with_three_ints+0x218>
+   10292:	00000097          	auipc	ra,0x0
+   10296:	3d0080e7          	jalr	ra,976(ra) # 10662 <usr_build_string_with_two_ints>
+   1029a:	850a                	c.mv	a0,sp
+   1029c:	4889                	c.li	a7,2
+   1029e:	00000073          	ecall
+   102a2:	4501                	c.li	a0,0
+   102a4:	05d00893          	addi	a7,zero,93
+   102a8:	00000073          	ecall
+   102ac:	a001                	c.j	102ac <main+0x2ac>
+   102ae:	4501                	c.li	a0,0
+   102b0:	0ac00893          	addi	a7,zero,172
+   102b4:	00000073          	ecall
+   102b8:	0ad00893          	addi	a7,zero,173
+   102bc:	0005061b          	addiw	a2,a0,0
+   102c0:	4501                	c.li	a0,0
+   102c2:	00000073          	ecall
+   102c6:	000117b7          	lui	a5,0x11
+   102ca:	000115b7          	lui	a1,0x11
+   102ce:	0005071b          	addiw	a4,a0,0
+   102d2:	98878793          	addi	a5,a5,-1656 # 10988 <usr_build_string_with_three_ints+0x208>
+   102d6:	850a                	c.mv	a0,sp
+   102d8:	93840693          	addi	a3,s0,-1736
+   102dc:	a9858593          	addi	a1,a1,-1384 # 10a98 <usr_build_string_with_three_ints+0x318>
+   102e0:	00000097          	auipc	ra,0x0
+   102e4:	382080e7          	jalr	ra,898(ra) # 10662 <usr_build_string_with_two_ints>
+   102e8:	850a                	c.mv	a0,sp
+   102ea:	4889                	c.li	a7,2
+   102ec:	00000073          	ecall
+   102f0:	4501                	c.li	a0,0
+   102f2:	05d00893          	addi	a7,zero,93
+   102f6:	00000073          	ecall
+   102fa:	a001                	c.j	102fa <main+0x2fa>
+   102fc:	4501                	c.li	a0,0
+   102fe:	0ac00893          	addi	a7,zero,172
+   10302:	00000073          	ecall
+   10306:	0ad00893          	addi	a7,zero,173
+   1030a:	0005061b          	addiw	a2,a0,0
+   1030e:	4501                	c.li	a0,0
+   10310:	00000073          	ecall
+   10314:	000117b7          	lui	a5,0x11
+   10318:	000115b7          	lui	a1,0x11
+   1031c:	0005071b          	addiw	a4,a0,0
+   10320:	98878793          	addi	a5,a5,-1656 # 10988 <usr_build_string_with_three_ints+0x208>
+   10324:	850a                	c.mv	a0,sp
+   10326:	93840693          	addi	a3,s0,-1736
+   1032a:	a8058593          	addi	a1,a1,-1408 # 10a80 <usr_build_string_with_three_ints+0x300>
+   1032e:	00000097          	auipc	ra,0x0
+   10332:	334080e7          	jalr	ra,820(ra) # 10662 <usr_build_string_with_two_ints>
+   10336:	850a                	c.mv	a0,sp
+   10338:	4889                	c.li	a7,2
+   1033a:	00000073          	ecall
+   1033e:	4501                	c.li	a0,0
+   10340:	05d00893          	addi	a7,zero,93
+   10344:	00000073          	ecall
+   10348:	a001                	c.j	10348 <main+0x348>
+   1034a:	4501                	c.li	a0,0
+   1034c:	0ac00893          	addi	a7,zero,172
+   10350:	00000073          	ecall
+   10354:	0ad00893          	addi	a7,zero,173
+   10358:	0005061b          	addiw	a2,a0,0
+   1035c:	4501                	c.li	a0,0
+   1035e:	00000073          	ecall
+   10362:	000117b7          	lui	a5,0x11
+   10366:	000115b7          	lui	a1,0x11
+   1036a:	0005071b          	addiw	a4,a0,0
+   1036e:	98878793          	addi	a5,a5,-1656 # 10988 <usr_build_string_with_three_ints+0x208>
+   10372:	850a                	c.mv	a0,sp
+   10374:	93840693          	addi	a3,s0,-1736
+   10378:	9b058593          	addi	a1,a1,-1616 # 109b0 <usr_build_string_with_three_ints+0x230>
+   1037c:	00000097          	auipc	ra,0x0
+   10380:	2e6080e7          	jalr	ra,742(ra) # 10662 <usr_build_string_with_two_ints>
+   10384:	850a                	c.mv	a0,sp
+   10386:	4889                	c.li	a7,2
+   10388:	00000073          	ecall
+   1038c:	4501                	c.li	a0,0
+   1038e:	05d00893          	addi	a7,zero,93
+   10392:	00000073          	ecall
+   10396:	a001                	c.j	10396 <main+0x396>
+   10398:	000117b7          	lui	a5,0x11
+   1039c:	000116b7          	lui	a3,0x11
+   103a0:	000115b7          	lui	a1,0x11
+   103a4:	850a                	c.mv	a0,sp
+   103a6:	9c878793          	addi	a5,a5,-1592 # 109c8 <usr_build_string_with_three_ints+0x248>
+   103aa:	9d868693          	addi	a3,a3,-1576 # 109d8 <usr_build_string_with_three_ints+0x258>
+   103ae:	9e058593          	addi	a1,a1,-1568 # 109e0 <usr_build_string_with_three_ints+0x260>
+   103b2:	e626                	c.sdsp	s1,264(sp)
+   103b4:	00000097          	auipc	ra,0x0
+   103b8:	2ae080e7          	jalr	ra,686(ra) # 10662 <usr_build_string_with_two_ints>
+   103bc:	850a                	c.mv	a0,sp
+   103be:	4889                	c.li	a7,2
+   103c0:	00000073          	ecall
+   103c4:	4501                	c.li	a0,0
+   103c6:	0dd00893          	addi	a7,zero,221
+   103ca:	00000073          	ecall
+   103ce:	000114b7          	lui	s1,0x11
+   103d2:	00011437          	lui	s0,0x11
+   103d6:	0005061b          	addiw	a2,a0,0
+   103da:	a0848693          	addi	a3,s1,-1528 # 10a08 <usr_build_string_with_three_ints+0x288>
+   103de:	850a                	c.mv	a0,sp
+   103e0:	a1040593          	addi	a1,s0,-1520 # 10a10 <usr_build_string_with_three_ints+0x290>
+   103e4:	00000097          	auipc	ra,0x0
+   103e8:	1e8080e7          	jalr	ra,488(ra) # 105cc <usr_build_string_with_int>
+   103ec:	850a                	c.mv	a0,sp
+   103ee:	4889                	c.li	a7,2
+   103f0:	00000073          	ecall
+   103f4:	4501                	c.li	a0,0
+   103f6:	0dd00893          	addi	a7,zero,221
+   103fa:	00000073          	ecall
+   103fe:	0005061b          	addiw	a2,a0,0
+   10402:	a0848693          	addi	a3,s1,-1528
+   10406:	850a                	c.mv	a0,sp
+   10408:	a1040593          	addi	a1,s0,-1520
+   1040c:	00000097          	auipc	ra,0x0
+   10410:	1c0080e7          	jalr	ra,448(ra) # 105cc <usr_build_string_with_int>
+   10414:	850a                	c.mv	a0,sp
+   10416:	4889                	c.li	a7,2
+   10418:	00000073          	ecall
+   1041c:	4501                	c.li	a0,0
+   1041e:	05d00893          	addi	a7,zero,93
+   10422:	00000073          	ecall
+   10426:	a001                	c.j	10426 <main+0x426>
+   10428:	00011537          	lui	a0,0x11
+   1042c:	b0050513          	addi	a0,a0,-1280 # 10b00 <usr_build_string_with_three_ints+0x380>
+   10430:	4889                	c.li	a7,2
+   10432:	00000073          	ecall
+   10436:	4501                	c.li	a0,0
+   10438:	05d00893          	addi	a7,zero,93
+   1043c:	00000073          	ecall
+   10440:	a001                	c.j	10440 <main+0x440>
+   10442:	000117b7          	lui	a5,0x11
+   10446:	000116b7          	lui	a3,0x11
+   1044a:	000115b7          	lui	a1,0x11
+   1044e:	850a                	c.mv	a0,sp
+   10450:	9c878793          	addi	a5,a5,-1592 # 109c8 <usr_build_string_with_three_ints+0x248>
+   10454:	9d868693          	addi	a3,a3,-1576 # 109d8 <usr_build_string_with_three_ints+0x258>
+   10458:	ab058593          	addi	a1,a1,-1360 # 10ab0 <usr_build_string_with_three_ints+0x330>
+   1045c:	e626                	c.sdsp	s1,264(sp)
+   1045e:	00000097          	auipc	ra,0x0
+   10462:	204080e7          	jalr	ra,516(ra) # 10662 <usr_build_string_with_two_ints>
+   10466:	850a                	c.mv	a0,sp
+   10468:	4889                	c.li	a7,2
+   1046a:	00000073          	ecall
+   1046e:	4501                	c.li	a0,0
+   10470:	0dd00893          	addi	a7,zero,221
+   10474:	00000073          	ecall
+   10478:	000114b7          	lui	s1,0x11
+   1047c:	00011437          	lui	s0,0x11
+   10480:	0005061b          	addiw	a2,a0,0
+   10484:	a0848693          	addi	a3,s1,-1528 # 10a08 <usr_build_string_with_three_ints+0x288>
+   10488:	850a                	c.mv	a0,sp
+   1048a:	a1040593          	addi	a1,s0,-1520 # 10a10 <usr_build_string_with_three_ints+0x290>
+   1048e:	00000097          	auipc	ra,0x0
+   10492:	13e080e7          	jalr	ra,318(ra) # 105cc <usr_build_string_with_int>
+   10496:	850a                	c.mv	a0,sp
+   10498:	4889                	c.li	a7,2
+   1049a:	00000073          	ecall
+   1049e:	4501                	c.li	a0,0
+   104a0:	0dd00893          	addi	a7,zero,221
+   104a4:	00000073          	ecall
+   104a8:	0005061b          	addiw	a2,a0,0
+   104ac:	a0848693          	addi	a3,s1,-1528
+   104b0:	850a                	c.mv	a0,sp
+   104b2:	a1040593          	addi	a1,s0,-1520
+   104b6:	00000097          	auipc	ra,0x0
+   104ba:	116080e7          	jalr	ra,278(ra) # 105cc <usr_build_string_with_int>
+   104be:	850a                	c.mv	a0,sp
+   104c0:	4889                	c.li	a7,2
+   104c2:	00000073          	ecall
+   104c6:	4501                	c.li	a0,0
+   104c8:	05d00893          	addi	a7,zero,93
+   104cc:	00000073          	ecall
+   104d0:	a001                	c.j	104d0 <main+0x4d0>
 
-0000000000010112 <usr_itoa.part.0>:
-   10112:	08054363          	blt	a0,zero,10198 <usr_itoa.part.0+0x86>
-   10116:	4e01                	c.li	t3,0
-   10118:	cd2d                	c.beqz	a0,10192 <usr_itoa.part.0+0x80>
-   1011a:	872e                	c.mv	a4,a1
-   1011c:	862e                	c.mv	a2,a1
-   1011e:	4781                	c.li	a5,0
-   10120:	4829                	c.li	a6,10
-   10122:	030566bb          	remw	a3,a0,a6
-   10126:	0605                	c.addi	a2,1
-   10128:	0017889b          	addiw	a7,a5,1
-   1012c:	833e                	c.mv	t1,a5
-   1012e:	0008879b          	addiw	a5,a7,0
-   10132:	0305453b          	divw	a0,a0,a6
-   10136:	0306869b          	addiw	a3,a3,48
-   1013a:	fed60fa3          	sb	a3,-1(a2)
-   1013e:	f175                	c.bnez	a0,10122 <usr_itoa.part.0+0x10>
-   10140:	040e0063          	beq	t3,zero,10180 <usr_itoa.part.0+0x6e>
-   10144:	0023069b          	addiw	a3,t1,2
-   10148:	97ae                	c.add	a5,a1
-   1014a:	02d00613          	addi	a2,zero,45
-   1014e:	00c78023          	sb	a2,0(a5)
-   10152:	00d587b3          	add	a5,a1,a3
-   10156:	00078023          	sb	zero,0(a5)
-   1015a:	4016d31b          	sraiw	t1,a3,0x1
-   1015e:	87b6                	c.mv	a5,a3
-   10160:	37fd                	c.addiw	a5,-1
-   10162:	97ae                	c.add	a5,a1
-   10164:	959a                	c.add	a1,t1
-   10166:	0007c603          	lbu	a2,0(a5)
-   1016a:	00074683          	lbu	a3,0(a4)
-   1016e:	0705                	c.addi	a4,1
-   10170:	17fd                	c.addi	a5,-1
-   10172:	fec70fa3          	sb	a2,-1(a4)
-   10176:	00d780a3          	sb	a3,1(a5)
-   1017a:	fee596e3          	bne	a1,a4,10166 <usr_itoa.part.0+0x54>
-   1017e:	8082                	c.jr	ra
-   10180:	00f586b3          	add	a3,a1,a5
-   10184:	00068023          	sb	zero,0(a3)
-   10188:	4018d31b          	sraiw	t1,a7,0x1
-   1018c:	fc031ae3          	bne	t1,zero,10160 <usr_itoa.part.0+0x4e>
-   10190:	8082                	c.jr	ra
-   10192:	00058023          	sb	zero,0(a1)
-   10196:	8082                	c.jr	ra
-   10198:	40a0053b          	subw	a0,zero,a0
-   1019c:	4e05                	c.li	t3,1
-   1019e:	bfb5                	c.j	1011a <usr_itoa.part.0+0x8>
+00000000000104d2 <usr_itoa.part.0>:
+   104d2:	08054363          	blt	a0,zero,10558 <usr_itoa.part.0+0x86>
+   104d6:	4e01                	c.li	t3,0
+   104d8:	cd2d                	c.beqz	a0,10552 <usr_itoa.part.0+0x80>
+   104da:	872e                	c.mv	a4,a1
+   104dc:	862e                	c.mv	a2,a1
+   104de:	4781                	c.li	a5,0
+   104e0:	4829                	c.li	a6,10
+   104e2:	030566bb          	remw	a3,a0,a6
+   104e6:	0605                	c.addi	a2,1
+   104e8:	0017889b          	addiw	a7,a5,1
+   104ec:	833e                	c.mv	t1,a5
+   104ee:	0008879b          	addiw	a5,a7,0
+   104f2:	0305453b          	divw	a0,a0,a6
+   104f6:	0306869b          	addiw	a3,a3,48
+   104fa:	fed60fa3          	sb	a3,-1(a2)
+   104fe:	f175                	c.bnez	a0,104e2 <usr_itoa.part.0+0x10>
+   10500:	040e0063          	beq	t3,zero,10540 <usr_itoa.part.0+0x6e>
+   10504:	0023069b          	addiw	a3,t1,2
+   10508:	97ae                	c.add	a5,a1
+   1050a:	02d00613          	addi	a2,zero,45
+   1050e:	00c78023          	sb	a2,0(a5)
+   10512:	00d587b3          	add	a5,a1,a3
+   10516:	00078023          	sb	zero,0(a5)
+   1051a:	4016d31b          	sraiw	t1,a3,0x1
+   1051e:	87b6                	c.mv	a5,a3
+   10520:	37fd                	c.addiw	a5,-1
+   10522:	97ae                	c.add	a5,a1
+   10524:	959a                	c.add	a1,t1
+   10526:	0007c603          	lbu	a2,0(a5)
+   1052a:	00074683          	lbu	a3,0(a4)
+   1052e:	0705                	c.addi	a4,1
+   10530:	17fd                	c.addi	a5,-1
+   10532:	fec70fa3          	sb	a2,-1(a4)
+   10536:	00d780a3          	sb	a3,1(a5)
+   1053a:	fee596e3          	bne	a1,a4,10526 <usr_itoa.part.0+0x54>
+   1053e:	8082                	c.jr	ra
+   10540:	00f586b3          	add	a3,a1,a5
+   10544:	00068023          	sb	zero,0(a3)
+   10548:	4018d31b          	sraiw	t1,a7,0x1
+   1054c:	fc031ae3          	bne	t1,zero,10520 <usr_itoa.part.0+0x4e>
+   10550:	8082                	c.jr	ra
+   10552:	00058023          	sb	zero,0(a1)
+   10556:	8082                	c.jr	ra
+   10558:	40a0053b          	subw	a0,zero,a0
+   1055c:	4e05                	c.li	t3,1
+   1055e:	bfb5                	c.j	104da <usr_itoa.part.0+0x8>
 
-00000000000101a0 <usr_strlen>:
-   101a0:	00054783          	lbu	a5,0(a0)
-   101a4:	cf81                	c.beqz	a5,101bc <usr_strlen+0x1c>
-   101a6:	0505                	c.addi	a0,1
-   101a8:	87aa                	c.mv	a5,a0
-   101aa:	0007c703          	lbu	a4,0(a5)
-   101ae:	86be                	c.mv	a3,a5
-   101b0:	0785                	c.addi	a5,1
-   101b2:	ff65                	c.bnez	a4,101aa <usr_strlen+0xa>
-   101b4:	40a6853b          	subw	a0,a3,a0
-   101b8:	2505                	c.addiw	a0,1
-   101ba:	8082                	c.jr	ra
-   101bc:	4501                	c.li	a0,0
-   101be:	8082                	c.jr	ra
+0000000000010560 <usr_strlen>:
+   10560:	00054783          	lbu	a5,0(a0)
+   10564:	cf81                	c.beqz	a5,1057c <usr_strlen+0x1c>
+   10566:	0505                	c.addi	a0,1
+   10568:	87aa                	c.mv	a5,a0
+   1056a:	0007c703          	lbu	a4,0(a5)
+   1056e:	86be                	c.mv	a3,a5
+   10570:	0785                	c.addi	a5,1
+   10572:	ff65                	c.bnez	a4,1056a <usr_strlen+0xa>
+   10574:	40a6853b          	subw	a0,a3,a0
+   10578:	2505                	c.addiw	a0,1
+   1057a:	8082                	c.jr	ra
+   1057c:	4501                	c.li	a0,0
+   1057e:	8082                	c.jr	ra
 
-00000000000101c0 <usr_strcpy>:
-   101c0:	0005c783          	lbu	a5,0(a1)
-   101c4:	0505                	c.addi	a0,1
-   101c6:	0585                	c.addi	a1,1
-   101c8:	fef50fa3          	sb	a5,-1(a0)
-   101cc:	fbf5                	c.bnez	a5,101c0 <usr_strcpy>
-   101ce:	8082                	c.jr	ra
+0000000000010580 <usr_strcpy>:
+   10580:	0005c783          	lbu	a5,0(a1)
+   10584:	0505                	c.addi	a0,1
+   10586:	0585                	c.addi	a1,1
+   10588:	fef50fa3          	sb	a5,-1(a0)
+   1058c:	fbf5                	c.bnez	a5,10580 <usr_strcpy>
+   1058e:	8082                	c.jr	ra
 
-00000000000101d0 <usr_strcat>:
-   101d0:	00054783          	lbu	a5,0(a0)
-   101d4:	cb81                	c.beqz	a5,101e4 <usr_strcat+0x14>
-   101d6:	00150793          	addi	a5,a0,1
-   101da:	0007c703          	lbu	a4,0(a5)
-   101de:	853e                	c.mv	a0,a5
-   101e0:	0785                	c.addi	a5,1
-   101e2:	ff65                	c.bnez	a4,101da <usr_strcat+0xa>
-   101e4:	0005c783          	lbu	a5,0(a1)
-   101e8:	0505                	c.addi	a0,1
-   101ea:	0585                	c.addi	a1,1
-   101ec:	fef50fa3          	sb	a5,-1(a0)
-   101f0:	fbf5                	c.bnez	a5,101e4 <usr_strcat+0x14>
-   101f2:	8082                	c.jr	ra
+0000000000010590 <usr_strcat>:
+   10590:	00054783          	lbu	a5,0(a0)
+   10594:	cb81                	c.beqz	a5,105a4 <usr_strcat+0x14>
+   10596:	00150793          	addi	a5,a0,1
+   1059a:	0007c703          	lbu	a4,0(a5)
+   1059e:	853e                	c.mv	a0,a5
+   105a0:	0785                	c.addi	a5,1
+   105a2:	ff65                	c.bnez	a4,1059a <usr_strcat+0xa>
+   105a4:	0005c783          	lbu	a5,0(a1)
+   105a8:	0505                	c.addi	a0,1
+   105aa:	0585                	c.addi	a1,1
+   105ac:	fef50fa3          	sb	a5,-1(a0)
+   105b0:	fbf5                	c.bnez	a5,105a4 <usr_strcat+0x14>
+   105b2:	8082                	c.jr	ra
 
-00000000000101f4 <usr_itoa>:
-   101f4:	c509                	c.beqz	a0,101fe <usr_itoa+0xa>
-   101f6:	00000317          	auipc	t1,0x0
-   101fa:	f1c30067          	jalr	zero,-228(t1) # 10112 <usr_itoa.part.0>
-   101fe:	03000713          	addi	a4,zero,48
-   10202:	00e58023          	sb	a4,0(a1)
-   10206:	000580a3          	sb	zero,1(a1)
-   1020a:	8082                	c.jr	ra
+00000000000105b4 <usr_itoa>:
+   105b4:	c509                	c.beqz	a0,105be <usr_itoa+0xa>
+   105b6:	00000317          	auipc	t1,0x0
+   105ba:	f1c30067          	jalr	zero,-228(t1) # 104d2 <usr_itoa.part.0>
+   105be:	03000713          	addi	a4,zero,48
+   105c2:	00e58023          	sb	a4,0(a1)
+   105c6:	000580a3          	sb	zero,1(a1)
+   105ca:	8082                	c.jr	ra
 
-000000000001020c <usr_build_string_with_int>:
-   1020c:	715d                	c.addi16sp	sp,-80
-   1020e:	fc26                	c.sdsp	s1,56(sp)
-   10210:	f84a                	c.sdsp	s2,48(sp)
-   10212:	f44e                	c.sdsp	s3,40(sp)
-   10214:	e486                	c.sdsp	ra,72(sp)
-   10216:	e0a2                	c.sdsp	s0,64(sp)
-   10218:	89aa                	c.mv	s3,a0
-   1021a:	892e                	c.mv	s2,a1
-   1021c:	84b6                	c.mv	s1,a3
-   1021e:	ca25                	c.beqz	a2,1028e <usr_build_string_with_int+0x82>
-   10220:	840a                	c.mv	s0,sp
-   10222:	8532                	c.mv	a0,a2
-   10224:	85a2                	c.mv	a1,s0
-   10226:	00000097          	auipc	ra,0x0
-   1022a:	eec080e7          	jalr	ra,-276(ra) # 10112 <usr_itoa.part.0>
-   1022e:	87ce                	c.mv	a5,s3
-   10230:	00094703          	lbu	a4,0(s2)
-   10234:	0785                	c.addi	a5,1
-   10236:	0905                	c.addi	s2,1
-   10238:	fee78fa3          	sb	a4,-1(a5)
-   1023c:	fb75                	c.bnez	a4,10230 <usr_build_string_with_int+0x24>
-   1023e:	0009c783          	lbu	a5,0(s3)
-   10242:	cfa1                	c.beqz	a5,1029a <usr_build_string_with_int+0x8e>
-   10244:	00198793          	addi	a5,s3,1
-   10248:	863e                	c.mv	a2,a5
-   1024a:	00064683          	lbu	a3,0(a2)
-   1024e:	8732                	c.mv	a4,a2
-   10250:	0605                	c.addi	a2,1
-   10252:	fee5                	c.bnez	a3,1024a <usr_build_string_with_int+0x3e>
-   10254:	85a2                	c.mv	a1,s0
-   10256:	0005c683          	lbu	a3,0(a1)
-   1025a:	0705                	c.addi	a4,1
-   1025c:	0585                	c.addi	a1,1
-   1025e:	fed70fa3          	sb	a3,-1(a4)
-   10262:	faf5                	c.bnez	a3,10256 <usr_build_string_with_int+0x4a>
-   10264:	0009c703          	lbu	a4,0(s3)
-   10268:	c709                	c.beqz	a4,10272 <usr_build_string_with_int+0x66>
-   1026a:	0007c703          	lbu	a4,0(a5)
-   1026e:	0785                	c.addi	a5,1
-   10270:	ff6d                	c.bnez	a4,1026a <usr_build_string_with_int+0x5e>
-   10272:	0004c703          	lbu	a4,0(s1)
-   10276:	0785                	c.addi	a5,1
-   10278:	0485                	c.addi	s1,1
-   1027a:	fee78f23          	sb	a4,-2(a5)
-   1027e:	fb75                	c.bnez	a4,10272 <usr_build_string_with_int+0x66>
-   10280:	60a6                	c.ldsp	ra,72(sp)
-   10282:	6406                	c.ldsp	s0,64(sp)
-   10284:	74e2                	c.ldsp	s1,56(sp)
-   10286:	7942                	c.ldsp	s2,48(sp)
-   10288:	79a2                	c.ldsp	s3,40(sp)
-   1028a:	6161                	c.addi16sp	sp,80
-   1028c:	8082                	c.jr	ra
-   1028e:	03000793          	addi	a5,zero,48
-   10292:	00f11023          	sh	a5,0(sp)
-   10296:	840a                	c.mv	s0,sp
-   10298:	bf59                	c.j	1022e <usr_build_string_with_int+0x22>
-   1029a:	874e                	c.mv	a4,s3
-   1029c:	00198793          	addi	a5,s3,1
-   102a0:	bf55                	c.j	10254 <usr_build_string_with_int+0x48>
+00000000000105cc <usr_build_string_with_int>:
+   105cc:	715d                	c.addi16sp	sp,-80
+   105ce:	fc26                	c.sdsp	s1,56(sp)
+   105d0:	f84a                	c.sdsp	s2,48(sp)
+   105d2:	f44e                	c.sdsp	s3,40(sp)
+   105d4:	e486                	c.sdsp	ra,72(sp)
+   105d6:	e0a2                	c.sdsp	s0,64(sp)
+   105d8:	89aa                	c.mv	s3,a0
+   105da:	892e                	c.mv	s2,a1
+   105dc:	84b6                	c.mv	s1,a3
+   105de:	ca25                	c.beqz	a2,1064e <usr_build_string_with_int+0x82>
+   105e0:	840a                	c.mv	s0,sp
+   105e2:	8532                	c.mv	a0,a2
+   105e4:	85a2                	c.mv	a1,s0
+   105e6:	00000097          	auipc	ra,0x0
+   105ea:	eec080e7          	jalr	ra,-276(ra) # 104d2 <usr_itoa.part.0>
+   105ee:	87ce                	c.mv	a5,s3
+   105f0:	00094703          	lbu	a4,0(s2)
+   105f4:	0785                	c.addi	a5,1
+   105f6:	0905                	c.addi	s2,1
+   105f8:	fee78fa3          	sb	a4,-1(a5)
+   105fc:	fb75                	c.bnez	a4,105f0 <usr_build_string_with_int+0x24>
+   105fe:	0009c783          	lbu	a5,0(s3)
+   10602:	cfa1                	c.beqz	a5,1065a <usr_build_string_with_int+0x8e>
+   10604:	00198793          	addi	a5,s3,1
+   10608:	863e                	c.mv	a2,a5
+   1060a:	00064683          	lbu	a3,0(a2)
+   1060e:	8732                	c.mv	a4,a2
+   10610:	0605                	c.addi	a2,1
+   10612:	fee5                	c.bnez	a3,1060a <usr_build_string_with_int+0x3e>
+   10614:	85a2                	c.mv	a1,s0
+   10616:	0005c683          	lbu	a3,0(a1)
+   1061a:	0705                	c.addi	a4,1
+   1061c:	0585                	c.addi	a1,1
+   1061e:	fed70fa3          	sb	a3,-1(a4)
+   10622:	faf5                	c.bnez	a3,10616 <usr_build_string_with_int+0x4a>
+   10624:	0009c703          	lbu	a4,0(s3)
+   10628:	c709                	c.beqz	a4,10632 <usr_build_string_with_int+0x66>
+   1062a:	0007c703          	lbu	a4,0(a5)
+   1062e:	0785                	c.addi	a5,1
+   10630:	ff6d                	c.bnez	a4,1062a <usr_build_string_with_int+0x5e>
+   10632:	0004c703          	lbu	a4,0(s1)
+   10636:	0785                	c.addi	a5,1
+   10638:	0485                	c.addi	s1,1
+   1063a:	fee78f23          	sb	a4,-2(a5)
+   1063e:	fb75                	c.bnez	a4,10632 <usr_build_string_with_int+0x66>
+   10640:	60a6                	c.ldsp	ra,72(sp)
+   10642:	6406                	c.ldsp	s0,64(sp)
+   10644:	74e2                	c.ldsp	s1,56(sp)
+   10646:	7942                	c.ldsp	s2,48(sp)
+   10648:	79a2                	c.ldsp	s3,40(sp)
+   1064a:	6161                	c.addi16sp	sp,80
+   1064c:	8082                	c.jr	ra
+   1064e:	03000793          	addi	a5,zero,48
+   10652:	00f11023          	sh	a5,0(sp)
+   10656:	840a                	c.mv	s0,sp
+   10658:	bf59                	c.j	105ee <usr_build_string_with_int+0x22>
+   1065a:	874e                	c.mv	a4,s3
+   1065c:	00198793          	addi	a5,s3,1
+   10660:	bf55                	c.j	10614 <usr_build_string_with_int+0x48>
 
-00000000000102a2 <usr_build_string_with_two_ints>:
-   102a2:	7119                	c.addi16sp	sp,-128
-   102a4:	f0ca                	c.sdsp	s2,96(sp)
-   102a6:	ecce                	c.sdsp	s3,88(sp)
-   102a8:	e8d2                	c.sdsp	s4,80(sp)
-   102aa:	e4d6                	c.sdsp	s5,72(sp)
-   102ac:	e0da                	c.sdsp	s6,64(sp)
-   102ae:	fc86                	c.sdsp	ra,120(sp)
-   102b0:	f8a2                	c.sdsp	s0,112(sp)
-   102b2:	f4a6                	c.sdsp	s1,104(sp)
-   102b4:	8aaa                	c.mv	s5,a0
-   102b6:	8a2e                	c.mv	s4,a1
-   102b8:	89b6                	c.mv	s3,a3
-   102ba:	8b3a                	c.mv	s6,a4
-   102bc:	893e                	c.mv	s2,a5
-   102be:	c669                	c.beqz	a2,10388 <usr_build_string_with_two_ints+0xe6>
-   102c0:	848a                	c.mv	s1,sp
-   102c2:	85a6                	c.mv	a1,s1
-   102c4:	8532                	c.mv	a0,a2
-   102c6:	00000097          	auipc	ra,0x0
-   102ca:	e4c080e7          	jalr	ra,-436(ra) # 10112 <usr_itoa.part.0>
-   102ce:	0c0b0463          	beq	s6,zero,10396 <usr_build_string_with_two_ints+0xf4>
-   102d2:	1000                	c.addi4spn	s0,sp,32
-   102d4:	85a2                	c.mv	a1,s0
-   102d6:	855a                	c.mv	a0,s6
-   102d8:	00000097          	auipc	ra,0x0
-   102dc:	e3a080e7          	jalr	ra,-454(ra) # 10112 <usr_itoa.part.0>
-   102e0:	87d6                	c.mv	a5,s5
-   102e2:	000a4703          	lbu	a4,0(s4)
-   102e6:	0785                	c.addi	a5,1
-   102e8:	0a05                	c.addi	s4,1
-   102ea:	fee78fa3          	sb	a4,-1(a5)
-   102ee:	fb75                	c.bnez	a4,102e2 <usr_build_string_with_two_ints+0x40>
-   102f0:	000ac783          	lbu	a5,0(s5)
-   102f4:	c7dd                	c.beqz	a5,103a2 <usr_build_string_with_two_ints+0x100>
-   102f6:	001a8713          	addi	a4,s5,1
-   102fa:	883a                	c.mv	a6,a4
-   102fc:	00084783          	lbu	a5,0(a6)
-   10300:	8642                	c.mv	a2,a6
-   10302:	0805                	c.addi	a6,1
-   10304:	ffe5                	c.bnez	a5,102fc <usr_build_string_with_two_ints+0x5a>
-   10306:	85a6                	c.mv	a1,s1
-   10308:	0005c783          	lbu	a5,0(a1)
-   1030c:	0605                	c.addi	a2,1
-   1030e:	0585                	c.addi	a1,1
-   10310:	fef60fa3          	sb	a5,-1(a2)
-   10314:	fbf5                	c.bnez	a5,10308 <usr_build_string_with_two_ints+0x66>
-   10316:	000ac783          	lbu	a5,0(s5)
-   1031a:	cbc1                	c.beqz	a5,103aa <usr_build_string_with_two_ints+0x108>
-   1031c:	883a                	c.mv	a6,a4
-   1031e:	00084783          	lbu	a5,0(a6)
-   10322:	8642                	c.mv	a2,a6
-   10324:	0805                	c.addi	a6,1
-   10326:	ffe5                	c.bnez	a5,1031e <usr_build_string_with_two_ints+0x7c>
-   10328:	0009c783          	lbu	a5,0(s3)
-   1032c:	0605                	c.addi	a2,1
-   1032e:	0985                	c.addi	s3,1
-   10330:	fef60fa3          	sb	a5,-1(a2)
-   10334:	fbf5                	c.bnez	a5,10328 <usr_build_string_with_two_ints+0x86>
-   10336:	000ac783          	lbu	a5,0(s5)
-   1033a:	c3c9                	c.beqz	a5,103bc <usr_build_string_with_two_ints+0x11a>
-   1033c:	863a                	c.mv	a2,a4
-   1033e:	00064783          	lbu	a5,0(a2)
-   10342:	86b2                	c.mv	a3,a2
-   10344:	0605                	c.addi	a2,1
-   10346:	ffe5                	c.bnez	a5,1033e <usr_build_string_with_two_ints+0x9c>
-   10348:	85a2                	c.mv	a1,s0
-   1034a:	0005c783          	lbu	a5,0(a1)
-   1034e:	0685                	c.addi	a3,1
-   10350:	0585                	c.addi	a1,1
-   10352:	fef68fa3          	sb	a5,-1(a3)
-   10356:	fbf5                	c.bnez	a5,1034a <usr_build_string_with_two_ints+0xa8>
-   10358:	000ac783          	lbu	a5,0(s5)
-   1035c:	c789                	c.beqz	a5,10366 <usr_build_string_with_two_ints+0xc4>
-   1035e:	00074783          	lbu	a5,0(a4)
-   10362:	0705                	c.addi	a4,1
-   10364:	ffed                	c.bnez	a5,1035e <usr_build_string_with_two_ints+0xbc>
-   10366:	00094783          	lbu	a5,0(s2)
-   1036a:	0705                	c.addi	a4,1
-   1036c:	0905                	c.addi	s2,1
-   1036e:	fef70f23          	sb	a5,-2(a4)
-   10372:	fbf5                	c.bnez	a5,10366 <usr_build_string_with_two_ints+0xc4>
-   10374:	70e6                	c.ldsp	ra,120(sp)
-   10376:	7446                	c.ldsp	s0,112(sp)
-   10378:	74a6                	c.ldsp	s1,104(sp)
-   1037a:	7906                	c.ldsp	s2,96(sp)
-   1037c:	69e6                	c.ldsp	s3,88(sp)
-   1037e:	6a46                	c.ldsp	s4,80(sp)
-   10380:	6aa6                	c.ldsp	s5,72(sp)
-   10382:	6b06                	c.ldsp	s6,64(sp)
-   10384:	6109                	c.addi16sp	sp,128
-   10386:	8082                	c.jr	ra
-   10388:	03000793          	addi	a5,zero,48
-   1038c:	00f11023          	sh	a5,0(sp)
-   10390:	848a                	c.mv	s1,sp
-   10392:	f40b10e3          	bne	s6,zero,102d2 <usr_build_string_with_two_ints+0x30>
-   10396:	03000793          	addi	a5,zero,48
-   1039a:	02f11023          	sh	a5,32(sp)
-   1039e:	1000                	c.addi4spn	s0,sp,32
-   103a0:	b781                	c.j	102e0 <usr_build_string_with_two_ints+0x3e>
-   103a2:	8656                	c.mv	a2,s5
-   103a4:	001a8713          	addi	a4,s5,1
-   103a8:	bfb9                	c.j	10306 <usr_build_string_with_two_ints+0x64>
-   103aa:	0009c783          	lbu	a5,0(s3)
-   103ae:	8656                	c.mv	a2,s5
-   103b0:	0605                	c.addi	a2,1
-   103b2:	fef60fa3          	sb	a5,-1(a2)
-   103b6:	0985                	c.addi	s3,1
-   103b8:	fba5                	c.bnez	a5,10328 <usr_build_string_with_two_ints+0x86>
-   103ba:	bfb5                	c.j	10336 <usr_build_string_with_two_ints+0x94>
-   103bc:	86d6                	c.mv	a3,s5
-   103be:	b769                	c.j	10348 <usr_build_string_with_two_ints+0xa6>
+0000000000010662 <usr_build_string_with_two_ints>:
+   10662:	7119                	c.addi16sp	sp,-128
+   10664:	f0ca                	c.sdsp	s2,96(sp)
+   10666:	ecce                	c.sdsp	s3,88(sp)
+   10668:	e8d2                	c.sdsp	s4,80(sp)
+   1066a:	e4d6                	c.sdsp	s5,72(sp)
+   1066c:	e0da                	c.sdsp	s6,64(sp)
+   1066e:	fc86                	c.sdsp	ra,120(sp)
+   10670:	f8a2                	c.sdsp	s0,112(sp)
+   10672:	f4a6                	c.sdsp	s1,104(sp)
+   10674:	8aaa                	c.mv	s5,a0
+   10676:	8a2e                	c.mv	s4,a1
+   10678:	89b6                	c.mv	s3,a3
+   1067a:	8b3a                	c.mv	s6,a4
+   1067c:	893e                	c.mv	s2,a5
+   1067e:	c669                	c.beqz	a2,10748 <usr_build_string_with_two_ints+0xe6>
+   10680:	848a                	c.mv	s1,sp
+   10682:	85a6                	c.mv	a1,s1
+   10684:	8532                	c.mv	a0,a2
+   10686:	00000097          	auipc	ra,0x0
+   1068a:	e4c080e7          	jalr	ra,-436(ra) # 104d2 <usr_itoa.part.0>
+   1068e:	0c0b0463          	beq	s6,zero,10756 <usr_build_string_with_two_ints+0xf4>
+   10692:	1000                	c.addi4spn	s0,sp,32
+   10694:	85a2                	c.mv	a1,s0
+   10696:	855a                	c.mv	a0,s6
+   10698:	00000097          	auipc	ra,0x0
+   1069c:	e3a080e7          	jalr	ra,-454(ra) # 104d2 <usr_itoa.part.0>
+   106a0:	87d6                	c.mv	a5,s5
+   106a2:	000a4703          	lbu	a4,0(s4)
+   106a6:	0785                	c.addi	a5,1
+   106a8:	0a05                	c.addi	s4,1
+   106aa:	fee78fa3          	sb	a4,-1(a5)
+   106ae:	fb75                	c.bnez	a4,106a2 <usr_build_string_with_two_ints+0x40>
+   106b0:	000ac783          	lbu	a5,0(s5)
+   106b4:	c7dd                	c.beqz	a5,10762 <usr_build_string_with_two_ints+0x100>
+   106b6:	001a8713          	addi	a4,s5,1
+   106ba:	883a                	c.mv	a6,a4
+   106bc:	00084783          	lbu	a5,0(a6)
+   106c0:	8642                	c.mv	a2,a6
+   106c2:	0805                	c.addi	a6,1
+   106c4:	ffe5                	c.bnez	a5,106bc <usr_build_string_with_two_ints+0x5a>
+   106c6:	85a6                	c.mv	a1,s1
+   106c8:	0005c783          	lbu	a5,0(a1)
+   106cc:	0605                	c.addi	a2,1
+   106ce:	0585                	c.addi	a1,1
+   106d0:	fef60fa3          	sb	a5,-1(a2)
+   106d4:	fbf5                	c.bnez	a5,106c8 <usr_build_string_with_two_ints+0x66>
+   106d6:	000ac783          	lbu	a5,0(s5)
+   106da:	cbc1                	c.beqz	a5,1076a <usr_build_string_with_two_ints+0x108>
+   106dc:	883a                	c.mv	a6,a4
+   106de:	00084783          	lbu	a5,0(a6)
+   106e2:	8642                	c.mv	a2,a6
+   106e4:	0805                	c.addi	a6,1
+   106e6:	ffe5                	c.bnez	a5,106de <usr_build_string_with_two_ints+0x7c>
+   106e8:	0009c783          	lbu	a5,0(s3)
+   106ec:	0605                	c.addi	a2,1
+   106ee:	0985                	c.addi	s3,1
+   106f0:	fef60fa3          	sb	a5,-1(a2)
+   106f4:	fbf5                	c.bnez	a5,106e8 <usr_build_string_with_two_ints+0x86>
+   106f6:	000ac783          	lbu	a5,0(s5)
+   106fa:	c3c9                	c.beqz	a5,1077c <usr_build_string_with_two_ints+0x11a>
+   106fc:	863a                	c.mv	a2,a4
+   106fe:	00064783          	lbu	a5,0(a2)
+   10702:	86b2                	c.mv	a3,a2
+   10704:	0605                	c.addi	a2,1
+   10706:	ffe5                	c.bnez	a5,106fe <usr_build_string_with_two_ints+0x9c>
+   10708:	85a2                	c.mv	a1,s0
+   1070a:	0005c783          	lbu	a5,0(a1)
+   1070e:	0685                	c.addi	a3,1
+   10710:	0585                	c.addi	a1,1
+   10712:	fef68fa3          	sb	a5,-1(a3)
+   10716:	fbf5                	c.bnez	a5,1070a <usr_build_string_with_two_ints+0xa8>
+   10718:	000ac783          	lbu	a5,0(s5)
+   1071c:	c789                	c.beqz	a5,10726 <usr_build_string_with_two_ints+0xc4>
+   1071e:	00074783          	lbu	a5,0(a4)
+   10722:	0705                	c.addi	a4,1
+   10724:	ffed                	c.bnez	a5,1071e <usr_build_string_with_two_ints+0xbc>
+   10726:	00094783          	lbu	a5,0(s2)
+   1072a:	0705                	c.addi	a4,1
+   1072c:	0905                	c.addi	s2,1
+   1072e:	fef70f23          	sb	a5,-2(a4)
+   10732:	fbf5                	c.bnez	a5,10726 <usr_build_string_with_two_ints+0xc4>
+   10734:	70e6                	c.ldsp	ra,120(sp)
+   10736:	7446                	c.ldsp	s0,112(sp)
+   10738:	74a6                	c.ldsp	s1,104(sp)
+   1073a:	7906                	c.ldsp	s2,96(sp)
+   1073c:	69e6                	c.ldsp	s3,88(sp)
+   1073e:	6a46                	c.ldsp	s4,80(sp)
+   10740:	6aa6                	c.ldsp	s5,72(sp)
+   10742:	6b06                	c.ldsp	s6,64(sp)
+   10744:	6109                	c.addi16sp	sp,128
+   10746:	8082                	c.jr	ra
+   10748:	03000793          	addi	a5,zero,48
+   1074c:	00f11023          	sh	a5,0(sp)
+   10750:	848a                	c.mv	s1,sp
+   10752:	f40b10e3          	bne	s6,zero,10692 <usr_build_string_with_two_ints+0x30>
+   10756:	03000793          	addi	a5,zero,48
+   1075a:	02f11023          	sh	a5,32(sp)
+   1075e:	1000                	c.addi4spn	s0,sp,32
+   10760:	b781                	c.j	106a0 <usr_build_string_with_two_ints+0x3e>
+   10762:	8656                	c.mv	a2,s5
+   10764:	001a8713          	addi	a4,s5,1
+   10768:	bfb9                	c.j	106c6 <usr_build_string_with_two_ints+0x64>
+   1076a:	0009c783          	lbu	a5,0(s3)
+   1076e:	8656                	c.mv	a2,s5
+   10770:	0605                	c.addi	a2,1
+   10772:	fef60fa3          	sb	a5,-1(a2)
+   10776:	0985                	c.addi	s3,1
+   10778:	fba5                	c.bnez	a5,106e8 <usr_build_string_with_two_ints+0x86>
+   1077a:	bfb5                	c.j	106f6 <usr_build_string_with_two_ints+0x94>
+   1077c:	86d6                	c.mv	a3,s5
+   1077e:	b769                	c.j	10708 <usr_build_string_with_two_ints+0xa6>
+
+0000000000010780 <usr_build_string_with_three_ints>:
+   10780:	7171                	c.addi16sp	sp,-176
+   10782:	f122                	c.sdsp	s0,160(sp)
+   10784:	e54e                	c.sdsp	s3,136(sp)
+   10786:	e152                	c.sdsp	s4,128(sp)
+   10788:	fcd6                	c.sdsp	s5,120(sp)
+   1078a:	f8da                	c.sdsp	s6,112(sp)
+   1078c:	f4de                	c.sdsp	s7,104(sp)
+   1078e:	f0e2                	c.sdsp	s8,96(sp)
+   10790:	f506                	c.sdsp	ra,168(sp)
+   10792:	ed26                	c.sdsp	s1,152(sp)
+   10794:	e94a                	c.sdsp	s2,144(sp)
+   10796:	8aaa                	c.mv	s5,a0
+   10798:	8bae                	c.mv	s7,a1
+   1079a:	8b36                	c.mv	s6,a3
+   1079c:	843a                	c.mv	s0,a4
+   1079e:	8a3e                	c.mv	s4,a5
+   107a0:	8c42                	c.mv	s8,a6
+   107a2:	89c6                	c.mv	s3,a7
+   107a4:	12060363          	beq	a2,zero,108ca <usr_build_string_with_three_ints+0x14a>
+   107a8:	890a                	c.mv	s2,sp
+   107aa:	85ca                	c.mv	a1,s2
+   107ac:	8532                	c.mv	a0,a2
+   107ae:	00000097          	auipc	ra,0x0
+   107b2:	d24080e7          	jalr	ra,-732(ra) # 104d2 <usr_itoa.part.0>
+   107b6:	12040163          	beq	s0,zero,108d8 <usr_build_string_with_three_ints+0x158>
+   107ba:	1004                	c.addi4spn	s1,sp,32
+   107bc:	85a6                	c.mv	a1,s1
+   107be:	8522                	c.mv	a0,s0
+   107c0:	00000097          	auipc	ra,0x0
+   107c4:	d12080e7          	jalr	ra,-750(ra) # 104d2 <usr_itoa.part.0>
+   107c8:	100c0f63          	beq	s8,zero,108e6 <usr_build_string_with_three_ints+0x166>
+   107cc:	0080                	c.addi4spn	s0,sp,64
+   107ce:	85a2                	c.mv	a1,s0
+   107d0:	8562                	c.mv	a0,s8
+   107d2:	00000097          	auipc	ra,0x0
+   107d6:	d00080e7          	jalr	ra,-768(ra) # 104d2 <usr_itoa.part.0>
+   107da:	87d6                	c.mv	a5,s5
+   107dc:	000bc703          	lbu	a4,0(s7)
+   107e0:	0785                	c.addi	a5,1
+   107e2:	0b85                	c.addi	s7,1
+   107e4:	fee78fa3          	sb	a4,-1(a5)
+   107e8:	fb75                	c.bnez	a4,107dc <usr_build_string_with_three_ints+0x5c>
+   107ea:	000ac783          	lbu	a5,0(s5)
+   107ee:	10078463          	beq	a5,zero,108f6 <usr_build_string_with_three_ints+0x176>
+   107f2:	001a8713          	addi	a4,s5,1
+   107f6:	883a                	c.mv	a6,a4
+   107f8:	00084783          	lbu	a5,0(a6)
+   107fc:	8642                	c.mv	a2,a6
+   107fe:	0805                	c.addi	a6,1
+   10800:	ffe5                	c.bnez	a5,107f8 <usr_build_string_with_three_ints+0x78>
+   10802:	85ca                	c.mv	a1,s2
+   10804:	0005c783          	lbu	a5,0(a1)
+   10808:	0605                	c.addi	a2,1
+   1080a:	0585                	c.addi	a1,1
+   1080c:	fef60fa3          	sb	a5,-1(a2)
+   10810:	fbf5                	c.bnez	a5,10804 <usr_build_string_with_three_ints+0x84>
+   10812:	000ac783          	lbu	a5,0(s5)
+   10816:	c7e5                	c.beqz	a5,108fe <usr_build_string_with_three_ints+0x17e>
+   10818:	883a                	c.mv	a6,a4
+   1081a:	00084783          	lbu	a5,0(a6)
+   1081e:	8642                	c.mv	a2,a6
+   10820:	0805                	c.addi	a6,1
+   10822:	ffe5                	c.bnez	a5,1081a <usr_build_string_with_three_ints+0x9a>
+   10824:	000b4783          	lbu	a5,0(s6)
+   10828:	0605                	c.addi	a2,1
+   1082a:	0b05                	c.addi	s6,1
+   1082c:	fef60fa3          	sb	a5,-1(a2)
+   10830:	fbf5                	c.bnez	a5,10824 <usr_build_string_with_three_ints+0xa4>
+   10832:	000ac783          	lbu	a5,0(s5)
+   10836:	cfe9                	c.beqz	a5,10910 <usr_build_string_with_three_ints+0x190>
+   10838:	863a                	c.mv	a2,a4
+   1083a:	00064783          	lbu	a5,0(a2)
+   1083e:	86b2                	c.mv	a3,a2
+   10840:	0605                	c.addi	a2,1
+   10842:	ffe5                	c.bnez	a5,1083a <usr_build_string_with_three_ints+0xba>
+   10844:	85a6                	c.mv	a1,s1
+   10846:	0005c783          	lbu	a5,0(a1)
+   1084a:	0685                	c.addi	a3,1
+   1084c:	0585                	c.addi	a1,1
+   1084e:	fef68fa3          	sb	a5,-1(a3)
+   10852:	fbf5                	c.bnez	a5,10846 <usr_build_string_with_three_ints+0xc6>
+   10854:	000ac783          	lbu	a5,0(s5)
+   10858:	cfd5                	c.beqz	a5,10914 <usr_build_string_with_three_ints+0x194>
+   1085a:	863a                	c.mv	a2,a4
+   1085c:	00064783          	lbu	a5,0(a2)
+   10860:	86b2                	c.mv	a3,a2
+   10862:	0605                	c.addi	a2,1
+   10864:	ffe5                	c.bnez	a5,1085c <usr_build_string_with_three_ints+0xdc>
+   10866:	000a4783          	lbu	a5,0(s4)
+   1086a:	0685                	c.addi	a3,1
+   1086c:	0a05                	c.addi	s4,1
+   1086e:	fef68fa3          	sb	a5,-1(a3)
+   10872:	fbf5                	c.bnez	a5,10866 <usr_build_string_with_three_ints+0xe6>
+   10874:	000ac783          	lbu	a5,0(s5)
+   10878:	cfad                	c.beqz	a5,108f2 <usr_build_string_with_three_ints+0x172>
+   1087a:	86ba                	c.mv	a3,a4
+   1087c:	0006c603          	lbu	a2,0(a3)
+   10880:	87b6                	c.mv	a5,a3
+   10882:	0685                	c.addi	a3,1
+   10884:	fe65                	c.bnez	a2,1087c <usr_build_string_with_three_ints+0xfc>
+   10886:	85a2                	c.mv	a1,s0
+   10888:	0005c683          	lbu	a3,0(a1)
+   1088c:	0785                	c.addi	a5,1
+   1088e:	0585                	c.addi	a1,1
+   10890:	fed78fa3          	sb	a3,-1(a5)
+   10894:	faf5                	c.bnez	a3,10888 <usr_build_string_with_three_ints+0x108>
+   10896:	000ac783          	lbu	a5,0(s5)
+   1089a:	c789                	c.beqz	a5,108a4 <usr_build_string_with_three_ints+0x124>
+   1089c:	00074783          	lbu	a5,0(a4)
+   108a0:	0705                	c.addi	a4,1
+   108a2:	ffed                	c.bnez	a5,1089c <usr_build_string_with_three_ints+0x11c>
+   108a4:	0009c783          	lbu	a5,0(s3)
+   108a8:	0705                	c.addi	a4,1
+   108aa:	0985                	c.addi	s3,1
+   108ac:	fef70f23          	sb	a5,-2(a4)
+   108b0:	fbf5                	c.bnez	a5,108a4 <usr_build_string_with_three_ints+0x124>
+   108b2:	70aa                	c.ldsp	ra,168(sp)
+   108b4:	740a                	c.ldsp	s0,160(sp)
+   108b6:	64ea                	c.ldsp	s1,152(sp)
+   108b8:	694a                	c.ldsp	s2,144(sp)
+   108ba:	69aa                	c.ldsp	s3,136(sp)
+   108bc:	6a0a                	c.ldsp	s4,128(sp)
+   108be:	7ae6                	c.ldsp	s5,120(sp)
+   108c0:	7b46                	c.ldsp	s6,112(sp)
+   108c2:	7ba6                	c.ldsp	s7,104(sp)
+   108c4:	7c06                	c.ldsp	s8,96(sp)
+   108c6:	614d                	c.addi16sp	sp,176
+   108c8:	8082                	c.jr	ra
+   108ca:	03000793          	addi	a5,zero,48
+   108ce:	00f11023          	sh	a5,0(sp)
+   108d2:	890a                	c.mv	s2,sp
+   108d4:	ee0413e3          	bne	s0,zero,107ba <usr_build_string_with_three_ints+0x3a>
+   108d8:	03000793          	addi	a5,zero,48
+   108dc:	02f11023          	sh	a5,32(sp)
+   108e0:	1004                	c.addi4spn	s1,sp,32
+   108e2:	ee0c15e3          	bne	s8,zero,107cc <usr_build_string_with_three_ints+0x4c>
+   108e6:	03000793          	addi	a5,zero,48
+   108ea:	04f11023          	sh	a5,64(sp)
+   108ee:	0080                	c.addi4spn	s0,sp,64
+   108f0:	b5ed                	c.j	107da <usr_build_string_with_three_ints+0x5a>
+   108f2:	87d6                	c.mv	a5,s5
+   108f4:	bf49                	c.j	10886 <usr_build_string_with_three_ints+0x106>
+   108f6:	8656                	c.mv	a2,s5
+   108f8:	001a8713          	addi	a4,s5,1
+   108fc:	b719                	c.j	10802 <usr_build_string_with_three_ints+0x82>
+   108fe:	000b4783          	lbu	a5,0(s6)
+   10902:	8656                	c.mv	a2,s5
+   10904:	0605                	c.addi	a2,1
+   10906:	fef60fa3          	sb	a5,-1(a2)
+   1090a:	0b05                	c.addi	s6,1
+   1090c:	ff81                	c.bnez	a5,10824 <usr_build_string_with_three_ints+0xa4>
+   1090e:	b715                	c.j	10832 <usr_build_string_with_three_ints+0xb2>
+   10910:	86d6                	c.mv	a3,s5
+   10912:	bf0d                	c.j	10844 <usr_build_string_with_three_ints+0xc4>
+   10914:	000a4783          	lbu	a5,0(s4)
+   10918:	86d6                	c.mv	a3,s5
+   1091a:	0685                	c.addi	a3,1
+   1091c:	fef68fa3          	sb	a5,-1(a3)
+   10920:	0a05                	c.addi	s4,1
+   10922:	f3b1                	c.bnez	a5,10866 <usr_build_string_with_three_ints+0xe6>
+   10924:	bf81                	c.j	10874 <usr_build_string_with_three_ints+0xf4>
