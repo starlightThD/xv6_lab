@@ -210,13 +210,22 @@ int copyin(char *dst, uint64 srcva, int maxlen) {
     struct proc *p = myproc();
     for (int i = 0; i < maxlen; i++) {
         // 你需要 walk_lookup 查 srcva+i 是否有效并有PTE_U权限
-        char *pa = user_va2pa(p->pagetable, srcva + i); // 你需要实现 user_va2pa
+        char *pa = user_va2pa(p->pagetable, srcva + i);
         if (!pa) return -1;
         dst[i] = *pa;
         if (dst[i] == 0) return 0;
     }
     return 0;
 }
+int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len) {
+    for (uint64 i = 0; i < len; i++) {
+        char *pa = user_va2pa(pagetable, dstva + i);
+        if (!pa) return -1;
+        *pa = src[i];
+    }
+    return 0;
+}
+
 int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max) {
     int i;
     for (i = 0; i < max; i++) {
@@ -249,14 +258,34 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 			printf("[syscall] exit(%ld)\n", tf->a0);
 			exit_proc((int)tf->a0);
 			break;
-
+		case SYS_kill:
+			if (myproc()->pid == tf->a0){
+				warning("[syscall] will kill itself!!!\n");
+			}
+			kill_proc(tf->a0);
+			break;
 		case SYS_fork:
 			int child_pid = fork_proc();
 			tf->a0 = child_pid;
 			printf("[syscall] fork -> %d\n", child_pid);
 			break;
-		case SYS_wait:
-			tf->a0 = wait_proc(NULL);
+			case SYS_wait: {
+				uint64 uaddr = tf->a0;
+				int kstatus = 0;
+				int pid = wait_proc(uaddr ? &kstatus : NULL);  // 在内核里等待并得到退出码
+
+				if (pid >= 0 && uaddr) {
+					// 将内核中的 kstatus 写回用户空间
+					if (copyout(myproc()->pagetable, uaddr, (char *)&kstatus, sizeof(kstatus)) < 0) {
+						pid = -1; // 用户空间地址不可写，视为失败
+					}
+				}
+				tf->a0 = pid;
+				break;
+			}
+		case SYS_yield:
+			tf->a0 =0;
+			yield();
 			break;
 		case SYS_pid:
 			tf->a0 = myproc()->pid;

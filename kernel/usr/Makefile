@@ -8,7 +8,8 @@ CFLAGS += -march=rv64gc -mabi=lp64
 LDFLAGS = -T user.ld -z max-page-size=4096
 
 # 源文件
-SRCS  := $(wildcard *.c)
+CRT0  := crt0.c
+SRCS  := $(filter-out $(CRT0), $(wildcard *.c))
 NAMES := $(basename $(SRCS))
 
 # 统一输出目录
@@ -16,7 +17,6 @@ BUILD := build
 ELFS  := $(addprefix $(BUILD)/,$(NAMES:=.elf))
 BINS  := $(addprefix $(BUILD)/,$(NAMES:=.bin))
 HDRS  := $(addprefix $(BUILD)/,$(NAMES:=.h))
-ASMS  := $(addprefix $(BUILD)/,$(NAMES:=.s))
 DUMPS := $(addprefix $(BUILD)/,$(NAMES:=.dump))
 ALL_HDR := $(BUILD)/user_progs.h
 
@@ -24,7 +24,7 @@ ALL_HDR := $(BUILD)/user_progs.h
 QUIET = @
 
 # 总目标
-all: $(BUILD) $(ALL_HDR) $(HDRS) $(ASMS) $(DUMPS) regen-user-progs
+all: $(BUILD) $(ALL_HDR) $(HDRS) $(DUMPS) regen-user-progs
 	$(QUIET)echo "用户程序编译完成"
 
 # 确保 build 目录存在
@@ -36,15 +36,10 @@ $(ALL_HDR): | $(BUILD)
 	$(QUIET)rm -f $@
 	$(QUIET)echo "/* 占位的空 user_progs.h */" > $@
 
-# C → 汇编
-$(BUILD)/%.s: %.c | $(BUILD) $(ALL_HDR)
-	$(QUIET)echo "ASM   $@"
-	$(QUIET)$(CC) $(CFLAGS) -S -o $@ $<
-
 # C → ELF
-$(BUILD)/%.elf: %.c user.ld | $(BUILD) $(ALL_HDR)
+$(BUILD)/%.elf: %.c $(CRT0) | $(BUILD) $(ALL_HDR)
 	$(QUIET)echo "LINK  $@"
-	$(QUIET)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+	$(QUIET)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 # ELF → bin
 $(BUILD)/%.bin: $(BUILD)/%.elf | $(BUILD)

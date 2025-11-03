@@ -383,3 +383,114 @@ void sys_access_task(void) {
     printf("SYS: read success, value=%d\n", val);
     exit_proc(0);
 }
+
+void infinite_task(void){
+	int count = 5000 ;
+	while(count){
+		count--;
+		if (count % 100 == 0)
+			printf("count for %d\n",count);
+		yield();
+	}
+	warning("INFINITE TASK FINISH WITHOUT KILLED!!\n");
+}
+
+void killer_task(uint64 kill_pid){
+	int count = 500;
+	while(count){
+		count--;
+		if(count % 100 == 0)
+			printf("I see you!!!\n");
+		yield();
+	}
+	kill_proc((int)kill_pid);
+	printf("Killed proc %d\n",(int)kill_pid);
+	exit_proc(0);
+}
+void victim_task(void){
+	int count =5000;
+	while(count){
+		count--;
+		if(count % 100 == 0)
+			printf("Call for help!!\n");
+		yield();
+	}
+	printf("No one can kill me!\n");
+	exit_proc(0);
+}
+
+void test_kill(void){
+	printf("\n----- 测试1: 创建后立即杀死 -----\n");
+	int pid =create_kernel_proc(simple_task);
+	printf("【测试】: 创建进程成功，PID: %d\n", pid);
+	kill_proc(pid);
+	printf("【测试】: 等待被杀死的进程退出,此处被杀死的进程不会有输出...\n");
+	int ret =0;
+	wait_proc(&ret);
+	printf("【测试】: 进程%d退出，退出码应该为129，此处为%d\n ",pid,ret);
+	if(SYS_kill == ret){
+		printf("【测试】:尝试立即杀死进程，测试成功\n");
+	}else{
+		printf("【测试】:尝试立即杀死进程失败，退出\n");
+		exit_proc(0);
+	}
+	printf("\n----- 测试2: 创建后稍后杀死 -----\n");
+	pid = create_kernel_proc(infinite_task);
+	int count = 500;
+	while(count){
+		count--; //等待500次调度
+		yield();
+	}
+	kill_proc(pid);
+	wait_proc(&ret);
+	if(SYS_kill == ret){
+		printf("【测试】:尝试稍后杀死进程，测试成功\n");
+	}else{
+		printf("【测试】:尝试稍后杀死进程失败，退出\n");
+		exit_proc(0);
+	}
+	printf("\n----- 测试3: 创建killer 和 victim -----\n");
+	int victim = create_kernel_proc(victim_task);
+	int killer = create_kernel_proc1(killer_task,victim);
+	int first_exit = wait_proc(&ret);
+	if(first_exit == killer){
+		wait_proc(&ret);
+		if(SYS_kill == ret){
+			printf("【测试】:killer win\n");
+		}else{
+			printf("【测试】:出现问题，killer先结束但victim存活\n");
+		}
+	}else if(first_exit == victim){
+		wait_proc(NULL);
+		if(SYS_kill == ret){
+			printf("【测试】:killer win\n");
+		}else{
+			printf("【测试】:出现问题，victim先结束且存活\n");
+		}
+	}
+	exit_proc(0);
+}
+void test_user_kill(void){
+	printf("===== 测试开始: 用户进程Kill测试 =====\n");
+    
+    printf("\n----- 创建fork测试进程 -----\n");
+    int test_pid = create_user_proc(kill_user_test_bin, kill_user_test_bin_len);
+    
+    if (test_pid < 0) {
+        printf("【错误】: 创建fork测试进程失败\n");
+        return;
+    }
+    
+    printf("【测试结果】: 创建fork测试进程成功，PID: %d\n", test_pid);
+    
+    // 等待fork测试进程完成
+    printf("\n----- 等待fork测试进程完成 -----\n");
+    int status;
+    int waited_pid = wait_proc(&status);
+    if (waited_pid == test_pid) {
+        printf("【测试结果】: fork测试进程(PID: %d)完成，状态码: %d\n", test_pid, status);
+    } else {
+        printf("【错误】: 等待fork测试进程时出错，等待到PID: %d，期望PID: %d\n", waited_pid, test_pid);
+    }
+    printf("===== 测试结束: 用户进程Kill测试 =====\n");
+}

@@ -66,16 +66,20 @@ void forkret(void) {
     if (p == 0) {
         panic("forkret: no current process");
     }
-
+    if (p->killed) {
+        printf("[forkret] Process PID %d killed before execution\n", p->pid);
+        exit_proc(SYS_kill);
+        return; // 虽然不会执行到这里，但为了代码清晰
+    }
     if (p->is_user) {
         // 用户进程：直接返回用户态
         return_to_user();
     } else {
         // 内核线程：执行入口函数
-        if (p->trapframe->epc) {
-            void (*fn)(void) = (void(*)(void))p->trapframe->epc;
-            fn();
-        }
+		if (p->trapframe->epc) {
+			void (*fn)(uint64) = (void(*)(uint64))p->trapframe->epc;
+			fn(p->trapframe->a0);
+		}
         exit_proc(0);  // 内核线程函数返回则退出
     }
 }
@@ -150,6 +154,7 @@ struct proc* alloc_proc(int is_user) {
             memset(&p->context, 0, sizeof(p->context));
             p->context.ra = (uint64)forkret;
             p->context.sp = p->kstack + PGSIZE - 16;  // 16字节对齐
+			p->killed = 0; //重置死亡状态
             return p;
         }
     }
@@ -181,6 +186,21 @@ int create_kernel_proc(void (*entry)(void)) {
     struct proc *p = alloc_proc(0);
     if (!p) return -1;
     p->trapframe->epc = (uint64)entry;
+    p->state = RUNNABLE;
+
+    struct proc *parent = myproc();
+    if (parent != 0) {
+        p->parent = parent;
+    } else {
+        p->parent = NULL;
+    }
+    return p->pid;
+}
+int create_kernel_proc1(void (*entry)(uint64),uint64 arg){
+	struct proc *p = alloc_proc(0);
+    if (!p) return -1;
+    p->trapframe->epc = (uint64)entry;
+	p->trapframe->a0 = (uint64)arg;
     p->state = RUNNABLE;
 
     struct proc *parent = myproc();
@@ -286,19 +306,7 @@ int fork_proc(void) {
 
 // 调度器 - 简化版
 void schedule(void) {
-  static int initialized = 0;
   struct cpu *c = mycpu();
-  
-  if (!initialized) {
-    
-    if(c == 0) {
-      panic("schedule: no current cpu");
-    }
-    c->proc = 0;
-    current_proc = 0;
-    initialized = 1;
-  }
-  
   while(1) {
     intr_on();
     for(int i = 0; i < PROC; i++) {
@@ -308,7 +316,6 @@ void schedule(void) {
 			c->proc = p;
 			current_proc = p;
 			swtch(&c->context, &p->context);
-			c = mycpu();
 			c->proc = 0;
 			current_proc = 0;
       }
@@ -321,23 +328,22 @@ void yield(void) {
     if (p == 0) {
         return;
     }
-    if (p->state != RUNNING) {
-        warning("yield when status is not RUNNING (%d)\n", p->state);
-        return;
-    }
     intr_off();
     struct cpu *c = mycpu();
     p->state = RUNNABLE;
-    register uint64 ra asm("ra");
-    p->context.ra = ra;
-    if (c->context.ra == 0) {
-        c->context.ra = (uint64)schedule;
-        c->context.sp = (uint64)c + PGSIZE;
-    }
+    //if (c->context.ra == 0) {
+    //    c->context.ra = (uint64)schedule;
+    //    c->context.sp = (uint64)c + PGSIZE;
+    //}
     current_proc = 0;
     c->proc = 0;
     swtch(&p->context, &c->context);
     intr_on();
+	if (p->killed) {
+        printf("[yield] Process PID %d killed during yield\n", p->pid);
+        exit_proc(SYS_kill);
+        return;
+    }
 }
 void sleep(void *chan){
     struct proc *p = myproc();
@@ -348,6 +354,10 @@ void sleep(void *chan){
     p->state = SLEEPING;
     swtch(&p->context, &c->context);
     p->chan = 0;
+	if(p->killed){
+		printf("[sleep] Process PID %d killed when wakeup\n", p->pid);
+		exit_proc(SYS_kill);
+	}
 }
 void wakeup(void *chan) {
     for(int i = 0; i < PROC; i++) {
@@ -356,6 +366,16 @@ void wakeup(void *chan) {
             p->state = RUNNABLE;
         }
     }
+}
+void kill_proc(int pid){
+	for(int i=0;i<PROC;i++){
+		struct proc *p = proc_table[i];
+		if(pid == p->pid){
+			p->killed = 1;
+			break;
+		}
+	}
+	return;
 }
 void exit_proc(int status) {
     struct proc *p = myproc();
@@ -475,4 +495,19 @@ void print_proc_table(void) {
     }
     printf("----------------------------------------------------------\n");
     printf("%d active processes\n", count);
+}
+
+struct proc* get_proc(int pid){
+	    // 检查 PID 是否有效
+    if (pid < 0 || pid >= PROC) {
+        return 0;
+    }
+    // 遍历进程表查找匹配的 PID
+    for (int i = 0; i < PROC; i++) {
+        struct proc *p = proc_table[i];
+        if (p->state != UNUSED && p->pid == pid) {
+            return p;
+        }
+    }
+    return 0;
 }

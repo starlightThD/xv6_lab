@@ -22,14 +22,18 @@ static __attribute__((always_inline)) inline void sys_exit(int status) {
     do_syscall(SYS_exit, status);
     while (1) {} // 不会返回
 }
-
+static __attribute__((always_inline)) inline void sys_kill(int pid) {
+	do_syscall(SYS_kill,pid);
+}
 static __attribute__((always_inline)) inline int sys_fork(void) {
     return do_syscall(SYS_fork, 0);
 }
-static __attribute__((always_inline)) inline int sys_wait(void) {
-    return do_syscall(SYS_wait, 0);
+static __attribute__((always_inline)) inline int sys_wait(int *status) {
+    return do_syscall(SYS_wait, (long)status);
 }
-
+static __attribute__((always_inline)) inline int sys_yield(void) {
+    return do_syscall(SYS_yield, 0);
+}
 static __attribute__((always_inline)) inline int sys_step(void) {
     return do_syscall(SYS_step, 0);
 }

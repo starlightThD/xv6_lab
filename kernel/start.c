@@ -9,6 +9,7 @@ struct CommandEntry command_table[] = {
     {"test_proc", test_process_creation, "进程创建测试"},
     {"test_sche", test_scheduler, "调度器测试"},
     {"test_sync", test_synchronization, "同步性测试"},
+	{"test_kill", test_kill,"内核下的kill测试"},
 	{"test_fork", test_user_fork, "用户进程Fork测试"},
 };
 #define COMMAND_COUNT (sizeof(command_table)/sizeof(command_table[0]))

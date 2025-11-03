@@ -9,6 +9,13 @@ Disassembly of section .text:
    10002:	4885                	c.li	a7,1
    10004:	00000073          	ecall
    10008:	4501                	c.li	a0,0
-   1000a:	05d00893          	addi	a7,zero,93
-   1000e:	00000073          	ecall
-   10012:	a001                	c.j	10012 <main+0x12>
+   1000a:	8082                	c.jr	ra
+
+000000000001000c <_start>:
+   1000c:	1141                	c.addi	sp,-16
+   1000e:	e406                	c.sdsp	ra,8(sp)
+   10010:	00000097          	auipc	ra,0x0
+   10014:	ff0080e7          	jalr	ra,-16(ra) # 10000 <main>
+   10018:	05d00893          	addi	a7,zero,93
+   1001c:	00000073          	ecall
+   10020:	a001                	c.j	10020 <_start+0x14>

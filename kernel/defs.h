@@ -66,10 +66,12 @@
 #define SYS_printint   1
 #define SYS_printstr   2
 #define SYS_exit      93
+#define SYS_kill 	 129
 #define SYS_pid 	 172
 #define SYS_ppid     173
 #define SYS_fork     220
 #define SYS_wait	 221
+#define SYS_yield    222
 #define SYS_step    0xFFF
 // ========================
 // typedef
@@ -301,10 +303,12 @@ struct proc* alloc_proc(int is_user);
 void free_proc(struct proc *p);
 void free_proc_table(void);
 int create_kernel_proc(void (*entry)(void));
+int create_kernel_proc1(void (*entry)(uint64), uint64 arg);
 int create_user_proc(const void *user_bin, int bin_size);
 int fork_proc(void);
 void exit_proc(int status);
 int wait_proc(int *status);
+void kill_proc(int pid);
 void return_to_user(void);
 void forkret(void);
 void schedule(void);
@@ -312,6 +316,7 @@ void yield(void);
 void sleep(void *chan);
 void wakeup(void *chan);
 void print_proc_table(void);
+struct proc* get_proc(int pid);
 
 // test.h
 void test_timer_interrupt(void);
@@ -320,6 +325,7 @@ void test_exception(void);
 void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
+void test_kill(void);
 void test_user_fork(void);
 // ========================
 // static inline 函数
