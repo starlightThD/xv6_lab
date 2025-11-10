@@ -67,7 +67,23 @@ regen-user-progs: $(HDRS)
 		bn=$$(basename $$f); \
 		echo "#include \"$$bn\"" >> $(ALL_HDR); \
 	done
-
+	$(QUIET)echo >> $(ALL_HDR)
+	$(QUIET)echo "// 用户测试程序结构" >> $(ALL_HDR)
+	$(QUIET)echo "struct UserTestEntry {" >> $(ALL_HDR)
+	$(QUIET)echo "	const char* name;		  // 程序名" >> $(ALL_HDR)
+	$(QUIET)echo "	const void* binary;		// 程序二进制数据" >> $(ALL_HDR)
+	$(QUIET)echo "	const int size;			// 程序大小" >> $(ALL_HDR)
+	$(QUIET)echo "};" >> $(ALL_HDR)
+	$(QUIET)echo >> $(ALL_HDR)
+	$(QUIET)echo "// 自动生成的用户程序表" >> $(ALL_HDR)
+	$(QUIET)echo "static const struct UserTestEntry user_test_table[] = {" >> $(ALL_HDR)
+	$(QUIET)for src in $(SRCS); do \
+		name=$$(basename $$src .c); \
+		echo "	{\"$$name\", $${name}_bin, $${name}_bin_len}," >> $(ALL_HDR); \
+	done
+	$(QUIET)echo "};" >> $(ALL_HDR)
+	$(QUIET)echo >> $(ALL_HDR)
+	$(QUIET)echo "#define USER_TEST_COUNT (sizeof(user_test_table)/sizeof(user_test_table[0]))" >> $(ALL_HDR)
 clean:
 	$(QUIET)echo "CLEAN build/"
 	$(QUIET)rm -rf $(BUILD)

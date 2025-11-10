@@ -15,6 +15,7 @@
 		"user_progs.h": "c",
 		"min_test.h": "c",
 		"simple_user_task.h": "c",
-		"fork_user_test.h": "c"
+		"fork_user_test.h": "c",
+		"file_test.h": "c"
 	}
 }

@@ -215,19 +215,29 @@ int create_user_proc(const void *user_bin, int bin_size) {
     struct proc *p = alloc_proc(1); // 1 表示用户进程
     if (!p) return -1;
 
-    uint64 user_entry = 0x10000;
-    uint64 user_stack = 0x20000;
+    uint64 user_entry = USER_TEXT_START;
+    uint64 user_stack = USER_STACK_SIZE;
 
     // 分配用户代码页
     void *page = alloc_page();
     if (!page) { free_proc(p); return -1; }
     map_page(p->pagetable, user_entry, (uint64)page, PTE_R | PTE_W | PTE_X | PTE_U);
     memcpy((void*)page, user_bin, bin_size);
-    // 分配用户栈页
-    void *stack_page = alloc_page();
-    if (!stack_page) { free_proc(p); return -1; }
-    map_page(p->pagetable, user_stack - PGSIZE, (uint64)stack_page, PTE_R | PTE_W | PTE_U);
-
+    // 分配多个栈页面 (至少2页)
+    for(int i = 0; i < 2; i++) {
+        void *stack_page = alloc_page();
+        if (!stack_page) { 
+            free_proc(p); 
+            return -1; 
+        }
+        uint64 stack_va = USER_STACK_SIZE - PGSIZE * (i + 1);
+        if(map_page(p->pagetable, stack_va, (uint64)stack_page, 
+            PTE_R | PTE_W | PTE_U) != 0) {
+            free_page(stack_page);
+            free_proc(p);
+            return -1;
+        }
+    }
 	p->sz = user_stack; // 用户空间从 0x10000 到 0x20000
 	    // 关键：将 trapframe 映射到 TRAPFRAME 虚拟地址
     if (map_page(p->pagetable, TRAPFRAME, (uint64)p->trapframe, PTE_R | PTE_W) != 0) {

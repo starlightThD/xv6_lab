@@ -1,24 +1,18 @@
 #include "defs.h"
 
-void hello_world() {
-    create_user_proc(hello_world_bin,hello_world_bin_len);
-	wait_proc(NULL);
-}
-struct CommandEntry command_table[] = {
-    {"hello", hello_world, "打印Hello World"},
-	{"test_timer_interrupt",test_timer_interrupt,"时钟中断测试"},
-	{"test_exception",test_exception,"异常测试"},
-	{"test_interrupt_overhead",test_interrupt_overhead,"测试中断开销"},
-    {"test_proccess", test_process_creation, "进程创建测试"},
-    {"test_scheduler", test_scheduler, "调度器测试"},
-    {"test_synchronization", test_synchronization, "同步性测试"},
-	{"test_kernel_kill", test_kill,"内核下的kill测试"},
-	{"test_user_kill",test_user_kill,"用户进程kill测试"},
-	{"test_user_fork", test_user_fork, "用户进程Fork测试"},
-	{"test_file_syscalls",test_file_syscalls,"用户进程文件操作"},
-	{"test_syscall_performance",test_syscall_performance,"测试系统调用开销"}
+// 内核测试命令表
+struct CommandEntry kernel_test_table[] = {
+    {"test_timer_interrupt", test_timer_interrupt},
+    {"test_exception", test_exception},
+    {"test_interrupt_overhead", test_interrupt_overhead},
+    {"test_process", test_process_creation},
+    {"test_scheduler", test_scheduler},
+    {"test_synchronization", test_synchronization},
+    {"test_kernel_kill", test_kill},
 };
-#define COMMAND_COUNT (sizeof(command_table)/sizeof(command_table[0]))
+
+#define KERNEL_TEST_COUNT (sizeof(kernel_test_table)/sizeof(kernel_test_table[0]))
+
 void kernel_main(void);
 // start函数：内核的C语言入口
 void start(){
@@ -49,14 +43,22 @@ void start(){
 }
 // 显示菜单函数
 void print_menu(void) {
-    printf("\n可用命令:\n");
-    for (int i = 0; i < COMMAND_COUNT; i++) {
-        printf("  %d. %s \t\t\t-%s\n", i+1, command_table[i].name, command_table[i].desc);
+    printf("\n=== 内核测试 ===\n");
+    for (int i = 0; i < KERNEL_TEST_COUNT; i++) {
+        printf("  k%d. %s\n", i+1, kernel_test_table[i].name);
     }
+    
+    printf("\n=== 用户测试 ===\n");
+    for (int i = 0; i < USER_TEST_COUNT; i++) {
+        printf("  u%d. %s\n", i+1, user_test_table[i].name);
+    }
+    
+    printf("\n=== 基础命令 ===\n");
     printf("  h. help          - 显示此帮助\n");
     printf("  e. exit          - 退出控制台\n");
     printf("  p. ps            - 显示进程状态\n");
 }
+
 void console(void) {
     char input_buffer[256];
     int exit_requested = 0;
@@ -66,65 +68,68 @@ void console(void) {
         printf("\nConsole >>> ");
         readline(input_buffer, sizeof(input_buffer));
 
-        // 处理空输入
         if (input_buffer[0] == '\0') continue;
 
-        // 处理单字符命令
-        if (input_buffer[0] == 'e' || input_buffer[0] == 'E') {
-            exit_requested = 1;
-            continue;
-        }
-        if (input_buffer[0] == 'h' || input_buffer[0] == 'H') {
-            print_menu();
-            continue;
-        }
-        if (input_buffer[0] == 'p' || input_buffer[0] == 'P') {
-            print_proc_table();
-            continue;
-        }
-
-        // 尝试解析数字
-        int cmd_index = -1;
-        if (input_buffer[0] >= '1' && input_buffer[0] <= '9') {
-            cmd_index = atoi(input_buffer) - 1;
-            if (cmd_index >= 0 && cmd_index < COMMAND_COUNT) {
-                // 执行对应命令
-                printf("\n----- 执行命令: %s -----\n", command_table[cmd_index].name);
-                int pid = create_kernel_proc(command_table[cmd_index].func);
-                if (pid < 0) {
-                    printf("创建%s进程失败\n", command_table[cmd_index].name);
-                } else {
-                    printf("创建%s进程成功，PID: %d\n", command_table[cmd_index].name, pid);
-                    int status;
-                    int waited_pid = wait_proc(&status);
-                    if (waited_pid == pid) {
-                        printf("%s进程(PID: %d)已退出，状态码: %d\n", 
-                            command_table[cmd_index].name, pid, status);
-                    } else {
-                        printf("等待%s进程时发生错误\n", command_table[cmd_index].name);
-                    }
-                }
+        // 处理基础命令
+        switch(input_buffer[0]) {
+            case 'e':
+            case 'E':
+                exit_requested = 1;
                 continue;
-            }
+            case 'h':
+            case 'H':
+                print_menu();
+                continue;
+            case 'p':
+            case 'P':
+                print_proc_table();
+                continue;
         }
 
-        // 如果不是数字，尝试命令名匹配
-        int found = 0;
-        for (int i = 0; i < COMMAND_COUNT; i++) {
-            if (strcmp(input_buffer, command_table[i].name) == 0) {
-                cmd_index = i;
-                found = 1;
-                break;
+        // 解析测试命令
+        if (input_buffer[0] == 'k' || input_buffer[0] == 'K') {
+            // 内核测试
+            int index = atoi(input_buffer + 1) - 1;
+            if (index >= 0 && index < KERNEL_TEST_COUNT) {
+                printf("\n----- 执行内核测试: %s -----\n", 
+                       kernel_test_table[index].name);
+                int pid = create_kernel_proc(kernel_test_table[index].func);
+                if (pid < 0) {
+                    printf("创建内核测试进程失败\n");
+                } else {
+                    printf("创建内核测试进程成功，PID: %d\n", pid);
+                    int status;
+                    wait_proc(&status);
+                }
+            } else {
+                printf("无效的内核测试序号\n");
             }
-        }
-
-        if (!found) {
-            printf("无效命令或序号: %s\n", input_buffer);
+        } else if (input_buffer[0] == 'u' || input_buffer[0] == 'U') {
+            // 用户测试
+            int index = atoi(input_buffer + 1) - 1;
+            if (index >= 0 && index < USER_TEST_COUNT) {
+                printf("\n----- 执行用户测试: %s -----\n", 
+                       user_test_table[index].name);
+                       
+                int pid = create_user_proc(user_test_table[index].binary,
+                                         user_test_table[index].size);
+                                         
+                if (pid < 0) {
+                    printf("创建用户测试进程失败\n");
+                } else {
+                    printf("创建用户测试进程成功，PID: %d\n", pid);
+                    int status;
+                    wait_proc(&status);
+                }
+            } else {
+                printf("无效的用户测试序号\n");
+            }
+        } else {
+            printf("无效命令: %s\n", input_buffer);
             printf("输入 'h' 查看帮助\n");
         }
     }
     printf("控制台进程退出\n");
-    return;
 }
 void kernel_main(void){
 	// 内核主函数

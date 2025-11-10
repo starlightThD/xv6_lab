@@ -327,33 +327,6 @@ void test_process_creation(void) {
 
     printf("===== 测试结束: 进程创建与管理测试 =====\n");
 }
-void test_user_fork(void) {
-    printf("===== 测试开始: 用户进程Fork测试 =====\n");
-    
-    // 创建fork测试进程
-    printf("\n----- 创建fork测试进程 -----\n");
-    int fork_test_pid = create_user_proc(fork_user_test_bin, fork_user_test_bin_len);
-    
-    if (fork_test_pid < 0) {
-        printf("【错误】: 创建fork测试进程失败\n");
-        return;
-    }
-    
-    printf("【测试结果】: 创建fork测试进程成功，PID: %d\n", fork_test_pid);
-    
-    // 等待fork测试进程完成
-    printf("\n----- 等待fork测试进程完成 -----\n");
-    int status;
-    int waited_pid = wait_proc(&status);
-    if (waited_pid == fork_test_pid) {
-        printf("【测试结果】: fork测试进程(PID: %d)完成，状态码: %d\n", fork_test_pid, status);
-        printf("✓ Fork测试: 通过\n");
-    } else {
-        printf("【错误】: 等待fork测试进程时出错，等待到PID: %d，期望PID: %d\n", waited_pid, fork_test_pid);
-        printf("✗ Fork测试: 失败\n");
-    }
-    printf("===== 测试结束: 用户进程Fork测试 =====\n");
-}
 void cpu_intensive_task(void) {
     int pid = myproc()->pid;
     printf("[进程 %d] 开始CPU密集计算\n", pid);
@@ -569,83 +542,4 @@ void test_kill(void){
 		}
 	}
 	exit_proc(0);
-}
-void test_user_kill(void){
-	printf("===== 测试开始: 用户进程Kill测试 =====\n");
-    
-    printf("\n----- 创建fork测试进程 -----\n");
-    int test_pid = create_user_proc(kill_user_test_bin, kill_user_test_bin_len);
-    
-    if (test_pid < 0) {
-        printf("【错误】: 创建fork测试进程失败\n");
-        return;
-    }
-    
-    printf("【测试结果】: 创建fork测试进程成功，PID: %d\n", test_pid);
-    
-    // 等待fork测试进程完成
-    printf("\n----- 等待fork测试进程完成 -----\n");
-    int status;
-    int waited_pid = wait_proc(&status);
-    if (waited_pid == test_pid) {
-        printf("【测试结果】: fork测试进程(PID: %d)完成，状态码: %d\n", test_pid, status);
-    } else {
-        printf("【错误】: 等待fork测试进程时出错，等待到PID: %d，期望PID: %d\n", waited_pid, test_pid);
-    }
-    printf("===== 测试结束: 用户进程Kill测试 =====\n");
-}
-void test_file_syscalls(void) {
-    printf("\n===== 测试开始: 文件系统调用测试 =====\n");
-    
-    printf("\n----- 创建文件测试进程 -----\n");
-    int test_pid = create_user_proc(file_test_bin, file_test_bin_len);
-    
-    if (test_pid < 0) {
-        printf("【错误】: 创建文件测试进程失败\n");
-        return;
-    }
-    
-    printf("【测试结果】: 创建文件测试进程成功，PID: %d\n", test_pid);
-    
-    // 等待测试进程完成
-    printf("\n----- 等待文件测试进程完成 -----\n");
-    int status;
-    int waited_pid = wait_proc(&status);
-    if (waited_pid == test_pid) {
-        printf("【测试结果】: 文件测试进程(PID: %d)完成，状态码: %d\n", 
-               test_pid, status);
-    } else {
-        printf("【错误】: 等待文件测试进程时出错，等待到PID: %d，期望PID: %d\n", 
-               waited_pid, test_pid);
-    }
-    
-    printf("===== 测试结束: 文件系统调用测试 =====\n");
-}
-void test_syscall_performance(void) {
-    printf("\n===== 测试开始: 系统调用性能测试 =====\n");
-    
-    printf("\n----- 创建性能测试进程 -----\n");
-    int test_pid = create_user_proc(syscall_performance_bin, syscall_performance_bin_len);
-    
-    if (test_pid < 0) {
-        printf("【错误】: 创建性能测试进程失败\n");
-        return;
-    }
-    
-    printf("【测试结果】: 创建性能测试进程成功，PID: %d\n", test_pid);
-    
-    // 等待测试进程完成
-    printf("\n----- 等待性能测试进程完成 -----\n");
-    int status;
-    int waited_pid = wait_proc(&status);
-    
-    if (waited_pid == test_pid) {
-        printf("【测试结果】: 性能测试进程(PID: %d)完成，状态码: %d\n", 
-               test_pid, status);
-    } else {
-        printf("【错误】: 等待性能测试进程时出错，等待到PID: %d，期望PID: %d\n", 
-               waited_pid, test_pid);
-    }
-    
-    printf("===== 测试结束: 系统调用性能测试 =====\n");
 }

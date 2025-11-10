@@ -93,41 +93,45 @@ typedef __builtin_va_list va_list;
 // ========================
 
 struct trapframe {
-  uint64 kernel_satp;	//0
-  uint64 kernel_sp;		//8
-  uint64 kernel_trap;	//16
-  uint64 sstatus;		//24
-  uint64 epc;			//32
-  uint64 kernel_hartid;	//40
-  uint64 ra;			//48
-  uint64 sp;			//56
-  uint64 gp;			//64
-  uint64 tp;			//72
-  uint64 t0;			//80
-  uint64 t1;			//88
-  uint64 t2;			//96
-  uint64 s0;			//104
-  uint64 s1;			//112
-  uint64 a0;			//120
-  uint64 a1;			//128
-  uint64 a2;			//136
-  uint64 a3;
-  uint64 a4;
-  uint64 a5;
-  uint64 a6;
-  uint64 a7;
-  uint64 s2;
-  uint64 s3;
-  uint64 s4;
-  uint64 s5;
-  uint64 s6;
-  uint64 s7;
-  uint64 s8;
-  uint64 s9;
-  uint64 s10;
-  uint64 s11;
-  uint64 usertrap; 		//264
-  uint64 kernel_vec;	//272
+  uint64 kernel_satp;    // 0
+  uint64 kernel_sp;      // 8
+  uint64 kernel_trap;    // 16
+  uint64 usertrap;       // 24
+  uint64 kernel_vec;     // 32
+  uint64 kernel_hartid;  // 40
+  uint64 sstatus;        // 48
+  uint64 epc;           // 56
+  uint64 ra;            // 64
+  uint64 sp;            // 72
+  uint64 gp;            // 80
+  uint64 tp;            // 88
+  uint64 t0;            // 96
+  uint64 t1;            // 104
+  uint64 t2;            // 112
+  uint64 t3;            // 120
+  uint64 t4;            // 128
+  uint64 t5;            // 136
+  uint64 t6;            // 144
+  uint64 s0;            // 152
+  uint64 s1;            // 160
+  uint64 a0;            // 168
+  uint64 a1;            // 176
+  uint64 a2;            // 184
+  uint64 a3;            // 192
+  uint64 a4;            // 200
+  uint64 a5;            // 208
+  uint64 a6;            // 216
+  uint64 a7;            // 224
+  uint64 s2;            // 232
+  uint64 s3;            // 240
+  uint64 s4;            // 248
+  uint64 s5;            // 256
+  uint64 s6;            // 264
+  uint64 s7;            // 272
+  uint64 s8;            // 280
+  uint64 s9;            // 288
+  uint64 s10;           // 296
+  uint64 s11;           // 304
 };
 
 struct uart_input_buf_t {
@@ -147,7 +151,6 @@ struct trap_info {
 struct CommandEntry {
     const char *name;
     void (*func)(void);
-    const char *desc;
 };
 
 struct context {
@@ -340,10 +343,6 @@ void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
 void test_kill(void);
-void test_user_fork(void);
-void test_user_kill(void);
-void test_file_syscalls(void);
-void test_syscall_performance(void);
 // ========================
 // static inline 函数
 // ========================
