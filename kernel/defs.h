@@ -65,6 +65,12 @@
 // syscall.h
 #define SYS_printint   1
 #define SYS_printstr   2
+#define SYS_open  	  16
+#define SYS_close     17
+#define SYS_read      18
+#define SYS_write     19
+#define SYS_sbrk      25
+#define SYS_get_time  42
 #define SYS_exit      93
 #define SYS_kill 	 129
 #define SYS_pid 	 172
@@ -206,6 +212,7 @@ int strlen(const char *s);
 int strcmp(const char *p, const char *q);
 char* strcpy(char *s, const char *t);
 char* safestrcpy(char *s, const char *t, int n);
+int atoi(const char *s);
 
 // sbi.h
 void sbi_set_time(uint64 time);
@@ -293,6 +300,12 @@ void handle_store_page_fault(struct trapframe *tf, struct trap_info *info);
 int handle_page_fault(uint64 va, int type);
 void usertrap(void);
 void usertrapret(void);
+int copyin(char *dst, uint64 srcva, int maxlen);
+int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len);
+int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max);
+int check_user_addr(uint64 addr, uint64 size, int write);
+
+
 
 // proc.h
 extern void swtch(struct context *old, struct context *new);
@@ -321,12 +334,16 @@ struct proc* get_proc(int pid);
 // test.h
 void test_timer_interrupt(void);
 void test_exception(void);
+void test_interrupt_overhead(void);
 
 void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
 void test_kill(void);
 void test_user_fork(void);
+void test_user_kill(void);
+void test_file_syscalls(void);
+void test_syscall_performance(void);
 // ========================
 // static inline 函数
 // ========================

@@ -37,3 +37,29 @@ char* safestrcpy(char *s, const char *t, int n) {
     *s = 0;
     return os;
 }
+// 将字符串转换为整数
+int atoi(const char *s) {
+    int n = 0;
+    int sign = 1;  // 正负号
+
+    // 跳过空白字符
+    while (*s == ' ' || *s == '\t') {
+        s++;
+    }
+
+    // 处理符号
+    if (*s == '-') {
+        sign = -1;
+        s++;
+    } else if (*s == '+') {
+        s++;
+    }
+
+    // 转换数字字符
+    while (*s >= '0' && *s <= '9') {
+        n = n * 10 + (*s - '0');
+        s++;
+    }
+
+    return sign * n;
+}

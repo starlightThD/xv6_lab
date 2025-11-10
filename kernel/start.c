@@ -6,11 +6,17 @@ void hello_world() {
 }
 struct CommandEntry command_table[] = {
     {"hello", hello_world, "打印Hello World"},
-    {"test_proc", test_process_creation, "进程创建测试"},
-    {"test_sche", test_scheduler, "调度器测试"},
-    {"test_sync", test_synchronization, "同步性测试"},
-	{"test_kill", test_kill,"内核下的kill测试"},
-	{"test_fork", test_user_fork, "用户进程Fork测试"},
+	{"test_timer_interrupt",test_timer_interrupt,"时钟中断测试"},
+	{"test_exception",test_exception,"异常测试"},
+	{"test_interrupt_overhead",test_interrupt_overhead,"测试中断开销"},
+    {"test_proccess", test_process_creation, "进程创建测试"},
+    {"test_scheduler", test_scheduler, "调度器测试"},
+    {"test_synchronization", test_synchronization, "同步性测试"},
+	{"test_kernel_kill", test_kill,"内核下的kill测试"},
+	{"test_user_kill",test_user_kill,"用户进程kill测试"},
+	{"test_user_fork", test_user_fork, "用户进程Fork测试"},
+	{"test_file_syscalls",test_file_syscalls,"用户进程文件操作"},
+	{"test_syscall_performance",test_syscall_performance,"测试系统调用开销"}
 };
 #define COMMAND_COUNT (sizeof(command_table)/sizeof(command_table[0]))
 void kernel_main(void);
@@ -41,59 +47,80 @@ void start(){
     // 防止返回保险
     panic("START: main() exit unexpectedly!!!\n");
 }
-
+// 显示菜单函数
+void print_menu(void) {
+    printf("\n可用命令:\n");
+    for (int i = 0; i < COMMAND_COUNT; i++) {
+        printf("  %d. %s \t\t\t-%s\n", i+1, command_table[i].name, command_table[i].desc);
+    }
+    printf("  h. help          - 显示此帮助\n");
+    printf("  e. exit          - 退出控制台\n");
+    printf("  p. ps            - 显示进程状态\n");
+}
 void console(void) {
     char input_buffer[256];
     int exit_requested = 0;
-
-    printf("可用命令:\n");
-    for (int i = 0; i < COMMAND_COUNT; i++) {
-        printf("  %s - %s\n", command_table[i].name, command_table[i].desc);
-    }
-    printf("  help          - 显示此帮助\n");
-    printf("  exit          - 退出控制台\n");
-    printf("  ps            - 显示进程状态\n");
+    print_menu();
 
     while (!exit_requested) {
-        printf("Console >>> ");
+        printf("\nConsole >>> ");
         readline(input_buffer, sizeof(input_buffer));
 
-        if (strcmp(input_buffer, "exit") == 0) {
+        // 处理空输入
+        if (input_buffer[0] == '\0') continue;
+
+        // 处理单字符命令
+        if (input_buffer[0] == 'e' || input_buffer[0] == 'E') {
             exit_requested = 1;
-        } else if (strcmp(input_buffer, "help") == 0) {
-            printf("可用命令:\n");
-            for (int i = 0; i < COMMAND_COUNT; i++) {
-                printf("  %s - %s\n", command_table[i].name, command_table[i].desc);
-            }
-            printf("  help          - 显示此帮助\n");
-            printf("  exit          - 退出控制台\n");
-            printf("  ps            - 显示进程状态\n");
-        } else if (strcmp(input_buffer, "ps") == 0) {
+            continue;
+        }
+        if (input_buffer[0] == 'h' || input_buffer[0] == 'H') {
+            print_menu();
+            continue;
+        }
+        if (input_buffer[0] == 'p' || input_buffer[0] == 'P') {
             print_proc_table();
-        } else {
-            int found = 0;
-            for (int i = 0; i < COMMAND_COUNT; i++) {
-                if (strcmp(input_buffer, command_table[i].name) == 0) {
-                    int pid = create_kernel_proc(command_table[i].func);
-                    if (pid < 0) {
-                        printf("创建%s进程失败\n", command_table[i].name);
+            continue;
+        }
+
+        // 尝试解析数字
+        int cmd_index = -1;
+        if (input_buffer[0] >= '1' && input_buffer[0] <= '9') {
+            cmd_index = atoi(input_buffer) - 1;
+            if (cmd_index >= 0 && cmd_index < COMMAND_COUNT) {
+                // 执行对应命令
+                printf("\n----- 执行命令: %s -----\n", command_table[cmd_index].name);
+                int pid = create_kernel_proc(command_table[cmd_index].func);
+                if (pid < 0) {
+                    printf("创建%s进程失败\n", command_table[cmd_index].name);
+                } else {
+                    printf("创建%s进程成功，PID: %d\n", command_table[cmd_index].name, pid);
+                    int status;
+                    int waited_pid = wait_proc(&status);
+                    if (waited_pid == pid) {
+                        printf("%s进程(PID: %d)已退出，状态码: %d\n", 
+                            command_table[cmd_index].name, pid, status);
                     } else {
-                        printf("创建%s进程成功，PID: %d\n", command_table[i].name, pid);
-                        int status;
-                        int waited_pid = wait_proc(&status);
-                        if (waited_pid == pid) {
-                            printf("%s进程(PID: %d)已退出，状态码: %d\n", command_table[i].name, pid, status);
-                        } else {
-                            printf("等待%s进程时发生错误\n", command_table[i].name);
-                        }
+                        printf("等待%s进程时发生错误\n", command_table[cmd_index].name);
                     }
-                    found = 1;
-                    break;
                 }
+                continue;
             }
-            if (!found && input_buffer[0] != '\0') {
-                printf("无效命令: %s\n", input_buffer);
+        }
+
+        // 如果不是数字，尝试命令名匹配
+        int found = 0;
+        for (int i = 0; i < COMMAND_COUNT; i++) {
+            if (strcmp(input_buffer, command_table[i].name) == 0) {
+                cmd_index = i;
+                found = 1;
+                break;
             }
+        }
+
+        if (!found) {
+            printf("无效命令或序号: %s\n", input_buffer);
+            printf("输入 'h' 查看帮助\n");
         }
     }
     printf("控制台进程退出\n");

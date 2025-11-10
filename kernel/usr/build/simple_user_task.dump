@@ -6,23 +6,25 @@ Disassembly of section .text:
 
 0000000000010000 <main>:
    10000:	00010537          	lui	a0,0x10
-   10004:	04050513          	addi	a0,a0,64 # 10040 <_start+0x1c>
-   10008:	4889                	c.li	a7,2
-   1000a:	00000073          	ecall
-   1000e:	4501                	c.li	a0,0
-   10010:	0ac00893          	addi	a7,zero,172
-   10014:	00000073          	ecall
-   10018:	4885                	c.li	a7,1
-   1001a:	2501                	c.addiw	a0,0
-   1001c:	00000073          	ecall
-   10020:	4501                	c.li	a0,0
-   10022:	8082                	c.jr	ra
+   10004:	04050513          	addi	a0,a0,64 # 10040 <_start+0x1a>
+   10008:	4581                	c.li	a1,0
+   1000a:	4889                	c.li	a7,2
+   1000c:	00000073          	ecall
+   10010:	4501                	c.li	a0,0
+   10012:	0ac00893          	addi	a7,zero,172
+   10016:	00000073          	ecall
+   1001a:	4885                	c.li	a7,1
+   1001c:	2501                	c.addiw	a0,0
+   1001e:	00000073          	ecall
+   10022:	4501                	c.li	a0,0
+   10024:	8082                	c.jr	ra
 
-0000000000010024 <_start>:
-   10024:	1141                	c.addi	sp,-16
-   10026:	e406                	c.sdsp	ra,8(sp)
-   10028:	00000097          	auipc	ra,0x0
-   1002c:	fd8080e7          	jalr	ra,-40(ra) # 10000 <main>
-   10030:	05d00893          	addi	a7,zero,93
-   10034:	00000073          	ecall
-   10038:	a001                	c.j	10038 <_start+0x14>
+0000000000010026 <_start>:
+   10026:	1141                	c.addi	sp,-16
+   10028:	e406                	c.sdsp	ra,8(sp)
+   1002a:	00000097          	auipc	ra,0x0
+   1002e:	fd6080e7          	jalr	ra,-42(ra) # 10000 <main>
+   10032:	4581                	c.li	a1,0
+   10034:	05d00893          	addi	a7,zero,93
+   10038:	00000073          	ecall
+   1003c:	a001                	c.j	1003c <_start+0x16>

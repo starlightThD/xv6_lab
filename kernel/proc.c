@@ -379,31 +379,24 @@ void kill_proc(int pid){
 }
 void exit_proc(int status) {
     struct proc *p = myproc();
-    
     if (p == 0) {
         panic("exit_proc: no current process");
     }
-    
     p->exit_status = status;
-    
     // 如果没有父进程的初始进程退出，表示关机
     if (!p->parent) {
         shutdown();
     }
-    
     // 设置为僵尸状态
     p->state = ZOMBIE;
-    
     wakeup((void*)p->parent);
     // 清除当前进程
     current_proc = 0;
     if (mycpu())
         mycpu()->proc = 0;
-    
     // 让出CPU给其他进程
     struct cpu *c = mycpu();
     swtch(&p->context, &c->context);
-    
     panic("exit_proc should not return after schedule");
 }
 int wait_proc(int *status) {
@@ -439,10 +432,9 @@ int wait_proc(int *status) {
         if (found_zombie) {
             if (status)
                 *status = zombie_status;
-
+			intr_on();
             free_proc(zombie_child);
             zombie_child = NULL;
-            intr_on();
             return zombie_pid;
         }
         

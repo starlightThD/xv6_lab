@@ -24,3 +24,19 @@
 
 #define PA2VA(pa) ((void *)(pa))
 #define VA2PA(va) ((uint64)(va))
+
+// ...existing code...
+
+// 用户空间布局定义
+#define USER_TEXT_START    0x1000          // 用户代码段起始地址
+#define USER_DATA_START    0x2000          // 用户数据段起始地址
+#define USER_HEAP_START    0x00400000      // 用户堆起始地址（4MB）
+#define USER_STACK_SIZE    0x20000         // 用户栈大小（128KB）
+#define USER_STACK_TOP     (MAXVA - PGSIZE)// 用户栈顶地址
+#define USER_STACK_BOTTOM  (USER_STACK_TOP - USER_STACK_SIZE) // 用户栈底地址
+#define USER_HEAP_MAX      USER_STACK_BOTTOM // 堆的最大扩展限制
+
+// 用户空间地址检查宏
+#define IS_USER_ADDR(va) ((uint64)(va) < MAXVA)
+#define IS_USER_STACK(va) ((uint64)(va) >= USER_STACK_BOTTOM && (uint64)(va) < USER_STACK_TOP)
+#define IS_USER_HEAP(va)  ((uint64)(va) >= USER_HEAP_START && (uint64)(va) < USER_HEAP_MAX)

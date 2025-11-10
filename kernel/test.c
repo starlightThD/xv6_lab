@@ -11,28 +11,27 @@ uint64 get_time(void) {
 void test_timer_interrupt(void) {
     printf("Testing timer interrupt...\n");
 
-    // 记录中断前的时间
     uint64 start_time = get_time();
     int interrupt_count = 0;
-	int last_count = interrupt_count;
-    // 设置测试标志
+    int last_count = 0;
+
+    // 设置全局测试标志，让中断处理函数能访问
     interrupt_test_flag = &interrupt_count;
 
-    // 等待几次中断
     while (interrupt_count < 5) {
-        if(last_count != interrupt_count) {
-			last_count = interrupt_count;
-			printf("Received interrupt %d\n", interrupt_count);
-		}
+        if (last_count != interrupt_count) {
+            last_count = interrupt_count;
+            printf("Received interrupt %d\n", interrupt_count);
+        }
         // 简单延时
         for (volatile int i = 0; i < 1000000; i++);
     }
 
-    // 测试结束，清除标志
+    // 清除测试标志
     interrupt_test_flag = 0;
 
     uint64 end_time = get_time();
-    printf("Timer test completed: %d interrupts in %lu cycles\n", 
+    printf("Timer test completed: %d interrupts in %lu cycles\n",
            interrupt_count, end_time - start_time);
 }
 
@@ -43,7 +42,7 @@ void test_exception(void) {
     // 1. 测试非法指令异常
     printf("1. 测试非法指令异常...\n");
     asm volatile (".word 0xffffffff");  // 非法RISC-V指令
-    printf("✓ 非法指令异常处理成功\n\n");
+    printf("✓ 识别到指令异常并尝试忽略\n\n");
     
     // 2. 测试存储页故障
     printf("2. 测试存储页故障异常...\n");
@@ -78,7 +77,7 @@ void test_exception(void) {
     if (invalid_ptr != 0) {
         printf("尝试读取未映射内存地址 0x%lx\n", (uint64)invalid_ptr);
         volatile uint64 value = *invalid_ptr;  // 触发加载页故障
-        printf("读取的值: %lu\n", value);  // 不太可能执行到这里，除非故障被处理
+        printf("读取的值: %lu\n", value);  // 除非故障被处理
         printf("✓ 加载页故障异常处理成功\n\n");
     } else {
         printf("警告: 无法找到未映射地址进行测试!\n\n");
@@ -135,9 +134,55 @@ void test_exception(void) {
     asm volatile ("ecall");  // 从S模式生成环境调用
     printf("✓ 环境调用异常处理成功\n\n");
     
-    printf("===== 异常处理测试完成 =====\n\n");
+    printf("===== 部分异常处理测试完成 =====\n\n");
+	printf("===== 测试不可恢复的除零异常 ====\n");
+	unsigned int a = 1;
+	unsigned int b =0;
+	unsigned int result = a/b;
+	// 根据中科大的手册，RV32I并不会因为除零而进入trap
+	printf("这行不应该被打印，如果打印了，那么result = %d\n",result);
 }
+void test_interrupt_overhead(void) {
+    printf("\n===== 开始中断开销测试 =====\n");
 
+    // 1. 测量时钟中断处理时间
+    printf("\n----- 测试1: 时钟中断处理时间 -----\n");
+    uint64 start_cycles, end_cycles;
+    int count = 0;
+    volatile int *test_flag = &count;
+    
+    // 记录开始时间
+    start_cycles = get_time();
+    interrupt_test_flag = test_flag;  // 设置全局标志
+    
+    // 等待10次中断
+    while(count < 10) {
+        // 空循环等待中断
+        asm volatile("nop");
+    }
+    
+    end_cycles = get_time();
+    interrupt_test_flag = 0;  // 清除标志
+    
+    uint64 total_cycles = end_cycles - start_cycles;
+    uint64 avg_cycles1 = total_cycles / 10;
+    printf("平均每次时钟中断处理耗时: %lu cycles\n", avg_cycles1);
+    
+    // 2. 测量上下文切换成本
+    printf("\n----- 测试2: 上下文切换成本 -----\n");
+    start_cycles = get_time();
+    
+    // 执行1000次yield来触发上下文切换
+    for(int i = 0; i < 1000; i++) {
+        asm volatile (".word 0xffffffff");  // 非法RISC-V指令
+    }
+    
+    end_cycles = get_time();
+    uint64 avg_cycles2 = (end_cycles - start_cycles) / 1000;
+	printf("平均每次时钟中断处理耗时: %lu cycles\n", avg_cycles1);
+    printf("平均每次上下文切换耗时: %lu cycles\n", avg_cycles2);
+    printf("\n===== 中断开销测试完成 =====\n");
+}
 
 // proc_test
 // 简单测试任务，用于测试进程创建
@@ -310,31 +355,73 @@ void test_user_fork(void) {
     printf("===== 测试结束: 用户进程Fork测试 =====\n");
 }
 void cpu_intensive_task(void) {
+    int pid = myproc()->pid;
+    printf("[进程 %d] 开始CPU密集计算\n", pid);
+    
     uint64 sum = 0;
-    for (uint64 i = 0; i < 10000000; i++) {
-        sum += i;
+    
+    // 增加循环次数到1亿次
+    const uint64 TOTAL_ITERATIONS = 100000000;
+    const uint64 REPORT_INTERVAL = TOTAL_ITERATIONS / 100;  // 每完成1%报告一次
+    
+    // 执行计算任务
+    for (uint64 i = 0; i < TOTAL_ITERATIONS; i++) {
+        // 增加计算复杂度
+        sum += (i * i) % 1000000007;  // 添加乘法和取模运算
+        
+        // 更频繁的进度报告（每1%报告一次）
+        if (i % REPORT_INTERVAL == 0) {
+            uint64 percent = (i * 100) / TOTAL_ITERATIONS;
+            printf("[进程 %d] 完成度: %lu%%，当前sum=%lu\n", 
+                   pid, percent, sum);
+            
+            // 主动让出CPU，增加切换机会
+            if (i > 0) {
+                yield();
+            }
+        }
     }
-    printf("CPU intensive task done in PID %d, sum=%lu\n", myproc()->pid, sum);
+    
+    printf("[进程 %d] 计算完成，最终sum=%lu\n", pid, sum);
     exit_proc(0);
 }
 
+// 改进后的调度器测试函数
 void test_scheduler(void) {
-    printf("===== 测试开始: 调度器测试 =====\n");
-
+    printf("\n===== 测试开始: 调度器公平性测试 =====\n");
+    
     // 创建多个计算密集型进程
+    int pids[3];
     for (int i = 0; i < 3; i++) {
-        create_kernel_proc(cpu_intensive_task);
+        pids[i] = create_kernel_proc(cpu_intensive_task);
+        if (pids[i] < 0) {
+            printf("【错误】创建进程 %d 失败\n", i);
+            return;
+        }
+        printf("创建进程成功，PID: %d\n", pids[i]);
     }
-
-    // 观察调度行为
+    
+    // 等待所有进程完成并记录时间
     uint64 start_time = get_time();
-	for (int i = 0; i < 3; i++) {
-    	wait_proc(NULL); // 等待所有子进程结束
-	}
+    int completed = 0;
+    
+    while (completed < 3) {
+        int status;
+        int pid = wait_proc(&status);
+        if (pid > 0) {
+            completed++;
+            printf("进程 %d 已完成，退出状态: %d (%d/3)\n", 
+                   pid, status, completed);
+        }
+    }
+    
     uint64 end_time = get_time();
-
-    printf("Scheduler test completed in %lu cycles\n", end_time - start_time);
-    printf("===== 测试结束 =====\n");
+    uint64 total_cycles = end_time - start_time;
+    
+    printf("\n----- 测试结果 -----\n");
+    printf("总执行时间: %lu cycles\n", total_cycles);
+    printf("平均每个进程执行时间: %lu cycles\n", total_cycles / 3);
+    printf("===== 调度器测试完成 =====\n");
 }
 static int proc_buffer = 0;
 static int proc_produced = 0;
@@ -345,6 +432,18 @@ void shared_buffer_init() {
 }
 
 void producer_task(void) {
+	// 复杂计算
+	int pid = myproc()->pid;
+    uint64 sum = 0;
+    const uint64 ITERATIONS = 10000000;  // 一千万次循环
+    
+    for(uint64 i = 0; i < ITERATIONS; i++) {
+        sum += (i * i) % 1000000007;  // 复杂计算
+        if(i % (ITERATIONS/10) == 0) {
+            printf("[Producer %d] 计算进度: %d%%\n", 
+                   pid, (int)(i * 100 / ITERATIONS));
+        }
+    }
     proc_buffer = 42;
     proc_produced = 1;
     wakeup(&proc_produced); // 唤醒消费者
@@ -354,6 +453,7 @@ void producer_task(void) {
 
 void consumer_task(void) {
     while (!proc_produced) {
+		printf("wait for producer\n");
         sleep(&proc_produced); // 等待生产者
     }
     printf("Consumer: consumed value %d\n", proc_buffer);
@@ -493,4 +593,59 @@ void test_user_kill(void){
         printf("【错误】: 等待fork测试进程时出错，等待到PID: %d，期望PID: %d\n", waited_pid, test_pid);
     }
     printf("===== 测试结束: 用户进程Kill测试 =====\n");
+}
+void test_file_syscalls(void) {
+    printf("\n===== 测试开始: 文件系统调用测试 =====\n");
+    
+    printf("\n----- 创建文件测试进程 -----\n");
+    int test_pid = create_user_proc(file_test_bin, file_test_bin_len);
+    
+    if (test_pid < 0) {
+        printf("【错误】: 创建文件测试进程失败\n");
+        return;
+    }
+    
+    printf("【测试结果】: 创建文件测试进程成功，PID: %d\n", test_pid);
+    
+    // 等待测试进程完成
+    printf("\n----- 等待文件测试进程完成 -----\n");
+    int status;
+    int waited_pid = wait_proc(&status);
+    if (waited_pid == test_pid) {
+        printf("【测试结果】: 文件测试进程(PID: %d)完成，状态码: %d\n", 
+               test_pid, status);
+    } else {
+        printf("【错误】: 等待文件测试进程时出错，等待到PID: %d，期望PID: %d\n", 
+               waited_pid, test_pid);
+    }
+    
+    printf("===== 测试结束: 文件系统调用测试 =====\n");
+}
+void test_syscall_performance(void) {
+    printf("\n===== 测试开始: 系统调用性能测试 =====\n");
+    
+    printf("\n----- 创建性能测试进程 -----\n");
+    int test_pid = create_user_proc(syscall_performance_bin, syscall_performance_bin_len);
+    
+    if (test_pid < 0) {
+        printf("【错误】: 创建性能测试进程失败\n");
+        return;
+    }
+    
+    printf("【测试结果】: 创建性能测试进程成功，PID: %d\n", test_pid);
+    
+    // 等待测试进程完成
+    printf("\n----- 等待性能测试进程完成 -----\n");
+    int status;
+    int waited_pid = wait_proc(&status);
+    
+    if (waited_pid == test_pid) {
+        printf("【测试结果】: 性能测试进程(PID: %d)完成，状态码: %d\n", 
+               test_pid, status);
+    } else {
+        printf("【错误】: 等待性能测试进程时出错，等待到PID: %d，期望PID: %d\n", 
+               waited_pid, test_pid);
+    }
+    
+    printf("===== 测试结束: 系统调用性能测试 =====\n");
 }

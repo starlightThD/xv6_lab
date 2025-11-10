@@ -61,7 +61,7 @@ void trap_init(void) {
 	for(int i = 0; i < MAX_IRQ; i++){
 		interrupt_vector[i] = 0;
 	}
-	plic_init();
+	plic_init();// 初始化PLIC（外部中断控制器）
     uint64 sie = r_sie();
     w_sie(sie | (1L << 5) | (1L<<9)); // 设置SIE.STIE位启用时钟中断和外部中断
 	sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
@@ -82,6 +82,9 @@ void kerneltrap(void) {
             // 时钟中断
             timeintr();
             sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
+			if(myproc() && myproc()->state == RUNNING) {
+				yield();  // 当前进程让出 CPU
+			}
         } else if((scause & 0xff) == 9) {
             // 外部中断
             handle_external_interrupt();
@@ -121,18 +124,47 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
     switch (cause) {
         case 0:  // 指令地址未对齐
             printf("Instruction address misaligned: 0x%lx\n", info->stval);
+			if(myproc()->is_user){
+				exit_proc(-1);
+			}
 			set_sepc(tf, info->sepc + 4);  // 使用辅助函数
             break;
             
         case 1:  // 指令访问故障
             printf("Instruction access fault: 0x%lx\n", info->stval);
+			if(myproc()->is_user){
+				exit_proc(-1);
+			}
 			set_sepc(tf, info->sepc + 4);  // 使用辅助函数
             break;
             
-        case 2:  // 非法指令
-            printf("Illegal instruction at 0x%lx: 0x%lx\n", info->sepc, info->stval);
+		case 2:  // 非法指令
+			// 检查是否是除0导致的非法指令
+			uint32_t instruction;
+			if (copyin((char*)&instruction, (uint64)info->sepc, 4) == 0) {
+				uint32_t opcode = instruction & 0x7f;
+				uint32_t funct3 = (instruction >> 12) & 0x7;
+				
+				// 检查是否是除法指令（rv64i中的div/divu/rem/remu等）
+				if (opcode == 0x33 && (funct3 == 0x4 || funct3 == 0x5 || 
+					funct3 == 0x6 || funct3 == 0x7)) {
+					printf("[FATAL] Process %d killed by divide by zero\n", myproc()->pid);
+            		exit_proc(-1);  // 直接终止进程
+				} else {
+					printf("Illegal instruction at 0x%lx: 0x%lx\n", 
+						info->sepc, info->stval);
+				}
+			} else {
+				printf("Illegal instruction at 0x%lx: 0x%lx\n", 
+					info->sepc, info->stval);
+			}
+			// 用户进程直接终止
+			if(myproc()->is_user){
+				exit_proc(-1);
+			}
+			// 内核进程跳过故障指令
 			set_sepc(tf, info->sepc + 4); 
-            break;
+			break;
             
         case 3:  // 断点
             printf("Breakpoint at 0x%lx\n", info->sepc);
@@ -141,6 +173,9 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             
         case 4:  // 加载地址未对齐
             printf("Load address misaligned: 0x%lx\n", info->stval);
+			if(myproc()->is_user){
+				exit_proc(-1);
+			}
 			set_sepc(tf, info->sepc + 4); 
             break;
             
@@ -156,6 +191,9 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             
         case 6:  // 存储地址未对齐
             printf("Store address misaligned: 0x%lx\n", info->stval);
+			if(myproc()->is_user){
+				exit_proc(-1);
+			}
 			set_sepc(tf, info->sepc + 4); 
             break;
             
@@ -170,7 +208,11 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
 			break;
             
         case 8:  // 用户模式环境调用
-            handle_syscall(tf,info);
+			if(myproc()->is_user){
+            	handle_syscall(tf,info);
+			}else{
+				warning("[EXCEPTION] ecall was called in S-mode");
+			}
             break;
             
         case 9:  // 监督模式环境调用
@@ -209,7 +251,6 @@ void* user_va2pa(pagetable_t pagetable, uint64 va) {
 int copyin(char *dst, uint64 srcva, int maxlen) {
     struct proc *p = myproc();
     for (int i = 0; i < maxlen; i++) {
-        // 你需要 walk_lookup 查 srcva+i 是否有效并有PTE_U权限
         char *pa = user_va2pa(p->pagetable, srcva + i);
         if (!pa) return -1;
         dst[i] = *pa;
@@ -239,7 +280,27 @@ int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max) {
     dst[max-1] = '\0';
     return -1; // 超过最大长度还没遇到 \0
 }
-
+int check_user_addr(uint64 addr, uint64 size, int write) {
+    // 基本检查
+    if (!IS_USER_ADDR(addr) || !IS_USER_ADDR(addr + size - 1))
+        return -1;
+        
+    // 检查特定区域
+    if (IS_USER_STACK(addr)) {
+        if (!IS_USER_STACK(addr + size - 1))
+            return -1;  // 跨越栈边界
+    } else if (IS_USER_HEAP(addr)) {
+        if (!IS_USER_HEAP(addr + size - 1))
+            return -1;  // 跨越堆边界
+    } else if (addr < USER_HEAP_START) {
+        if (addr + size > USER_HEAP_START)
+            return -1;  // 跨越代码/数据段边界
+    } else {
+        return -1;  // 在未定义区域
+    }
+    
+    return 0;  // 地址合法
+}
 void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 	switch (tf->a7) {
 		case SYS_printint:
@@ -293,11 +354,74 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 		case SYS_ppid:
 			tf->a0 = myproc()->parent ? myproc()->parent->pid : 0;
 			break;
+		case SYS_get_time:
+			tf->a0 = get_time();
+			break;
 		case SYS_step:
 			tf->a0 = 0;
 			printf("[syscall] step enabled but do nothing\n");
 			break;
+	case SYS_write: {
+		int fd = tf->a0;          // 文件描述符
+		char buf[128];            // 临时缓冲区
+		
+		// 目前只支持标准输出(fd=1)和标准错误(fd=2)
+		if (fd != 1 && fd != 2) {
+			tf->a0 = -1;
+			break;
+		}
+		
+		// 检查用户提供的缓冲区地址是否合法
+		if (check_user_addr(tf->a1, tf->a2, 0) < 0) {
+			printf("[syscall] invalid write buffer address\n");
+			tf->a0 = -1;
+			break;
+		}
+		
+		// 从用户空间安全地复制字符串
+		if (copyinstr(buf, myproc()->pagetable, tf->a1, sizeof(buf)) < 0) {
+			printf("[syscall] invalid write buffer\n");
+			tf->a0 = -1;
+			break;
+		}
+		
+		// 输出到控制台
+		printf("%s", buf);
+		tf->a0 = strlen(buf);  // 返回写入的字节数
+		break;
+	}
 
+	case SYS_read: {
+		int fd = tf->a0;          // 文件描述符
+		uint64 buf = tf->a1;      // 用户缓冲区地址
+		int n = tf->a2;           // 要读取的字节数
+		
+		// 目前只支持标准输入(fd=0)
+		if (fd != 0) {
+			tf->a0 = -1;
+			break;
+		}
+		
+		// 检查用户提供的缓冲区地址是否合法
+		if (check_user_addr(buf, n, 1) < 0) {  // 1表示写入访问
+			printf("[syscall] invalid read buffer address\n");
+			tf->a0 = -1;
+			break;
+		}
+		
+		// TODO: 实现从控制台读取
+		tf->a0 = -1;
+		break;
+	}
+        
+        case SYS_open:
+        case SYS_close: 
+            // 暂时不支持真实的文件操作
+            tf->a0 = -1;
+            break;
+		case SYS_sbrk:
+			tf->a0 = -1;
+			break;
 		default:
 			printf("[syscall] unknown syscall: %ld\n", tf->a7);
 			tf->a0 = -1;
@@ -382,7 +506,6 @@ void usertrap(void) {
 
 void usertrapret(void) {
     struct proc *p = myproc();
-
     // 计算 trampoline 中 uservec 的虚拟地址（对双方页表一致）
     uint64 uservec_va = (uint64)TRAMPOLINE + ((uint64)uservec - (uint64)trampoline);
     w_stvec(uservec_va);

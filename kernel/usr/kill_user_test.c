@@ -11,7 +11,7 @@ int main() {
 		int count = 5000;
 		while(count){
 			count--;
-			if(count%100 == 0){
+			if(count%10 == 0){
 				usr_build_string_with_int(message, "[Child2] Count: ", count, "\n");
                 sys_printstr(message);
                 sys_yield(); // 让出CPU
@@ -22,11 +22,11 @@ int main() {
 		usr_build_string_with_int(message, "【测试】: 创建子进程，PID: ", child1, "\n");
         sys_printstr(message);
         int ret =0;
-        sys_printstr("【测试】: 让进程运行一段时间...\n");
-        // 等待一段时间
-        for (int i = 0; i < 500; i++) {
-            sys_yield();
-        }
+        //sys_printstr("【测试】: 让进程运行一段时间...\n");
+        //// 等待一段时间
+        //for (int i = 0; i < 1000; i++) {
+        //    sys_yield();
+        //}
 		sys_kill(child1);
 		sys_wait(&ret);
 		if(SYS_kill == ret){

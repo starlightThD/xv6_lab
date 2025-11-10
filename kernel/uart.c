@@ -45,7 +45,10 @@ void uart_intr(void) {
 
     while (ReadReg(LSR) & LSR_RX_READY) {
         char c = ReadReg(RHR);
-
+		if (c == 0x0c) { // 是'L'与 0x1f按位与的结果
+            clear_screen();
+            continue;
+        }
         if (c == '\r' || c == '\n') {
             uart_putc('\n');
             // 将编辑好的整行写入全局缓冲区
