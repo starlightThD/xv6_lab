@@ -47,6 +47,9 @@ void uart_intr(void) {
         char c = ReadReg(RHR);
 		if (c == 0x0c) { // 是'L'与 0x1f按位与的结果
             clear_screen();
+			if (myproc()->pid == 1){ // 检查当前进程是否为控制台进程
+				printf("Console >>> ");
+			}
             continue;
         }
         if (c == '\r' || c == '\n') {
