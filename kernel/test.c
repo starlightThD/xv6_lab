@@ -23,8 +23,6 @@ void test_timer_interrupt(void) {
             last_count = interrupt_count;
             printf("Received interrupt %d\n", interrupt_count);
         }
-        // 简单延时
-        for (volatile int i = 0; i < 1000000; i++);
     }
 
     // 清除测试标志
