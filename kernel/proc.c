@@ -31,6 +31,7 @@ struct cpu* mycpu(void) {
 		current_cpu = &cpu_instance;
 		printf("CPU initialized: %p\n", current_cpu);
     }
+	assert(current_cpu != 0);
     return current_cpu;
 }
 void return_to_user(void) {
@@ -115,6 +116,7 @@ struct proc* alloc_proc(int is_user) {
 		struct proc *p = proc_table[i];
         if(p->state == UNUSED) {
             p->pid = i;
+			p->cwd = 0;
             p->state = USED;
 			p->is_user = is_user;
             // 分配 trapframe
@@ -194,6 +196,10 @@ int create_kernel_proc(void (*entry)(void)) {
     } else {
         p->parent = NULL;
     }
+	if (parent && parent->cwd)
+		p->cwd = idup(parent->cwd);
+	else
+		p->cwd = 0; // 或者在 main/init 进程里手动设置
     return p->pid;
 }
 int create_kernel_proc1(void (*entry)(uint64),uint64 arg){
@@ -209,6 +215,10 @@ int create_kernel_proc1(void (*entry)(uint64),uint64 arg){
     } else {
         p->parent = NULL;
     }
+	if (parent && parent->cwd)
+		p->cwd = idup(parent->cwd);
+	else
+		p->cwd = 0; // 或者在 main/init 进程里手动设置
     return p->pid;
 }
 int create_user_proc(const void *user_bin, int bin_size) {
@@ -310,72 +320,77 @@ int fork_proc(void) {
 
     child->state = RUNNABLE;
     child->parent = parent;
+	child->cwd = parent->cwd;
     return child->pid;
 }
 
 
 // 调度器 - 简化版
 void schedule(void) {
-  struct cpu *c = mycpu();
   while(1) {
     intr_on();
     for(int i = 0; i < PROC; i++) {
         struct proc *p = proc_table[i];
-      	if(p->state == RUNNABLE) {
-			p->state = RUNNING;
-			c->proc = p;
-			current_proc = p;
-			swtch(&c->context, &p->context);
-			c->proc = 0;
-			current_proc = 0;
-      }
+        if(p->state == RUNNABLE) {
+            p->state = RUNNING;
+            mycpu()->proc = p;
+            current_proc = p;
+            swtch(&mycpu()->context, &p->context);
+            mycpu()->proc = 0;
+            current_proc = 0;
+        }
     }
   }
 }
 // 进程主动让出CPU
 void yield(void) {
+	intr_off();
     struct proc *p = myproc();
     if (p == 0) {
         return;
     }
-    intr_off();
     struct cpu *c = mycpu();
     p->state = RUNNABLE;
-    //if (c->context.ra == 0) {
-    //    c->context.ra = (uint64)schedule;
-    //    c->context.sp = (uint64)c + PGSIZE;
-    //}
     current_proc = 0;
     c->proc = 0;
+	intr_on();
     swtch(&p->context, &c->context);
-    intr_on();
 	if (p->killed) {
         printf("[yield] Process PID %d killed during yield\n", p->pid);
         exit_proc(SYS_kill);
         return;
     }
 }
-void sleep(void *chan){
+void sleep(void *chan, struct spinlock *lk){
+	intr_off();
     struct proc *p = myproc();
     struct cpu *c = mycpu();
     register uint64 ra asm("ra");
     p->context.ra = ra;
     p->chan = chan;
     p->state = SLEEPING;
+    if (lk){
+        release(lk);
+	}
+	intr_on();
     swtch(&p->context, &c->context);
     p->chan = 0;
-	if(p->killed){
-		printf("[sleep] Process PID %d killed when wakeup\n", p->pid);
-		exit_proc(SYS_kill);
-	}
+    if (lk)
+        acquire(lk);
+    if(p->killed){
+        exit_proc(SYS_kill);
+    }
 }
+
 void wakeup(void *chan) {
+	intr_off();
     for(int i = 0; i < PROC; i++) {
         struct proc *p = proc_table[i];
         if(p->state == SLEEPING && p->chan == chan) {
             p->state = RUNNABLE;
         }
     }
+	intr_on();
 }
 void kill_proc(int pid){
 	for(int i=0;i<PROC;i++){
@@ -465,7 +480,7 @@ int wait_proc(int *status) {
         
         // 有活跃子进程但没有僵尸子进程，进入睡眠等待
 		intr_on();
-        sleep((void*)p);
+        yield();
     }
 }
 

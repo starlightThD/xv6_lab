@@ -262,14 +262,9 @@ int handle_page_fault(uint64 va, int type) {
         }
 
         printf("[PAGE FAULT] 页面已映射且权限正确\n");
+		panic("debug");
         return 1;
     }
-
-    //// 只为用户进程分配新页
-    //if (!is_user) {
-    //    printf("[PAGE FAULT] 系统进程/内核不应分配新页，直接失败\n");
-    //    return 0;
-    //}
 
     void* page = alloc_page();
     if (page == 0) {

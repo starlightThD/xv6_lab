@@ -63,3 +63,30 @@ int atoi(const char *s) {
 
     return sign * n;
 }
+// 比较字符串前 n 个字符
+int strncmp(const char *s, const char *t, int n) {
+    while(n > 0 && *s && *t) {
+        if(*s != *t)
+            return (uchar)*s - (uchar)*t;
+        s++;
+        t++;
+        n--;
+    }
+    if(n == 0)
+        return 0;
+    return (uchar)*s - (uchar)*t;
+}
+
+// 复制字符串前 n 个字符
+char *strncpy(char *dst, const char *src, int n) {
+    char *ret = dst;
+    while(n > 0 && *src) {
+        *dst++ = *src++;
+        n--;
+    }
+    while(n > 0) {
+        *dst++ = 0;
+        n--;
+    }
+    return ret;
+}

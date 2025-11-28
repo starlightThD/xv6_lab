@@ -132,6 +132,18 @@ void console(void) {
     printf("控制台进程退出\n");
 }
 void kernel_main(void){
+	// 设置当前进程的工作目录为根目录
+    struct inode *rootip = iget(ROOTDEV, ROOTINO);
+    if (rootip == 0) {
+        panic("KERNEL_MAIN: cannot get root inode!\n");
+    }
+    myproc()->cwd = rootip;
+	
+	virtio_disk_init();   // 1. 初始化磁盘驱动
+    binit();              // 2. 初始化块缓冲区
+    fileinit();           // 3. 初始化文件表
+    iinit();              // 4. 初始化 inode 表
+    fsinit(ROOTDEV);      // 5. 初始化文件系统（会自动调用 initlog）
 	// 内核主函数
 	clear_screen();
 	int console_pid = create_kernel_proc(console);

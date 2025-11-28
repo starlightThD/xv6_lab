@@ -79,6 +79,84 @@
 #define SYS_wait	 221
 #define SYS_yield    222
 #define SYS_step    0xFFF
+
+// stat.h
+#define T_DIR     1   // Directory
+#define T_FILE    2   // File
+#define T_DEVICE  3   // Device
+
+
+// fs.h
+#define ROOTINO    	1
+#define BSIZE      	1024
+#define FSMAGIC    	0x10203040
+#define NDIRECT    	12
+#define NINDIRECT  	(BSIZE / sizeof(uint))
+#define MAXFILE    	(NDIRECT + NINDIRECT)
+#define IPB       	(BSIZE / sizeof(struct dinode))
+#define BPB       	(BSIZE*8)
+#define DIRSIZ    	14
+#define NPROC        64  // maximum number of processes
+#define NCPU          8  // maximum number of CPUs
+#define NOFILE       16  // open files per process
+#define NFILE       100  // open files per system
+#define NINODE       50  // maximum number of active i-nodes
+#define NDEV         10  // maximum major device number
+#define ROOTDEV       1  // device number of file system root disk
+#define MAXARG       32  // max exec arguments
+#define MAXOPBLOCKS  10  // max # of blocks any FS op writes
+#define FSSIZE       2000  // size of file system in blocks
+#define MAXPATH      128   // maximum file path name
+#define USERSTACK    1     // user stack pages
+#define CONSOLE 1
+#define IBLOCK(i, sb)     ((i) / IPB + sb.inodestart)
+#define BBLOCK(b, sb) ((b)/BPB + sb.bmapstart)
+// pipe.h
+#define PIPESIZE 512
+
+// virtio.h
+#define VIRTIO_MMIO_MAGIC_VALUE		0x000 // 0x74726976
+#define VIRTIO_MMIO_VERSION			0x004 // version; should be 2
+#define VIRTIO_MMIO_DEVICE_ID		0x008 // device type; 1 is net, 2 is disk
+#define VIRTIO_MMIO_VENDOR_ID		0x00c // 0x554d4551
+#define VIRTIO_MMIO_DEVICE_FEATURES	0x010
+#define VIRTIO_MMIO_DRIVER_FEATURES	0x020
+#define VIRTIO_MMIO_QUEUE_SEL		0x030 // select queue, write-only
+#define VIRTIO_MMIO_QUEUE_NUM_MAX	0x034 // max size of current queue, read-only
+#define VIRTIO_MMIO_QUEUE_NUM		0x038 // size of current queue, write-only
+#define VIRTIO_MMIO_QUEUE_READY		0x044 // ready bit
+#define VIRTIO_MMIO_QUEUE_NOTIFY	0x050 // write-only
+#define VIRTIO_MMIO_INTERRUPT_STATUS	0x060 // read-only
+#define VIRTIO_MMIO_INTERRUPT_ACK	0x064 // write-only
+#define VIRTIO_MMIO_STATUS		0x070 // read/write
+#define VIRTIO_MMIO_QUEUE_DESC_LOW	0x080 // physical address for descriptor table, write-only
+#define VIRTIO_MMIO_QUEUE_DESC_HIGH	0x084
+#define VIRTIO_MMIO_DRIVER_DESC_LOW	0x090 // physical address for available ring, write-only
+#define VIRTIO_MMIO_DRIVER_DESC_HIGH	0x094
+#define VIRTIO_MMIO_DEVICE_DESC_LOW	0x0a0 // physical address for used ring, write-only
+#define VIRTIO_MMIO_DEVICE_DESC_HIGH	0x0a4
+#define VIRTIO_CONFIG_S_ACKNOWLEDGE	1
+#define VIRTIO_CONFIG_S_DRIVER		2
+#define VIRTIO_CONFIG_S_DRIVER_OK	4
+#define VIRTIO_CONFIG_S_FEATURES_OK	8
+#define VIRTIO_BLK_F_RO              5	/* Disk is read-only */
+#define VIRTIO_BLK_F_SCSI            7	/* Supports scsi command passthru */
+#define VIRTIO_BLK_F_CONFIG_WCE     11	/* Writeback mode available in config */
+#define VIRTIO_BLK_F_MQ             12	/* support more than one vq */
+#define VIRTIO_F_ANY_LAYOUT         27
+#define VIRTIO_RING_F_INDIRECT_DESC 28
+#define VIRTIO_RING_F_EVENT_IDX     29
+#define NUM 16
+#define VRING_DESC_F_NEXT  1 // chained with another descriptor
+#define VRING_DESC_F_WRITE 2 // device writes (vs read)
+#define VIRTIO_BLK_T_IN  0 // read the disk
+#define VIRTIO_BLK_T_OUT 1 // write the disk
+
+// bio.h
+#define BSIZE 1024
+#define MAXOPBLOCKS  10  // max # of blocks any FS op writes
+#define LOGBLOCKS    (MAXOPBLOCKS*3)  // max data blocks in on-disk log
+#define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 // ========================
 // typedef
 // ========================
@@ -191,8 +269,177 @@ struct proc {
   uint64 sz;
   pagetable_t pagetable;
   struct trapframe *trapframe;
+  struct inode *cwd; // 当前工作目录
+};
+// fs.h
+// 超级块结构
+struct superblock {
+    uint magic;
+    uint size;
+    uint nblocks;
+    uint ninodes;
+    uint nlog;
+    uint logstart;
+    uint inodestart;
+    uint bmapstart;
+};
+// 磁盘 inode 结构
+struct dinode {
+    short type;
+    short major;
+    short minor;
+    short nlink;
+    uint size;
+    uint addrs[NDIRECT+1];
 };
 
+// 目录项结构
+struct dirent {
+  ushort inum;
+  char name[DIRSIZ] __attribute__((nonstring));
+};
+
+// spinlock.h
+struct spinlock {
+  uint locked;       // Is the lock held?
+  char *name;        // Name of lock.
+};
+// sleeplock.h
+struct sleeplock {
+  uint locked;       // Is the lock held?
+  struct spinlock lk; // spinlock protecting this sleep lock
+  char *name;        // Name of lock.
+  int pid;           // Process holding lock
+};
+// 内存 inode 结构
+struct inode {
+    uint dev;
+    uint inum;
+    int ref;
+    int valid;
+    int used;           // 0: 空闲，1: 被占用
+    // 从磁盘拷贝的内容
+    short type;
+    short major;
+    short minor;
+    short nlink;
+    uint size;
+    uint addrs[NDIRECT+1];
+	struct sleeplock lock;    // 新增：inode的睡眠锁
+};
+
+// virtio.h
+struct virtq_desc {
+  uint64 addr;
+  uint32 len;
+  uint16 flags;
+  uint16 next;
+};
+
+struct virtq_avail {
+  uint16 flags; // always zero
+  uint16 idx;   // driver will write ring[idx] next
+  uint16 ring[NUM]; // descriptor numbers of chain heads
+  uint16 unused;
+};
+
+struct virtq_used_elem {
+  uint32 id;   // index of start of completed descriptor chain
+  uint32 len;
+};
+
+struct virtq_used {
+  uint16 flags; // always zero
+  uint16 idx;   // device increments when it adds a ring[] entry
+  struct virtq_used_elem ring[NUM];
+};
+struct virtio_blk_req {
+  uint32 type; // VIRTIO_BLK_T_IN or ..._OUT
+  uint32 reserved;
+  uint64 sector;
+};
+
+struct disk {
+  struct virtq_desc *desc;
+  struct virtq_avail *avail;
+  struct virtq_used *used;
+  char free[NUM];  // is a descriptor free?
+  uint16 used_idx; // we've looked this far in used[2..NUM].
+  struct {
+    struct buf *b;
+    char status;
+  } info[NUM];
+  struct virtio_blk_req ops[NUM];
+  struct spinlock vdisk_lock;
+};
+
+
+
+// bio.h
+struct buf {
+  int valid;   // has data been read from disk?
+  int disk;    // does disk "own" buf?
+  uint dev;
+  uint blockno;
+  uint refcnt;
+  struct sleeplock lock; // 统一使用 sleeplock
+  struct buf *prev; // LRU cache list
+  struct buf *next;
+  uchar data[BSIZE];
+};
+
+struct Bcache {
+  struct buf buf[NBUF];
+  struct buf head;
+  struct spinlock lock; // 全局锁
+};
+
+// log.h
+struct logheader {
+  int n;
+  int block[LOGBLOCKS];
+};
+
+struct log {
+	struct spinlock lock;
+  int start;
+  int outstanding; // how many FS sys calls are executing.
+  int committing;  // in commit(), please wait.
+  int dev;
+  struct logheader lh;
+};
+// file.h
+struct file {
+  enum { FD_NONE, FD_PIPE, FD_INODE, FD_DEVICE } type;
+  int ref; // reference count
+  char readable;
+  char writable;
+  struct pipe *pipe; // FD_PIPE
+  struct inode *ip;  // FD_INODE and FD_DEVICE
+  uint off;          // FD_INODE
+  short major;       // FD_DEVICE
+};
+struct devsw {
+  int (*read)(int, uint64, int);
+  int (*write)(int, uint64, int);
+};
+// pipe.h
+struct pipe {
+  char data[PIPESIZE];
+  uint nread;     // number of bytes read
+  uint nwrite;    // number of bytes written
+  int readopen;   // read fd is still open
+  int writeopen;  // write fd is still open
+};
+
+// stat.h
+struct stat {
+  int dev;     // File system's disk device
+  uint ino;    // Inode number
+  short type;  // Type of file
+  short nlink; // Number of links to file
+  uint64 size; // Size of file in bytes
+};
 // ========================
 // 函数声明（分模块）
 // ========================
@@ -216,6 +463,8 @@ int strcmp(const char *p, const char *q);
 char* strcpy(char *s, const char *t);
 char* safestrcpy(char *s, const char *t, int n);
 int atoi(const char *s);
+int strncmp(const char *s, const char *t, int n);
+char *strncpy(char *dst, const char *src, int n);
 
 // sbi.h
 void sbi_set_time(uint64 time);
@@ -329,7 +578,7 @@ void return_to_user(void);
 void forkret(void);
 void schedule(void);
 void yield(void);
-void sleep(void *chan);
+void sleep(void *chan,struct spinlock *lk);
 void wakeup(void *chan);
 void print_proc_table(void);
 struct proc* get_proc(int pid);
@@ -343,6 +592,78 @@ void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
 void test_kill(void);
+
+// virtio_disk.h
+void virtio_disk_init(void);
+int alloc_desc(void);
+void free_desc(int i);
+void free_chain(int i);
+int alloc3_desc(int *idx);
+void virtio_disk_rw(struct buf *b, int write);
+void virtio_disk_intr(void);
+
+// spinlock.h
+void initlock(struct spinlock *lk, char *name);
+void acquire(struct spinlock *lk);
+void release(struct spinlock *lk);
+int holding(struct spinlock *lk);
+
+// sleeplock.h
+void initsleeplock(struct sleeplock *lk, char *name);
+void acquiresleep(struct sleeplock *lk);
+void releasesleep(struct sleeplock *lk);
+int holdingsleep(struct sleeplock *lk);
+
+// bio.h
+void binit(void);
+struct buf* bread(uint dev, uint blockno);
+void bwrite(struct buf *b);
+void brelse(struct buf *b);
+void bpin(struct buf *b);
+void bunpin(struct buf *b);
+
+// log.h
+void initlog(int dev, struct superblock *sb);
+void begin_op(void);
+void end_op(void);
+void recover_from_log(void);
+void log_write(struct buf *b);
+
+// pipe.h
+int pipealloc(struct file **f0, struct file **f1);
+void pipeclose(struct pipe *pi, int writable);
+int pipewrite(struct pipe *pi, uint64 addr, int n);
+int piperead(struct pipe *pi, uint64 addr, int n);
+
+// file.h
+void fileinit(void);
+struct file* filealloc(void);
+struct file* filedup(struct file *f);
+void fileclose(struct file *f);
+int filestat(struct file *f, uint64 addr);
+int fileread(struct file *f, uint64 addr, int n);
+int filewrite(struct file *f, uint64 addr, int n);
+
+// fs.h
+void fsinit(int dev);
+struct inode* ialloc(uint dev, short type);
+void iinit();
+struct inode* idup(struct inode *ip);
+void ilock(struct inode *ip);
+void iunlock(struct inode *ip);      // 你需要在文件中实现或声明
+void iput(struct inode *ip);
+void iupdate(struct inode *ip);  
+void itrunc(struct inode *ip); 
+void stati(struct inode *ip, struct stat *st);
+int readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n);
+int writei(struct inode *ip, int user_src, uint64 src, uint off, uint n);
+struct inode* dirlookup(struct inode *dp, char *name, uint *poff);
+int dirlink(struct inode *dp, char *name, uint inum);
+struct inode* namei(char *path);
+struct inode* nameiparent(char *path, char *name);
+void ireclaim(int dev); 
+struct inode* iget(uint dev, uint inum);
+void iunlockput(struct inode *ip);
 // ========================
 // static inline 函数
 // ========================

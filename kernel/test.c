@@ -425,7 +425,7 @@ void producer_task(void) {
 void consumer_task(void) {
     while (!proc_produced) {
 		printf("wait for producer\n");
-        sleep(&proc_produced); // 等待生产者
+        sleep(&proc_produced,NULL); // 等待生产者
     }
     printf("Consumer: consumed value %d\n", proc_buffer);
     exit_proc(0);

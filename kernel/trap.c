@@ -1,6 +1,7 @@
 #include "defs.h"
 extern char trampoline[],uservec[], userret[];
 extern pagetable_t kernel_pagetable;
+extern void virtio_disk_intr(void);
 static inline void save_exception_info(struct trapframe *tf, uint64 sepc, uint64 sstatus, uint64 scause, uint64 stval) {
     tf->epc = sepc;
     // 其他字段需要保存在全局变量或函数参数中
@@ -65,9 +66,12 @@ void trap_init(void) {
     uint64 sie = r_sie();
     w_sie(sie | (1L << 5) | (1L<<9)); // 设置SIE.STIE位启用时钟中断和外部中断
 	sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
+	register_interrupt(VIRTIO0_IRQ, virtio_disk_intr); //设置VIRTIO0中断
+	//enable_interrupts(VIRTIO0_IRQ);
 	printf("Registered exception handlers: store_page_fault=%p\n", handle_store_page_fault);
 	printf("trap_init complete.\n");
 }
+
 void kerneltrap(void) {
     // 保存当前中断状态
     uint64 sstatus = r_sstatus();

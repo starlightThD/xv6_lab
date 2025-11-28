@@ -1,5 +1,6 @@
 K=kernel
 USRDIR = $(K)/usr
+DISK = fs.img
 
 ifndef TOOLPREFIX
 TOOLPREFIX := $(shell if riscv64-unknown-elf-objdump -i 2>&1 | grep 'elf64-big' >/dev/null 2>&1; \
@@ -33,7 +34,11 @@ LDFLAGS = -z max-page-size=4096 -g
 
 # QEMU 配置
 QEMU = qemu-system-riscv64
-QEMUOPTS = -machine virt -bios /usr/riscv64-linux-gnu/opensbi/fw_jump.elf -kernel $K/kernel -m 128M -smp 1 -nographic
+QEMUOPTS = -machine virt -bios /usr/riscv64-linux-gnu/opensbi/fw_jump.elf -kernel $K/kernel -m 128M -smp 1 -nographic \
+-global virtio-mmio.force-legacy=false \
+-drive file=$(DISK),if=none,format=raw,id=x0 \
+-device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
+-d int -D qemu_int.log 
 
 # 最小化对象文件
 MINIMAL_OBJS = \
@@ -53,9 +58,17 @@ MINIMAL_OBJS = \
   $K/switch.o \
   $K/proc.o  \
   $K/string.o \
-  $K/test.o 
+  $K/test.o \
+  $K/virtio_disk.o \
+  $K/bio.o \
+  $K/log.o \
+  $K/file.o \
+  $K/pipe.o \
+  $K/fs.o	\
+  $K/spinlock.o \
+  $K/sleeplock.o
 
-all: userprog $(K)/kernel
+all: userprog $(K)/kernel 
 
 userprog:
 	$(MAKE) -C $(USRDIR)
@@ -115,6 +128,30 @@ $K/string.o: $K/string.c
 
 $K/test.o: $K/test.c
 	$(CC) $(CFLAGS) -c $K/test.c -o $K/test.o
+
+$K/virtio_disk.o: $K/virtio_disk.c
+	$(CC) $(CFLAGS) -c $K/virtio_disk.c -o $K/virtio_disk.o
+
+$K/bio.o: $K/bio.c
+	$(CC) $(CFLAGS) -c $K/bio.c -o $K/bio.o
+
+$K/log.o: $K/log.c	
+	$(CC) $(CFLAGS) -c $K/log.c -o $K/log.o
+
+$K/file.o: $K/file.c
+	$(CC) $(CFLAGS) -c $K/file.c -o $K/file.o
+
+$K/pipe.o: $K/pipe.c
+	$(CC) $(CFLAGS) -c $K/pipe.c -o $K/pipe.o 
+
+$K/fs.o: $K/fs.c
+	$(CC) $(CFLAGS) -c $K/fs.c -o $K/fs.o 
+
+$K/spinlock.o: $K/spinlock.c
+	$(CC) $(CFLAGS) -c $K/spinlock.c -o $K/spinlock.o 
+
+$K/sleeplock.o: $K/sleeplock.c
+	$(CC) $(CFLAGS) -c $K/sleeplock.c -o $K/sleeplock.o 
 # 验证内存布局
 check: $K/kernel
 	@echo "=== 检查段信息 ==="
@@ -179,4 +216,4 @@ clean: clean-debug
 	$(MAKE) -C $(USRDIR) clean
 	rm -f $K/*.o $K/kernel $K/*.asm $K/*.sym
 
-.PHONY: all userprog check clean qemu qemu-gdb debug gdb-init clean-debug
+.PHONY: all userprog check clean qemu qemu-gdb debug gdb-init clean-debug fs
