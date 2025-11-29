@@ -541,3 +541,41 @@ void test_kill(void){
 	}
 	exit_proc(0);
 }
+
+void test_filesystem_integrity(void) {
+    printf("Testing filesystem integrity (kernel mode)...\n");
+
+    // 创建或查找测试文件 inode
+    struct inode *ip = create("testfile", T_FILE, 0, 0);
+    assert(ip != NULL);
+
+    // 打开文件
+    struct file *f = fileopen(ip, 1, 1); // 可读可写
+    assert(f != NULL);
+
+    // 写入数据
+    char buffer[] = "Hello, filesystem!";
+    int bytes = filewrite(f, (uint64)buffer, strlen(buffer));
+    assert(bytes == strlen(buffer));
+
+    // 关闭文件
+    fileclose(f);
+
+    // 重新打开并验证
+    ip = namei("testfile");
+    assert(ip != NULL);
+    f = fileopen(ip, 1, 0); // 只读
+    assert(f != NULL);
+
+    char read_buffer[64];
+    bytes = fileread(f, (uint64)read_buffer, sizeof(read_buffer) - 1);
+    read_buffer[bytes] = '\0';
+
+    assert(strcmp(buffer, read_buffer) == 0);
+    fileclose(f);
+
+    // 删除文件
+    assert(unlink("testfile") == 0);
+
+    printf("Filesystem integrity test passed (kernel mode)\n");
+}
