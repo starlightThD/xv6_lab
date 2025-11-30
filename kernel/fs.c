@@ -427,7 +427,6 @@ int writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
 			break;
 		bp = bread(ip->dev, addr);
 		m = min(n - tot, BSIZE - off % BSIZE);
-		printf("writei: user_src=%d, src=%p, m=%u\n", user_src, (void*)src, m);
 		if (either_copyin(bp->data + (off % BSIZE), user_src, src, m) == -1)
 		{
 			brelse(bp);
@@ -632,7 +631,8 @@ create(char *path, short type, short major, short minor)
 		panic("create: dirlink");
 
 	iunlockput(dp);
-	end_op(); // 结束事务
+	iunlock(ip);
+	end_op(); 
 	return ip;
 }
 int unlink(char *path)

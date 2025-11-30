@@ -68,57 +68,6 @@ recover_from_log(void)
   log.lh.n = 0;
   write_head(); // clear the log
 }
-//// called at the start of each FS system call.
-//void
-//begin_op(void)
-//{
-//  acquire(&log.lock);
-//  while(1){
-//    if(log.committing){
-//      sleep(&log, &log.lock);
-//    } else if(log.lh.n + (log.outstanding+1)*MAXOPBLOCKS > LOGBLOCKS){
-//      // this op might exhaust log space; wait for commit.
-//      sleep(&log, &log.lock);
-//    } else {
-//      log.outstanding += 1;
-//      release(&log.lock);
-//      break;
-//    }
-//  }
-//}
-
-//// called at the end of each FS system call.
-//// commits if this was the last outstanding operation.
-//void
-//end_op(void)
-//{
-//  int do_commit = 0;
-
-//  acquire(&log.lock);
-//  log.outstanding -= 1;
-//  if(log.committing)
-//    panic("log.committing");
-//  if(log.outstanding == 0){
-//    do_commit = 1;
-//    log.committing = 1;
-//  } else {
-//    // begin_op() may be waiting for log space,
-//    // and decrementing log.outstanding has decreased
-//    // the amount of reserved space.
-//    wakeup(&log);
-//  }
-//  release(&log.lock);
-
-//  if(do_commit){
-//    // call commit w/o holding locks, since not allowed
-//    // to sleep with locks.
-//    commit();
-//    acquire(&log.lock);
-//    log.committing = 0;
-//    wakeup(&log);
-//    release(&log.lock);
-//  }
-//}
 void
 begin_op(void)
 {
@@ -126,14 +75,11 @@ begin_op(void)
   printf("[begin_op] outstanding(before)=%d\n", log.outstanding);
   while(1){
     if(log.committing){
-      printf("[begin_op] sleep: committing\n");
       sleep(&log, &log.lock);
     } else if(log.lh.n + (log.outstanding+1)*MAXOPBLOCKS > LOGBLOCKS){
-      printf("[begin_op] sleep: log space exhausted (lh.n=%d, outstanding=%d)\n", log.lh.n, log.outstanding);
       sleep(&log, &log.lock);
     } else {
       log.outstanding += 1;
-      printf("[begin_op] outstanding(after)=%d\n", log.outstanding);
       release(&log.lock);
       break;
     }
@@ -148,13 +94,11 @@ end_op(void)
   acquire(&log.lock);
   printf("[end_op] outstanding(before)=%d\n", log.outstanding);
   log.outstanding -= 1;
-  printf("[end_op] outstanding(after)=%d\n", log.outstanding);
   if(log.committing)
     panic("log.committing");
   if(log.outstanding == 0){
     do_commit = 1;
     log.committing = 1;
-    printf("[end_op] do_commit=1\n");
   } else {
     wakeup(&log);
   }

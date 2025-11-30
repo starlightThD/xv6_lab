@@ -18,7 +18,6 @@ acquiresleep(struct sleeplock *lk)
   }
   lk->locked = 1;
   lk->pid = myproc()->pid;
-  printf("pid %d acquire sleeplock %s\n",myproc()->pid,lk->name);
   release(&lk->lk);
 }
 
@@ -28,7 +27,6 @@ releasesleep(struct sleeplock *lk)
   acquire(&lk->lk);
   lk->locked = 0;
   lk->pid = 0;
-  printf("pid %d release sleeplock %s\n",myproc()->pid,lk->name);
   wakeup(lk);
   release(&lk->lk);
 }

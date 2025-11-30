@@ -37,8 +37,7 @@ QEMU = qemu-system-riscv64
 QEMUOPTS = -machine virt -bios /usr/riscv64-linux-gnu/opensbi/fw_jump.elf -kernel $K/kernel -m 128M -smp 1 -nographic \
 -global virtio-mmio.force-legacy=false \
 -drive file=$(DISK),if=none,format=raw,id=x0 \
--device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
--d int -D qemu_int.log 
+-device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
 # 最小化对象文件
 MINIMAL_OBJS = \

@@ -546,36 +546,48 @@ void test_filesystem_integrity(void) {
     printf("Testing filesystem integrity (kernel mode)...\n");
 
     // 创建或查找测试文件 inode
-    struct inode *ip = create("testfile", T_FILE, 0, 0);
+    const char *filename = "testfile";
+    printf("Creating/opening file: %s\n", filename);
+    struct inode *ip = create((char *)filename, T_FILE, 0, 0);
     assert(ip != NULL);
 
     // 打开文件
     struct file *f = fileopen(ip, 1, 1); // 可读可写
     assert(f != NULL);
+    printf("File opened for write: %s\n", filename);
 
     // 写入数据
     char buffer[] = "Hello, filesystem!";
+    printf("Writing data: \"%s\" (len=%lu)\n", buffer, strlen(buffer));
     int bytes = filewrite(f, (uint64)buffer, strlen(buffer));
+    printf("Wrote %d bytes to file\n", bytes);
     assert(bytes == strlen(buffer));
 
     // 关闭文件
     fileclose(f);
+    printf("File closed after write: %s\n", filename);
 
     // 重新打开并验证
-    ip = namei("testfile");
+    ip = namei((char *)filename);
     assert(ip != NULL);
     f = fileopen(ip, 1, 0); // 只读
     assert(f != NULL);
+    printf("File opened for read: %s\n", filename);
 
     char read_buffer[64];
     bytes = fileread(f, (uint64)read_buffer, sizeof(read_buffer) - 1);
     read_buffer[bytes] = '\0';
+    printf("Read %d bytes from file\n", bytes);
+    printf("Read data: \"%s\"\n", read_buffer);
 
     assert(strcmp(buffer, read_buffer) == 0);
     fileclose(f);
+    printf("File closed after read: %s\n", filename);
 
     // 删除文件
-    assert(unlink("testfile") == 0);
+    int unlink_ret = unlink((char *)filename);
+    printf("Unlink file: %s, result=%d\n", filename, unlink_ret);
+    assert(unlink_ret == 0);
 
     printf("Filesystem integrity test passed (kernel mode)\n");
 }
