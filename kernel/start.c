@@ -10,6 +10,7 @@ struct CommandEntry kernel_test_table[] = {
     {"test_synchronization", test_synchronization},
     {"test_kernel_kill", test_kill},
 	{"test_filesys_integrity",test_filesystem_integrity},
+	{"test_concurrent_access",test_concurrent_access},
 };
 
 #define KERNEL_TEST_COUNT (sizeof(kernel_test_table)/sizeof(kernel_test_table[0]))

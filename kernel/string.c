@@ -90,3 +90,10 @@ char *strncpy(char *dst, const char *src, int n) {
     }
     return ret;
 }
+// 简单实现 strcat
+char* strcat(char *dst, const char *src) {
+    char *ret = dst;
+    while(*dst) dst++;
+    while((*dst++ = *src++));
+    return ret;
+}

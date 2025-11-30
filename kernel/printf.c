@@ -57,19 +57,16 @@ static void printint(long long xx, int base, int sign, int width, int padzero){
     while (--i >= 0)
         consputc(buf[i]);
 }
-void printf(const char *fmt, ...) {
-    va_list ap;
+void vprintf(const char *fmt, va_list ap) {
     int i, c;
     char *s;
 
-    va_start(ap, fmt);
     for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
         if(c != '%'){
             buffer_char(c);
             continue;
         }
-        flush_printf_buffer(); // 遇到格式化标志时，先刷新缓冲区
-		// 解析填充标志和宽度
+        flush_printf_buffer();
         int padzero = 0, width = 0;
         c = fmt[++i] & 0xff;
         if (c == '0') {
@@ -80,7 +77,6 @@ void printf(const char *fmt, ...) {
             width = width * 10 + (c - '0');
             c = fmt[++i] & 0xff;
         }
-        // 检查是否有长整型标记'l'
         int is_long = 0;
         if(c == 'l') {
             is_long = 1;
@@ -88,7 +84,6 @@ void printf(const char *fmt, ...) {
             if(c == 0)
                 break;
         }
-        
         switch(c){
         case 'd':
             if(is_long)
@@ -116,10 +111,9 @@ void printf(const char *fmt, ...) {
                 s = "(null)";
             consputs(s);
             break;
-        case 'p':
+        case 'p': {
             unsigned long ptr = (unsigned long)va_arg(ap, void*);
             consputs("0x");
-            // 输出16位宽，不足补0
             char buf[17];
             int i;
             for (i = 0; i < 16; i++) {
@@ -129,6 +123,7 @@ void printf(const char *fmt, ...) {
             buf[16] = '\0';
             consputs(buf);
             break;
+        }
         case 'b':
             if(is_long)
                 printint(va_arg(ap, long long), 2, 0, width, padzero);
@@ -147,16 +142,18 @@ void printf(const char *fmt, ...) {
         default:
             buffer_char('%');
             if(padzero) buffer_char('0');
-            if(width) {
-                // 只支持一位宽度，简单处理
-                buffer_char('0' + width);
-            }
+            if(width) buffer_char('0' + width);
             if(is_long) buffer_char('l');
             buffer_char(c);
             break;
         }
     }
-    flush_printf_buffer(); // 最后刷新缓冲区
+    flush_printf_buffer();
+}
+void printf(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
     va_end(ap);
 }
 // 清屏功能
@@ -295,7 +292,7 @@ void warning(const char *fmt, ...) {
     color_purple(); // 设置紫色
     printf("[WARNING] ");
     va_start(ap, fmt);
-    printf(fmt, ap);
+    vprintf(fmt, ap);
     va_end(ap);
     reset_color(); // 恢复默认颜色
 }

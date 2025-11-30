@@ -508,6 +508,7 @@ char *safestrcpy(char *s, const char *t, int n);
 int atoi(const char *s);
 int strncmp(const char *s, const char *t, int n);
 char *strncpy(char *dst, const char *src, int n);
+char* strcat(char *dst, const char *src);
 
 // sbi.h
 void sbi_set_time(uint64 time);
@@ -635,6 +636,7 @@ void test_synchronization(void);
 void test_kill(void);
 
 void test_filesystem_integrity(void);
+void test_concurrent_access(void);
 // virtio_disk.h
 void virtio_disk_init(void);
 int alloc_desc(void);
@@ -684,8 +686,10 @@ struct file *filedup(struct file *f);
 struct file *fileopen(struct inode *ip, int readable, int writable);
 void fileclose(struct file *f);
 int filestat(struct file *f, uint64 addr);
-int fileread(struct file *f, uint64 addr, int n);
-int filewrite(struct file *f, uint64 addr, int n);
+void filelock(struct file *f);
+void fileunlock(struct file *f);
+int read(struct file *f, uint64 addr, int n);
+int write(struct file *f, uint64 addr, int n);
 
 // fs.h
 void fsinit(int dev);

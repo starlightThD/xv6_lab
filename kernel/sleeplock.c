@@ -13,6 +13,11 @@ void
 acquiresleep(struct sleeplock *lk)
 {
   acquire(&lk->lk);
+if (lk->locked && lk->pid == myproc()->pid) {
+    warning("sleeplock: pid %d tries to recursively acquire lock '%s'\n", myproc()->pid, lk->name);
+    release(&lk->lk);
+    return;
+  }
   while (lk->locked) {
     sleep(lk, &lk->lk);
   }

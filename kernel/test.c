@@ -556,10 +556,10 @@ void test_filesystem_integrity(void) {
     assert(f != NULL);
     printf("File opened for write: %s\n", filename);
 
-    // 写入数据
+    // 写入数据（加锁）
     char buffer[] = "Hello, filesystem!";
     printf("Writing data: \"%s\" (len=%lu)\n", buffer, strlen(buffer));
-    int bytes = filewrite(f, (uint64)buffer, strlen(buffer));
+    int bytes = write(f, (uint64)buffer, strlen(buffer));
     printf("Wrote %d bytes to file\n", bytes);
     assert(bytes == strlen(buffer));
 
@@ -574,13 +574,14 @@ void test_filesystem_integrity(void) {
     assert(f != NULL);
     printf("File opened for read: %s\n", filename);
 
+    // 读取数据（加锁）
     char read_buffer[64];
-    bytes = fileread(f, (uint64)read_buffer, sizeof(read_buffer) - 1);
+    bytes = read(f, (uint64)read_buffer, sizeof(read_buffer) - 1);
     read_buffer[bytes] = '\0';
     printf("Read %d bytes from file\n", bytes);
     printf("Read data: \"%s\"\n", read_buffer);
-
     assert(strcmp(buffer, read_buffer) == 0);
+
     fileclose(f);
     printf("File closed after read: %s\n", filename);
 
@@ -590,4 +591,91 @@ void test_filesystem_integrity(void) {
     assert(unlink_ret == 0);
 
     printf("Filesystem integrity test passed (kernel mode)\n");
+}
+void make_pid_string(char *buf, int pid) {
+    strcpy(buf, "my pid is ");
+    // 转换 pid 为字符串
+    char num[16];
+    int n = pid, i = 0;
+    if(n == 0) {
+        num[i++] = '0';
+    } else {
+        int tmp = n;
+        while(tmp > 0) {
+            tmp /= 10;
+            i++;
+        }
+        num[i] = '\0';
+        tmp = n;
+        for(int j = i - 1; j >= 0; j--) {
+            num[j] = '0' + (tmp % 10);
+            tmp /= 10;
+        }
+    }
+    strcat(buf, num);
+}
+void concurrent_child_task(uint64 filename_addr) {
+    const char *filename = (const char *)filename_addr;
+    struct inode *ip = namei((char *)filename);
+    assert(ip != NULL);
+
+    struct file *f = fileopen(ip, 1, 1); // 可读可写
+    assert(f != NULL);
+    char read_buffer[64];
+    int bytes = read(f, (uint64)read_buffer, sizeof(read_buffer) - 1);
+    read_buffer[bytes] = '\0';
+    printf("[Child %d] Read from file: \"%s\"\n", myproc()->pid, read_buffer);
+
+    // 写入自己的 pid
+    char write_buffer[64];
+    make_pid_string(write_buffer, myproc()->pid);
+    int len = strlen(write_buffer);
+	f->off = 0;
+    write(f, (uint64)write_buffer, len);
+    fileclose(f);
+    exit_proc(0);
+}
+void test_concurrent_access(void) {
+    printf("Testing concurrent file access...\n");
+
+    const char *filename = "concurrent_testfile";
+    struct inode *ip = create((char *)filename, T_FILE, 0, 0);
+    assert(ip != NULL);
+
+    struct file *f = fileopen(ip, 1, 1);
+    assert(f != NULL);
+
+    // 父进程写入初始内容
+    char buffer[64];
+	make_pid_string(buffer, myproc()->pid);
+	int len = strlen(buffer);
+	write(f, (uint64)buffer, len);
+    fileclose(f);
+    printf("[Parent] Wrote initial content: \"%s\"\n", buffer);
+
+    // 创建三个子进程并发访问
+    int child_pids[3];
+    for (int i = 0; i < 3; i++) {
+        child_pids[i] = create_kernel_proc1(concurrent_child_task, (uint64)filename);
+        printf("[Parent] Created child %d, pid=%d\n", i, child_pids[i]);
+    }
+
+    // 等待所有子进程结束
+    for (int i = 0; i < 3; i++) {
+        wait_proc(NULL);
+    }
+
+    // 父进程再次读取文件内容
+    ip = namei((char *)filename);
+    assert(ip != NULL);
+    f = fileopen(ip, 1, 0); // 只读
+    assert(f != NULL);
+
+    char final_buffer[64];
+    int bytes = read(f, (uint64)final_buffer, sizeof(final_buffer) - 1);
+    final_buffer[bytes] = '\0';
+    printf("[Parent] Final file content: \"%s\"\n", final_buffer);
+
+    fileclose(f);
+    printf("Concurrent access test finished.\n");
 }

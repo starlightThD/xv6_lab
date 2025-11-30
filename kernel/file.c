@@ -86,9 +86,7 @@ void fileclose(struct file *f)
 	}
 	else if (ff.type == FD_INODE || ff.type == FD_DEVICE)
 	{
-		begin_op();
 		iput(ff.ip);
-		end_op();
 	}
 }
 
@@ -110,90 +108,119 @@ int filestat(struct file *f, uint64 addr)
 	}
 	return -1;
 }
-
-// Read from file f.
-// addr is a user virtual address.
-int fileread(struct file *f, uint64 addr, int n)
-{
-	int r = 0;
-
-	if (f->readable == 0)
-		return -1;
-
-	if (f->type == FD_PIPE)
-	{
-		r = piperead(f->pipe, addr, n);
-	}
-	else if (f->type == FD_DEVICE)
-	{
-		if (f->major < 0 || f->major >= NDEV || !devsw[f->major].read)
-			return -1;
-		r = devsw[f->major].read(1, addr, n);
-	}
-	else if (f->type == FD_INODE)
-	{
-		ilock(f->ip);
-		if ((r = readi(f->ip, 0, addr, f->off, n)) > 0)
-			f->off += r;
-		iunlock(f->ip);
-	}
-	else
-	{
-		panic("fileread");
-	}
-
-	return r;
+// 加锁文件（对 inode 加锁）
+void filelock(struct file *f) {
+    if (f->type == FD_INODE || f->type == FD_DEVICE) {
+        ilock(f->ip);
+    }
 }
 
-// Write to file f.
-// addr is a user virtual address.
+// 解锁文件（对 inode 解锁）
+void fileunlock(struct file *f) {
+    if (f->type == FD_INODE || f->type == FD_DEVICE) {
+        iunlock(f->ip);
+    }
+}
+int fileread(struct file *f, uint64 addr, int n)
+{
+    int r = 0;
+
+    if (f->readable == 0)
+        return -1;
+
+    if (f->type == FD_PIPE)
+    {
+        r = piperead(f->pipe, addr, n);
+    }
+    else if (f->type == FD_DEVICE)
+    {
+        if (f->major < 0 || f->major >= NDEV || !devsw[f->major].read)
+            return -1;
+        r = devsw[f->major].read(1, addr, n);
+    }
+    else if (f->type == FD_INODE)
+    {
+        if (!holdingsleep(&f->ip->lock)) {
+            warning("fileread: pid %d must hold inode lock before reading\n", myproc()->pid);
+            return -1;
+        }
+        if ((r = readi(f->ip, 0, addr, f->off, n)) > 0)
+            f->off += r;
+    }
+    else
+    {
+        panic("fileread");
+    }
+
+    return r;
+}
+
 int filewrite(struct file *f, uint64 addr, int n)
 {
-	int r, ret = 0;
+    int r, ret = 0;
 
-	if (f->writable == 0)
-		return -1;
+    if (f->writable == 0)
+        return -1;
 
-	if (f->type == FD_PIPE)
-	{
-		ret = pipewrite(f->pipe, addr, n);
-	}
-	else if (f->type == FD_DEVICE)
-	{
-		if (f->major < 0 || f->major >= NDEV || !devsw[f->major].write)
-			return -1;
-		ret = devsw[f->major].write(1, addr, n);
-	}
-	else if (f->type == FD_INODE)
-	{
-		int max = ((MAXOPBLOCKS - 1 - 1 - 2) / 2) * BSIZE;
-		int i = 0;
-		while (i < n)
-		{
-			int n1 = n - i;
-			if (n1 > max)
-				n1 = max;
+    if (f->type == FD_PIPE)
+    {
+        ret = pipewrite(f->pipe, addr, n);
+    }
+    else if (f->type == FD_DEVICE)
+    {
+        if (f->major < 0 || f->major >= NDEV || !devsw[f->major].write)
+            return -1;
+        ret = devsw[f->major].write(1, addr, n);
+    }
+    else if (f->type == FD_INODE)
+    {
+        if (!holdingsleep(&f->ip->lock)) {
+            warning("filewrite: pid %d must hold inode lock before writing\n", myproc()->pid);
+            return -1;
+        }
+        int max = ((MAXOPBLOCKS - 1 - 1 - 2) / 2) * BSIZE;
+        int i = 0;
+        while (i < n)
+        {
+            int n1 = n - i;
+            if (n1 > max)
+                n1 = max;
 
-			begin_op();
-			ilock(f->ip);
-			if ((r = writei(f->ip, 0, addr + i, f->off, n1)) > 0)
-				f->off += r;
-			iunlock(f->ip);
-			end_op();
+            if ((r = writei(f->ip, 0, addr + i, f->off, n1)) > 0)
+                f->off += r;
 
-			if (r != n1)
-			{
-				// error from writei
-				break;
-			}
-			i += r;
-		}
-		ret = (i == n ? n : -1);
-	}
-	else
-	{
-		panic("filewrite");
-	}
+            if (r != n1)
+            {
+                // error from writei
+                break;
+            }
+            i += r;
+        }
+        ret = (i == n ? n : -1);
+    }
+    else
+    {
+        panic("filewrite");
+    }
 
-	return ret;
+    return ret;
+}
+int read(struct file *f, uint64 addr, int n) {
+    int ret;
+    begin_op();
+    filelock(f);
+    ret = fileread(f, addr, n);
+    fileunlock(f);
+    end_op();
+    return ret;
+}
+
+int write(struct file *f, uint64 addr, int n) {
+    int ret;
+    begin_op();
+    filelock(f);
+    ret = filewrite(f, addr, n);
+    fileunlock(f);
+    end_op();
+    return ret;
 }

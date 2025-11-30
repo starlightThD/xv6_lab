@@ -72,7 +72,6 @@ void
 begin_op(void)
 {
   acquire(&log.lock);
-  printf("[begin_op] outstanding(before)=%d\n", log.outstanding);
   while(1){
     if(log.committing){
       sleep(&log, &log.lock);
@@ -90,9 +89,7 @@ void
 end_op(void)
 {
   int do_commit = 0;
-
   acquire(&log.lock);
-  printf("[end_op] outstanding(before)=%d\n", log.outstanding);
   log.outstanding -= 1;
   if(log.committing)
     panic("log.committing");

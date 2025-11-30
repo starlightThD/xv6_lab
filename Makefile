@@ -67,7 +67,10 @@ MINIMAL_OBJS = \
   $K/spinlock.o \
   $K/sleeplock.o
 
-all: userprog $(K)/kernel 
+fs:
+	rm -rf ./fs.img && ./mkfs fs.img
+
+all: fs userprog $(K)/kernel 
 
 userprog:
 	$(MAKE) -C $(USRDIR)
@@ -161,12 +164,12 @@ check: $K/kernel
 	$(OBJDUMP) -f $K/kernel
 
 # 运行 QEMU
-qemu: userprog $K/kernel
+qemu: fs userprog $K/kernel
 	@echo "=== 启动 QEMU ==="
 	$(QEMU) $(QEMUOPTS)
 
 # 调试模式运行 QEMU (等待 GDB 连接)
-qemu-gdb: userprog $K/kernel
+qemu-gdb: fs userprog $K/kernel
 	@echo "=== 启动 QEMU 调试模式 ==="
 	@echo "使用调试器: $(GDB)"
 	@echo "在另一个终端运行: make debug"
