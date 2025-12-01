@@ -29,9 +29,9 @@ pipealloc(struct file **f0, struct file **f1)
   if(pi)
     free_page((char*)pi);
   if(*f0)
-    fileclose(*f0);
+    close(*f0);
   if(*f1)
-    fileclose(*f1);
+    close(*f1);
   return -1;
 }
 

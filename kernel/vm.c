@@ -17,25 +17,24 @@ pagetable_t create_pagetable(void) {
 }
 // 辅助函数：仅查找
 pte_t* walk_lookup(pagetable_t pt, uint64 va) {
-	va = sv39_sign_extend(va);
-	if (!sv39_check_valid(va))
-		panic("va out of sv39 range");
+    va = sv39_sign_extend(va);
+    if (!sv39_check_valid(va)) {
+        debug("[WALK_LOOKUP] va out of sv39 range: 0x%lx\n", va);
+        return 0;
+    }
+    
     for (int level = 2; level > 0; level--) {
         pte_t *pte = &pt[px(level, va)];
-        if (!pte) {
-            printf("[WALK_LOOKUP] pte is NULL at level %d\n", level);
-            return 0;
-        }
         if (*pte & PTE_V) {
             uint64 pa = PTE2PA(*pte);
-            // 防御性检测：物理地址必须在合法物理内存范围
-            if (pa < KERNBASE || pa >= PHYSTOP) {
-                printf("[WALK_LOOKUP] 非法页表物理地址: 0x%lx (level %d, va=0x%lx)\n", pa, level, va);
+            // 检查物理地址合法性，但放宽范围检查
+            if (pa == 0 || (pa % PGSIZE) != 0) {
+                debug("[WALK_LOOKUP] 无效页表物理地址: 0x%lx (level %d, va=0x%lx)\n", pa, level, va);
                 return 0;
             }
             pt = (pagetable_t)pa;
         } else {
-            printf("[WALK_LOOKUP] 页表项无效: level=%d va=0x%lx\n", level, va);
+            debug("[WALK_LOOKUP] 页表项无效: level=%d va=0x%lx\n", level, va);
             return 0;
         }
     }
@@ -149,30 +148,22 @@ static pagetable_t kvmmake(void) {
 	}
     
     // VIRTIO 设备
-    if (map_page(kpgtbl, VIRTIO0, VIRTIO0, PTE_R | PTE_W) != 0)
-        panic("kvmmake: virtio map failed");
+    if (map_page(kpgtbl, VIRTIO0, VIRTIO0, PTE_R | PTE_W) != 0){
+    	panic("kvmmake: virtio map failed");
+	}
     
-    //// 4. 扩大SBI调用区域映射
-	//for (uint64 pa = 0; pa < 0x100000; pa += PGSIZE) {
-	//	if (map_page(kpgtbl, pa, pa, PTE_R | PTE_W) != 0)
-	//		panic("kvmmake: low memory map failed");
-	//}
-
-	//// 特别映射包含0xfd02080的页
-	//uint64 sbi_special = 0xfd02000;  // 页对齐
-	//if (map_page(kpgtbl, sbi_special, sbi_special, PTE_R | PTE_W) != 0)
-	//	panic("kvmmake: sbi special area map failed");
-	// 分配一页物理内存用于 trampoline
 	void *tramp_phys = alloc_page();
-	if (!tramp_phys)
+	if (!tramp_phys){
 		panic("kvmmake: alloc trampoline page failed");
+	}
 	extern char trampoline[];
 	memcpy(tramp_phys, trampoline, PGSIZE);
 
 	// 分配一页物理内存用于 trapframe
 	void *trapframe_phys = alloc_page();
-	if (!trapframe_phys)
+	if (!trapframe_phys){
 		panic("kvmmake: alloc trapframe page failed");
+	}
 	memset(trapframe_phys, 0, PGSIZE);
 
 	// 映射 trampoline
@@ -188,8 +179,8 @@ static pagetable_t kvmmake(void) {
 	// 保存物理地址供后续使用
 	trampoline_phys_addr = (uint64)tramp_phys;
 	trapframe_phys_addr = (uint64)trapframe_phys;
-	printf("trampoline_phy_addr = %lx\n",trampoline_phys_addr);
-	printf("trapframe_phys_addr = %lx\n",trapframe_phys_addr);
+	debug("trampoline_phy_addr = %lx\n",trampoline_phys_addr);
+	debug("trapframe_phys_addr = %lx\n",trapframe_phys_addr);
     return kpgtbl;
 }
 // 启用分页（单核只需设置一次 satp 并刷新 TLB）
@@ -207,7 +198,7 @@ void kvminit(void) {
     sfence_vma();
     w_satp(MAKE_SATP(kernel_pagetable));
     sfence_vma();
-    printf("[KVM] 内核分页已启用，satp=0x%lx\n", MAKE_SATP(kernel_pagetable));
+    debug("[KVM] 内核分页已启用，satp=0x%lx\n", MAKE_SATP(kernel_pagetable));
 }
 // 获取当前页表
 pagetable_t get_current_pagetable(void) {
@@ -228,64 +219,108 @@ void print_pagetable(pagetable_t pagetable, int level, uint64 va_base) {
     }
 }
 // 处理页面故障（按需分配内存）
-// type: 1=指令页，2=读数据页，3=写数据页
+
+// 修改页错误处理函数
 int handle_page_fault(uint64 va, int type) {
-    printf("[PAGE FAULT] 处理地址 0x%lx, 类型 %d\n", va, type);
+    debug("[PAGE FAULT] 处理地址 0x%lx, 类型 %d\n", va, type);
+
+    // 1. 首先检查空指针访问
+    if (va == 0) {
+        debug("[PAGE FAULT] 检测到空指针访问！\n");
+        panic("Null pointer dereference");
+    }
+
+    // 2. 检查是否访问空指针附近的低地址（通常是编程错误）
+    if (va < PGSIZE) {
+        debug("[PAGE FAULT] 检测到低地址访问 (可能是空指针偏移)！va=0x%lx\n", va);
+        panic("Low address access (likely null pointer offset)");
+    }
 
     uint64 page_va = (va / PGSIZE) * PGSIZE;
+    
+    // 3. 检查地址范围
     if (page_va >= MAXVA) {
-        printf("[PAGE FAULT] 虚拟地址超出范围\n");
-        return 0;
+        debug("[PAGE FAULT] 虚拟地址超出范围\n");
+        panic("Virtual address out of range");
     }
 
     struct proc *p = myproc();
     pagetable_t pt = kernel_pagetable;
-    //int is_user = 0;
+    int is_user = 0;
+    
     if (p && p->pagetable && p->is_user) {
         pt = p->pagetable;
-        //is_user = 1;
+        is_user = 1;
     }
 
-    // 先检查是否已经有映射
+    // 4. 对于用户进程，检查是否访问内核空间
+    if (is_user && va >= 0x80000000 && va != TRAMPOLINE && va != TRAPFRAME) {
+        debug("[PAGE FAULT] 用户进程试图访问内核空间！va=0x%lx\n", va);
+        panic("User process accessing kernel space");
+    }
+
+    // 检查是否已经有映射
     pte_t *pte = walk_lookup(pt, page_va);
     if (pte && (*pte & PTE_V)) {
+        // 计算需要的权限
         int need_perm = 0;
-        if (type == 1) need_perm = PTE_X;
-        else if (type == 2) need_perm = PTE_R;
-        else if (type == 3) need_perm = PTE_R | PTE_W;
+        if (type == 1) need_perm = PTE_X | PTE_R;  // 指令访问
+        else if (type == 2) need_perm = PTE_R;     // 读数据
+        else if (type == 3) need_perm = PTE_R | PTE_W;  // 写数据
 
-        if ((*pte & need_perm) != need_perm) {
+        // 检查当前权限
+        int current_perm = *pte & (PTE_R | PTE_W | PTE_X);
+        if ((current_perm & need_perm) != need_perm) {
+            // 权限不足，尝试添加权限
             *pte |= need_perm;
+            if (is_user && page_va < 0x80000000) {
+                *pte |= PTE_U;  // 用户空间需要PTE_U
+            }
             sfence_vma();
-            printf("[PAGE FAULT] 已更新页面权限\n");
+            debug("[PAGE FAULT] 已更新页面权限\n");
             return 1;
         }
-
-        printf("[PAGE FAULT] 页面已映射且权限正确\n");
-		panic("debug");
-        return 1;
+        
+        // 页面存在且权限正确，这可能是其他问题
+        debug("[PAGE FAULT] 页面已映射且权限正确，可能是访问保护页或其他错误\n");
+        debug("[PAGE FAULT] pte=0x%lx, 当前权限=0x%x, 需要权限=0x%x\n", *pte, current_perm, need_perm);
+        panic("Unexpected page fault on valid mapping");
     }
 
+    // 5. 检查是否应该允许按需分配
+    // 对于某些特殊地址范围，我们可能不想自动分配
+    if (va >= 0xffffff0000000000UL) {  // 非常高的地址，可能是指针计算错误
+        debug("[PAGE FAULT] 检测到异常高地址访问！va=0x%lx\n", va);
+        panic("Abnormally high address access");
+    }
+
+    // 页面不存在，分配新页面
     void* page = alloc_page();
     if (page == 0) {
-        printf("[PAGE FAULT] 内存不足，无法分配页面\n");
-        return 0;
+        debug("[PAGE FAULT] 内存不足，无法分配页面\n");
+        panic("Out of memory during page fault");
     }
     memset(page, 0, PGSIZE);
 
+    // 设置权限
     int perm = 0;
-    if (type == 1) perm = PTE_X | PTE_R | PTE_U;
-    else if (type == 2) perm = PTE_R | PTE_U;
-    else if (type == 3) perm = PTE_R | PTE_W | PTE_U;
+    if (type == 1) perm = PTE_X | PTE_R;
+    else if (type == 2) perm = PTE_R;
+    else if (type == 3) perm = PTE_R | PTE_W;
+
+    // 用户空间添加PTE_U权限
+    if (is_user && page_va < 0x80000000) {
+        perm |= PTE_U;
+    }
 
     if (map_page(pt, page_va, (uint64)page, perm) != 0) {
         free_page(page);
-        printf("[PAGE FAULT] 页面映射失败\n");
-        return 0;
+        debug("[PAGE FAULT] 页面映射失败\n");
+        panic("Failed to map page during page fault");
     }
 
     sfence_vma();
-    printf("[PAGE FAULT] 成功分配并映射页面 0x%lx -> 0x%lx\n", page_va, (uint64)page);
+    debug("[PAGE FAULT] 成功分配并映射页面 0x%lx -> 0x%lx\n", page_va, (uint64)page);
     return 1;
 }
 void test_pagetable(void) {
@@ -344,20 +379,20 @@ void test_pagetable(void) {
 void check_mapping(uint64 va) {
     pte_t *pte = walk_lookup(kernel_pagetable, va);
     if(pte && (*pte & PTE_V)) {
-        printf("Address 0x%lx is mapped: pte=0x%lx\n", va, *pte);
+        debug("Address 0x%lx is mapped: pte=0x%lx\n", va, *pte);
 		volatile unsigned char *p = (unsigned char*)va;
-        printf("Try to read [0x%lx]: 0x%02x\n", va, *p);
+        debug("Try to read [0x%lx]: 0x%02x\n", va, *p);
     } else {
-        printf("Address 0x%lx is NOT mapped\n", va);
+        debug("Address 0x%lx is NOT mapped\n", va);
     }
 }
 int check_is_mapped(uint64 va) {
     pte_t *pte = walk_lookup(get_current_pagetable(), va);
     if (pte && (*pte & PTE_V)) {
-        printf("Address 0x%lx is mapped: pte=0x%lx\n", va, *pte);
+        debug("Address 0x%lx is mapped: pte=0x%lx\n", va, *pte);
         return 1;
     } else {
-        printf("Address 0x%lx is NOT mapped\n", va);
+        debug("Address 0x%lx is NOT mapped\n", va);
         return 0;
     }
 }

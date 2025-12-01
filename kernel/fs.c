@@ -1,7 +1,6 @@
 #include "defs.h"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
-
 struct superblock sb;
 // Read the super block.
 static void
@@ -127,19 +126,21 @@ ialloc(uint dev, short type)
 
 void iupdate(struct inode *ip)
 {
-	struct buf *bp;
-	struct dinode *dip;
+    struct buf *bp;
+    struct dinode *dip;
 
-	bp = bread(ip->dev, IBLOCK(ip->inum, sb));
-	dip = (struct dinode *)bp->data + ip->inum % IPB;
-	dip->type = ip->type;
-	dip->major = ip->major;
-	dip->minor = ip->minor;
-	dip->nlink = ip->nlink;
-	dip->size = ip->size;
-	memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
-	log_write(bp);
-	brelse(bp);
+    bp = bread(ip->dev, IBLOCK(ip->inum, sb));
+    dip = (struct dinode *)bp->data + ip->inum % IPB;
+    // 更新磁盘 inode
+    dip->type = ip->type;
+    dip->major = ip->major;
+    dip->minor = ip->minor;
+    dip->nlink = ip->nlink;
+    dip->size = ip->size;
+    memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
+
+    log_write(bp);
+    brelse(bp);
 }
 struct inode *
 iget(uint dev, uint inum)
@@ -583,14 +584,16 @@ nameiparent(char *path, char *name)
 struct inode *
 create(char *path, short type, short major, short minor)
 {
-	begin_op(); // 开始事务
+	begin_op();
 	char name[DIRSIZ];
 	struct inode *dp, *ip;
 
 	// 找到父目录 inode
 	dp = nameiparent(path, name);
-	if (dp == 0)
+	if (dp == 0){
+		end_op();
 		return 0;
+	}
 
 	ilock(dp);
 
@@ -600,12 +603,12 @@ create(char *path, short type, short major, short minor)
 		iunlockput(dp);
 		ilock(ip);
 		if (type == T_FILE && ip->type == T_FILE) {
-			iunlock(ip); // 释放锁
-			end_op(); // 结束事务
+			iunlock(ip);
+			end_op();
 			return ip;
 		}
 		iunlockput(ip);
-		end_op(); // 结束事务
+		end_op();
 		return 0;
 	}
 
@@ -620,7 +623,6 @@ create(char *path, short type, short major, short minor)
 	ip->nlink = 1;
 	iupdate(ip);
 
-	// 添加目录项
 	if (type == T_DIR)
 	{
 		dp->nlink++;
@@ -637,20 +639,23 @@ create(char *path, short type, short major, short minor)
 }
 int unlink(char *path)
 {
-	begin_op(); // 开始事务
+	begin_op(); 
 	struct inode *dp, *ip;
 	char name[DIRSIZ];
 	uint off;
 
 	dp = nameiparent(path, name);
-	if (dp == 0)
+	if (dp == 0){
+		end_op();
 		return -1;
+	}
 
 	ilock(dp);
 
 	if ((ip = dirlookup(dp, name, &off)) == 0)
 	{
 		iunlockput(dp);
+		end_op();
 		return -1;
 	}
 
@@ -662,7 +667,6 @@ int unlink(char *path)
 	ip->nlink--;
 	iupdate(ip);
 
-	// 清空目录项
 	struct dirent de;
 	memset(&de, 0, sizeof(de));
 	if (writei(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))

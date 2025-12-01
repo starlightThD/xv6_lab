@@ -205,6 +205,19 @@ int filewrite(struct file *f, uint64 addr, int n)
 
     return ret;
 }
+
+struct file *open(struct inode *ip, int readable, int writable) {
+    begin_op();
+    struct file *f = fileopen(ip, readable, writable);
+    end_op();
+    return f;
+}
+
+void close(struct file *f) {
+    begin_op();
+    fileclose(f);
+    end_op();
+}
 int read(struct file *f, uint64 addr, int n) {
     int ret;
     begin_op();

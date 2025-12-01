@@ -4,7 +4,10 @@
 // ========================
 // 宏定义
 // ========================
-
+// debug
+//#ifndef DEBUG 
+//#define DEBUG 1 
+//#endif
 // timer.h
 #define TIMER_INTERVAL 1000000
 
@@ -551,6 +554,7 @@ void print_pagetable(pagetable_t pagetable, int level, uint64 va_base);
 
 // printf.h
 void printf(const char *fmt, ...);
+int snprintf(char *buf, size_t size, const char *fmt, ...);
 void clear_screen(void);
 void goto_rc(int row, int col);
 void cursor_up(int lines);
@@ -571,7 +575,8 @@ void color_purple(void);
 void color_cyan(void);
 void color_reverse(void);
 void clear_line(void);
-void panic(const char *msg);
+void debug(const char *fmt, ...);
+void panic(const char *fmt, ...);
 void warning(const char *fmt, ...);
 void test_printf_precision(void);
 void test_curse_move();
@@ -636,7 +641,8 @@ void test_synchronization(void);
 void test_kill(void);
 
 void test_filesystem_integrity(void);
-void test_concurrent_access(void);
+void test_multi_process_filesystem(void);
+void test_filesystem_performance(void);
 // virtio_disk.h
 void virtio_disk_init(void);
 int alloc_desc(void);
@@ -683,11 +689,11 @@ int piperead(struct pipe *pi, uint64 addr, int n);
 void fileinit(void);
 struct file *filealloc(void);
 struct file *filedup(struct file *f);
-struct file *fileopen(struct inode *ip, int readable, int writable);
-void fileclose(struct file *f);
 int filestat(struct file *f, uint64 addr);
 void filelock(struct file *f);
 void fileunlock(struct file *f);
+struct file *open(struct inode *ip, int readable, int writable);
+void close(struct file *f);
 int read(struct file *f, uint64 addr, int n);
 int write(struct file *f, uint64 addr, int n);
 
@@ -821,14 +827,15 @@ static inline uint32 read32(uint64 addr)
 	}
 }
 
-static inline void assert(int expr)
-{
-	if (!expr)
-	{
-		printf("assert failed: file %s, line %d\n", __FILE__, __LINE__);
-		panic("assert");
-	}
-}
+#define assert(expr) \
+    do { \
+        if (!(expr)) { \
+            printf("assert failed: file %s, line %d\n", __FILE__, __LINE__); \
+            panic("assert"); \
+        } \
+    } while (0)
+
+
 static inline uint64 sv39_sign_extend(uint64 va)
 {
 	if (va & (1L << 38))

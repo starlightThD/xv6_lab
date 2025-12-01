@@ -70,7 +70,7 @@ MINIMAL_OBJS = \
 fs:
 	rm -rf ./fs.img && ./mkfs fs.img
 
-all: fs userprog $(K)/kernel 
+all: userprog $(K)/kernel 
 
 userprog:
 	$(MAKE) -C $(USRDIR)
@@ -164,12 +164,12 @@ check: $K/kernel
 	$(OBJDUMP) -f $K/kernel
 
 # 运行 QEMU
-qemu: fs userprog $K/kernel
+qemu: userprog $K/kernel
 	@echo "=== 启动 QEMU ==="
 	$(QEMU) $(QEMUOPTS)
 
 # 调试模式运行 QEMU (等待 GDB 连接)
-qemu-gdb: fs userprog $K/kernel
+qemu-gdb: userprog $K/kernel
 	@echo "=== 启动 QEMU 调试模式 ==="
 	@echo "使用调试器: $(GDB)"
 	@echo "在另一个终端运行: make debug"

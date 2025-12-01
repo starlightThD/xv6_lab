@@ -48,7 +48,7 @@ void handle_external_interrupt(void) {
     
     if (irq == 0) {
         // 虚假中断
-        printf("Spurious external interrupt\n");
+        debug("Spurious external interrupt\n");
         return;
     }
     interrupt_dispatch(irq);
@@ -57,7 +57,7 @@ void handle_external_interrupt(void) {
 
 void trap_init(void) {
 	intr_off();
-	printf("trap_init...\n");
+	debug("trap_init...\n");
 	w_stvec((uint64)kernelvec);
 	for(int i = 0; i < MAX_IRQ; i++){
 		interrupt_vector[i] = 0;
@@ -68,8 +68,8 @@ void trap_init(void) {
 	sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
 	register_interrupt(VIRTIO0_IRQ, virtio_disk_intr); //设置VIRTIO0中断
 	//enable_interrupts(VIRTIO0_IRQ);
-	printf("Registered exception handlers: store_page_fault=%p\n", handle_store_page_fault);
-	printf("trap_init complete.\n");
+	debug("Registered exception handlers: store_page_fault=%p\n", handle_store_page_fault);
+	debug("trap_init complete.\n");
 }
 
 void kerneltrap(void) {
@@ -93,11 +93,11 @@ void kerneltrap(void) {
             // 外部中断
             handle_external_interrupt();
         } else {
-            printf("kerneltrap: unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
+            debug("kerneltrap: unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
         }
     } else {
         // 处理异常（最高位为0）
-        printf("Exception: scause=%ld, sepc=0x%lx, stval=0x%lx\n", scause, sepc, stval);
+        debug("Exception: scause=%ld, sepc=0x%lx, stval=0x%lx\n", scause, sepc, stval);
         
         // 构造trapframe结构
         struct trapframe tf;
@@ -127,7 +127,7 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
     
     switch (cause) {
         case 0:  // 指令地址未对齐
-            printf("Instruction address misaligned: 0x%lx\n", info->stval);
+            debug("Instruction address misaligned: 0x%lx\n", info->stval);
 			if(myproc()->is_user){
 				exit_proc(-1);
 			}
@@ -135,7 +135,7 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             break;
             
         case 1:  // 指令访问故障
-            printf("Instruction access fault: 0x%lx\n", info->stval);
+            debug("Instruction access fault: 0x%lx\n", info->stval);
 			if(myproc()->is_user){
 				exit_proc(-1);
 			}
@@ -152,14 +152,14 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
 				// 检查是否是除法指令（rv64i中的div/divu/rem/remu等）
 				if (opcode == 0x33 && (funct3 == 0x4 || funct3 == 0x5 || 
 					funct3 == 0x6 || funct3 == 0x7)) {
-					printf("[FATAL] Process %d killed by divide by zero\n", myproc()->pid);
+					debug("[FATAL] Process %d killed by divide by zero\n", myproc()->pid);
             		exit_proc(-1);  // 直接终止进程
 				} else {
-					printf("Illegal instruction at 0x%lx: 0x%lx\n", 
+					debug("Illegal instruction at 0x%lx: 0x%lx\n", 
 						info->sepc, info->stval);
 				}
 			} else {
-				printf("Illegal instruction at 0x%lx: 0x%lx\n", 
+				debug("Illegal instruction at 0x%lx: 0x%lx\n", 
 					info->sepc, info->stval);
 			}
 			// 用户进程直接终止
@@ -171,12 +171,12 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
 			break;
             
         case 3:  // 断点
-            printf("Breakpoint at 0x%lx\n", info->sepc);
+            debug("Breakpoint at 0x%lx\n", info->sepc);
             set_sepc(tf, info->sepc + 4);
             break;
             
         case 4:  // 加载地址未对齐
-            printf("Load address misaligned: 0x%lx\n", info->stval);
+            debug("Load address misaligned: 0x%lx\n", info->stval);
 			if(myproc()->is_user){
 				exit_proc(-1);
 			}
@@ -184,7 +184,7 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             break;
             
 		case 5:  // 加载访问故障
-			printf("Load access fault: 0x%lx\n", info->stval);
+			debug("Load access fault: 0x%lx\n", info->stval);
 			// 尝试先增加页权限
 			if (check_is_mapped(info->stval) && handle_page_fault(info->stval, 2)) {
 				return; // 成功处理
@@ -194,7 +194,7 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
 			break;
             
         case 6:  // 存储地址未对齐
-            printf("Store address misaligned: 0x%lx\n", info->stval);
+            debug("Store address misaligned: 0x%lx\n", info->stval);
 			if(myproc()->is_user){
 				exit_proc(-1);
 			}
@@ -202,7 +202,7 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             break;
             
 		case 7:  // 存储访问故障
-			printf("Store access fault: 0x%lx\n", info->stval);
+			debug("Store access fault: 0x%lx\n", info->stval);
 			// 尝试先增加页权限
 			if (check_is_mapped(info->stval) && handle_page_fault(info->stval, 3)) {
 				return; // 成功处理
@@ -220,7 +220,7 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             break;
             
         case 9:  // 监督模式环境调用
-            printf("Supervisor environment call at 0x%lx\n", info->sepc);
+            debug("Supervisor environment call at 0x%lx\n", info->sepc);
 			set_sepc(tf, info->sepc + 4); 
             break;
             
@@ -237,7 +237,7 @@ void handle_exception(struct trapframe *tf, struct trap_info *info) {
             break;
             
         default:
-            printf("Unknown exception: cause=%ld, sepc=0x%lx, stval=0x%lx\n", 
+            debug("Unknown exception: cause=%ld, sepc=0x%lx, stval=0x%lx\n", 
                    cause, info->sepc, info->stval);
             panic("Unknown exception");
             break;
@@ -308,19 +308,21 @@ int check_user_addr(uint64 addr, uint64 size, int write) {
 void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 	switch (tf->a7) {
 		case SYS_printint:
-			printf("[syscall] print int: %ld\n", tf->a0);
+			debug("[syscall] print int: %ld\n", tf->a0);
+			printf("%ld", tf->a0);
 			break;
 
 		case SYS_printstr: 
 			char buf[128];
 			if (copyinstr(buf, myproc()->pagetable, tf->a0, sizeof(buf)) < 0) {
-				printf("[syscall] invalid string\n");
+				debug("[syscall] invalid string\n");
 				break;
 			}
-			printf("[syscall] print str: %s\n", buf);
+			debug("[syscall] print str: %s\n", buf);
+			printf("%s", buf);
 			break;
 		case SYS_exit:
-			printf("[syscall] exit(%ld)\n", tf->a0);
+			debug("[syscall] exit(%ld)\n", tf->a0);
 			exit_proc((int)tf->a0);
 			break;
 		case SYS_kill:
@@ -332,7 +334,7 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 		case SYS_fork:
 			int child_pid = fork_proc();
 			tf->a0 = child_pid;
-			printf("[syscall] fork -> %d\n", child_pid);
+			debug("[syscall] fork -> %d\n", child_pid);
 			break;
 			case SYS_wait: {
 				uint64 uaddr = tf->a0;
@@ -363,7 +365,7 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 			break;
 		case SYS_step:
 			tf->a0 = 0;
-			printf("[syscall] step enabled but do nothing\n");
+			debug("[syscall] step enabled but do nothing\n");
 			break;
 	case SYS_write: {
 		int fd = tf->a0;          // 文件描述符
@@ -377,14 +379,14 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 		
 		// 检查用户提供的缓冲区地址是否合法
 		if (check_user_addr(tf->a1, tf->a2, 0) < 0) {
-			printf("[syscall] invalid write buffer address\n");
+			debug("[syscall] invalid write buffer address\n");
 			tf->a0 = -1;
 			break;
 		}
 		
 		// 从用户空间安全地复制字符串
 		if (copyinstr(buf, myproc()->pagetable, tf->a1, sizeof(buf)) < 0) {
-			printf("[syscall] invalid write buffer\n");
+			debug("[syscall] invalid write buffer\n");
 			tf->a0 = -1;
 			break;
 		}
@@ -408,7 +410,7 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 		
 		// 检查用户提供的缓冲区地址是否合法
 		if (check_user_addr(buf, n, 1) < 0) {  // 1表示写入访问
-			printf("[syscall] invalid read buffer address\n");
+			debug("[syscall] invalid read buffer address\n");
 			tf->a0 = -1;
 			break;
 		}
@@ -427,7 +429,7 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 			tf->a0 = -1;
 			break;
 		default:
-			printf("[syscall] unknown syscall: %ld\n", tf->a7);
+			debug("[syscall] unknown syscall: %ld\n", tf->a7);
 			tf->a0 = -1;
 			break;
 	}
@@ -438,7 +440,7 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info) {
 
 // 处理指令页故障
 void handle_instruction_page_fault(struct trapframe *tf, struct trap_info *info) {
-    printf("Instruction page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
+    debug("Instruction page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
     
     // 尝试处理页面故障
     if (handle_page_fault(info->stval, 1)) {  // 1表示指令页
@@ -451,7 +453,7 @@ void handle_instruction_page_fault(struct trapframe *tf, struct trap_info *info)
 
 // 处理加载页故障
 void handle_load_page_fault(struct trapframe *tf, struct trap_info *info) {
-    printf("Load page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
+    debug("Load page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
     
     // 尝试处理页面故障
     if (handle_page_fault(info->stval, 2)) {  // 2表示读数据页
@@ -464,7 +466,7 @@ void handle_load_page_fault(struct trapframe *tf, struct trap_info *info) {
 
 // 处理存储页故障
 void handle_store_page_fault(struct trapframe *tf, struct trap_info *info) {
-    printf("Store page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
+    debug("Store page fault at va=0x%lx, sepc=0x%lx\n", info->stval, info->sepc);
     
     // 尝试处理页面故障
     if (handle_page_fault(info->stval, 3)) {  // 3表示写数据页
@@ -498,7 +500,7 @@ void usertrap(void) {
         } else if (code == 9) {
             handle_external_interrupt();
         } else {
-            printf("[usertrap] unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
+            debug("[usertrap] unknown interrupt scause=%lx sepc=%lx\n", scause, sepc);
         }
     } else {
         struct trap_info info = { .sepc = sepc, .sstatus = sstatus, .scause = scause, .stval = stval };

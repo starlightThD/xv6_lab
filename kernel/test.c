@@ -34,6 +34,8 @@ void test_timer_interrupt(void) {
 }
 
 // 修改测试异常处理函数
+// 在test_exception函数中添加虚拟内存测试部分
+
 void test_exception(void) {
     printf("\n===== 开始全面异常处理测试 =====\n\n");
     
@@ -80,9 +82,144 @@ void test_exception(void) {
     } else {
         printf("警告: 无法找到未映射地址进行测试!\n\n");
     }
+
+    // ===== 新增：虚拟内存系统测试 =====
+    printf("===== 虚拟内存系统测试 =====\n\n");
     
+    // 4. 测试按需分配功能
+    printf("4. 测试按需页面分配...\n");
+    for (uint64 test_addr = 0xB0000000; test_addr < 0xB0010000; test_addr += 0x1000) {
+        if (check_is_mapped(test_addr) == 0) {
+            printf("测试地址 0x%lx 的按需分配\n", test_addr);
+            
+            // 写入测试
+            volatile uint64 *ptr = (uint64*)test_addr;
+            *ptr = 0xDEADBEEF;
+            printf("  写入成功: 0x%lx\n", *ptr);
+            
+            // 验证页面已分配
+            if (check_is_mapped(test_addr)) {
+                printf("  ✓ 页面成功分配并映射\n");
+            } else {
+                printf("  ✗ 页面分配失败\n");
+            }
+            break;
+        }
+    }
+    printf("\n");
+    
+    // 5. 测试页面权限更新
+    printf("5. 测试页面权限更新...\n");
+    uint64 perm_test_addr = 0xC0000000;
+    if (check_is_mapped(perm_test_addr) == 0) {
+        printf("为地址 0x%lx 分配页面\n", perm_test_addr);
+        
+        // 先进行读访问，触发页面分配
+        volatile uint64 *ptr = (uint64*)perm_test_addr;
+        uint64 read_val = *ptr;
+        printf("  初始读取值: 0x%lx\n", read_val);
+        
+        // 再进行写访问，可能触发权限更新
+        *ptr = 0x12345678;
+        printf("  写入后读取: 0x%lx\n", *ptr);
+        printf("  ✓ 页面权限更新成功\n");
+    }
+    printf("\n");
+    
+    // 6. 测试跨页面访问
+    printf("6. 测试跨页面数据访问...\n");
+    uint64 cross_page_addr = 0xD0000FFE; // 跨越页面边界的地址
+    if (check_is_mapped(cross_page_addr) == 0 && check_is_mapped(cross_page_addr + 4) == 0) {
+        printf("测试跨页面访问，起始地址: 0x%lx\n", cross_page_addr);
+        
+        // 写入跨页面的数据
+        volatile uint32 *ptr = (uint32*)cross_page_addr;
+        *ptr = 0xABCDEF01;
+        printf("  跨页面写入成功: 0x%x\n", *ptr);
+        
+        // 验证两个页面都被分配
+        if (check_is_mapped(cross_page_addr) && check_is_mapped(cross_page_addr + 4)) {
+            printf("  ✓ 跨页面访问成功，相关页面都已分配\n");
+        } else {
+            printf("  ✗ 跨页面访问异常\n");
+        }
+    } else {
+        printf("  跳过：页面已映射\n");
+    }
+    printf("\n");
+    
+    // 7. 测试连续页面分配
+    printf("7. 测试连续页面分配...\n");
+    uint64 base_addr = 0xE0000000;
+    int allocated_pages = 0;
+    
+    for (int i = 0; i < 5; i++) {
+        uint64 addr = base_addr + (i * 0x1000);
+        if (check_is_mapped(addr) == 0) {
+            printf("  分配页面 %d, 地址: 0x%lx\n", i, addr);
+            
+            volatile uint64 *ptr = (uint64*)addr;
+            *ptr = 0x1000 + i; // 写入页面索引
+            
+            if (check_is_mapped(addr)) {
+                allocated_pages++;
+                printf("    写入值: %lu, 读取值: %lu\n", 0x1000UL + i, *ptr);
+            }
+        } else {
+            printf("  页面 %d (0x%lx) 已映射，跳过\n", i, addr);
+        }
+    }
+    printf("  ✓ 成功分配 %d 个连续页面\n", allocated_pages);
+    printf("\n");
+    
+    // 8. 测试内存访问模式
+    printf("8. 测试不同内存访问模式...\n");
+    uint64 pattern_addr = 0xF0000000;
+    if (check_is_mapped(pattern_addr) == 0) {
+        volatile char *byte_ptr = (char*)pattern_addr;
+        volatile uint16 *word_ptr = (uint16*)pattern_addr;
+        volatile uint32 *dword_ptr = (uint32*)pattern_addr;
+        volatile uint64 *qword_ptr = (uint64*)pattern_addr;
+        
+        // 字节访问
+        *byte_ptr = 0xAB;
+        printf("  字节访问: 写入 0xAB, 读取 0x%x\n", *byte_ptr);
+        
+        // 字访问
+        *word_ptr = 0xCDEF;
+        printf("  字访问: 写入 0xCDEF, 读取 0x%x\n", *word_ptr);
+        
+        // 双字访问
+        *dword_ptr = 0x12345678;
+        printf("  双字访问: 写入 0x12345678, 读取 0x%x\n", *dword_ptr);
+        
+        // 四字访问
+        *qword_ptr = 0xFEDCBA9876543210UL;
+        printf("  四字访问: 写入 0xFEDCBA9876543210, 读取 0x%lx\n", *qword_ptr);
+        
+        printf("  ✓ 不同访问模式测试成功\n");
+    } else {
+        printf("  跳过：页面已映射\n");
+    }
+    printf("\n");
+    
+    // 9. 测试页表遍历
+    printf("9. 测试页表结构验证...\n");
+    
+    // 检查几个已知映射的页面
+    uint64 test_addrs[] = {0x80000000, 0x10000000, 0xB0000000, 0};
+    for (int i = 0; test_addrs[i] != 0; i++) {
+        int mapped = check_is_mapped(test_addrs[i]);
+        printf("  地址 0x%lx: %s\n", test_addrs[i], mapped ? "已映射" : "未映射");
+    }
+    printf("  ✓ 页表结构验证完成\n");
+    printf("\n");
+    
+    printf("===== 虚拟内存系统测试完成 =====\n\n");
+    
+    // 继续原有的其他测试...
     // 4. 测试存储地址未对齐异常
-    printf("4. 测试存储地址未对齐异常...\n");
+    printf("10. 测试存储地址未对齐异常...\n");
     uint64 aligned_addr = (uint64)alloc_page();
     if (aligned_addr != 0) {
         uint64 misaligned_addr = aligned_addr + 1;  // 制造未对齐地址
@@ -101,7 +238,7 @@ void test_exception(void) {
     }
     
     // 5. 测试加载地址未对齐异常
-    printf("5. 测试加载地址未对齐异常...\n");
+    printf("11. 测试加载地址未对齐异常...\n");
     if (aligned_addr != 0) {
         uint64 misaligned_addr = aligned_addr + 1;
         printf("使用未对齐地址: 0x%lx\n", misaligned_addr);
@@ -119,26 +256,27 @@ void test_exception(void) {
         printf("警告: 无法分配内存进行未对齐访问测试!\n\n");
     }
 
-	// 6. 测试断点异常
-	printf("6. 测试断点异常...\n");
-	asm volatile (
-		"nop\n\t"      // 确保ebreak前有有效指令
-		"ebreak\n\t"   // 断点指令
-		"nop\n\t"      // 确保ebreak后有有效指令
-	);
-	printf("✓ 断点异常处理成功\n\n");
+    // 6. 测试断点异常
+    printf("12. 测试断点异常...\n");
+    asm volatile (
+        "nop\n\t"      // 确保ebreak前有有效指令
+        "ebreak\n\t"   // 断点指令
+        "nop\n\t"      // 确保ebreak后有有效指令
+    );
+    printf("✓ 断点异常处理成功\n\n");
+    
     // 7. 测试环境调用异常
-    printf("7. 测试环境调用异常...\n");
+    printf("13. 测试环境调用异常...\n");
     asm volatile ("ecall");  // 从S模式生成环境调用
     printf("✓ 环境调用异常处理成功\n\n");
     
     printf("===== 部分异常处理测试完成 =====\n\n");
-	printf("===== 测试不可恢复的除零异常 ====\n");
-	unsigned int a = 1;
-	unsigned int b =0;
-	unsigned int result = a/b;
-	// 根据中科大的手册，RV32I并不会因为除零而进入trap
-	printf("这行不应该被打印，如果打印了，那么result = %d\n",result);
+    printf("===== 测试不可恢复的除零异常 ====\n");
+    unsigned int a = 1;
+    unsigned int b = 0;
+    unsigned int result = a/b;
+    // 根据中科大的手册，RV32I并不会因为除零而进入trap
+    printf("这行不应该被打印，如果打印了，那么result = %d\n", result);
 }
 void test_interrupt_overhead(void) {
     printf("\n===== 开始中断开销测试 =====\n");
@@ -172,7 +310,7 @@ void test_interrupt_overhead(void) {
     
     // 执行1000次yield来触发上下文切换
     for(int i = 0; i < 1000; i++) {
-        asm volatile (".word 0xffffffff");  // 非法RISC-V指令
+        yield();
     }
     
     end_cycles = get_time();
@@ -543,139 +681,280 @@ void test_kill(void){
 }
 
 void test_filesystem_integrity(void) {
-    printf("Testing filesystem integrity (kernel mode)...\n");
+    printf("Filesystem stress test...\n");
 
-    // 创建或查找测试文件 inode
-    const char *filename = "testfile";
-    printf("Creating/opening file: %s\n", filename);
-    struct inode *ip = create((char *)filename, T_FILE, 0, 0);
-    assert(ip != NULL);
+    const char *filename = "stressfile";
+    struct inode *ip = namei((char *)filename);
+    if (ip == NULL) {
+        debug("文件不存在，创建新文件: %s\n", filename);
+        ip = create((char *)filename, T_FILE, 0, 0);
+        assert(ip != NULL);
+        close(open(ip, 1, 1));
+    }
+    struct file *f;
+    int bytes;
 
-    // 打开文件
-    struct file *f = fileopen(ip, 1, 1); // 可读可写
-    assert(f != NULL);
-    printf("File opened for write: %s\n", filename);
+    // 1. 多轮写入和读取
+    for (int i = 0; i < 5; i++) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "round %d", i);
 
-    // 写入数据（加锁）
-    char buffer[] = "Hello, filesystem!";
-    printf("Writing data: \"%s\" (len=%lu)\n", buffer, strlen(buffer));
-    int bytes = write(f, (uint64)buffer, strlen(buffer));
-    printf("Wrote %d bytes to file\n", bytes);
-    assert(bytes == strlen(buffer));
+        ip = namei((char *)filename);
+        assert(ip != NULL);
+        f = open(ip, 1, 1);
+        assert(f != NULL);
+        f->off = 0;
+        bytes = write(f, (uint64)buf, strlen(buf));
+        assert(bytes == strlen(buf));
+        close(f);
 
-    // 关闭文件
-    fileclose(f);
-    printf("File closed after write: %s\n", filename);
+        ip = namei((char *)filename);
+        assert(ip != NULL);
+        f = open(ip, 1, 0);
+        assert(f != NULL);
+        char readbuf[32];
+        f->off = 0;
+        bytes = read(f, (uint64)readbuf, sizeof(readbuf) - 1);
+        readbuf[bytes] = '\0';
+        printf("Round %d: Read \"%s\"\n", i, readbuf);
+        assert(strcmp(buf, readbuf) == 0);
+        close(f);
+    }
 
-    // 重新打开并验证
+    // 2. 跨块写入与读取
     ip = namei((char *)filename);
     assert(ip != NULL);
-    f = fileopen(ip, 1, 0); // 只读
+    f = open(ip, 1, 1);
     assert(f != NULL);
-    printf("File opened for read: %s\n", filename);
+    f->off = 0;
+    char bigbuf[1024];
+    for (int i = 0; i < sizeof(bigbuf) - 1; i++)
+        bigbuf[i] = 'A' + (i % 26);
+    bigbuf[1023] = '\0';
+    bytes = write(f, (uint64)bigbuf, 1024);
+    assert(bytes == 1024);
+    close(f);
 
-    // 读取数据（加锁）
-    char read_buffer[64];
-    bytes = read(f, (uint64)read_buffer, sizeof(read_buffer) - 1);
-    read_buffer[bytes] = '\0';
-    printf("Read %d bytes from file\n", bytes);
-    printf("Read data: \"%s\"\n", read_buffer);
-    assert(strcmp(buffer, read_buffer) == 0);
+    ip = namei((char *)filename);
+    assert(ip != NULL);
+    f = open(ip, 1, 0);
+    assert(f != NULL);
+    char bigread[1024];
+    f->off = 0;
+    bytes = read(f, (uint64)bigread, 1024);
+    bigread[1023] = '\0';
+    printf("Cross-block read : \"%s\"\n", bigread);
+    assert(bytes == 1024);
+    close(f);
 
-    fileclose(f);
-    printf("File closed after read: %s\n", filename);
+    // 3. 多文件操作
+    for (int i = 0; i < 3; i++) {
+        char fname[16];
+        snprintf(fname, sizeof(fname), "file%d", i);
+        ip = create(fname, T_FILE, 0, 0);
+        assert(ip != NULL);
+        f = open(ip, 1, 1);
+        assert(f != NULL);
+        char msg[32];
+        snprintf(msg, sizeof(msg), "hello_%d", i);
+        bytes = write(f, (uint64)msg, strlen(msg));
+        assert(bytes == strlen(msg));
+        close(f);
 
-    // 删除文件
+        ip = namei(fname);
+        assert(ip != NULL);
+        f = open(ip, 1, 0);
+        assert(f != NULL);
+        char rbuf[32];
+        bytes = read(f, (uint64)rbuf, sizeof(rbuf) - 1);
+        rbuf[bytes] = '\0';
+        printf("Multi-file %s: \"%s\"\n", fname, rbuf);
+        assert(strcmp(msg, rbuf) == 0);
+        close(f);
+
+        int ret = unlink(fname);
+        assert(ret == 0);
+    }
+
+    // 4. 错误处理
+    ip = namei("no_such_file");
+    assert(ip == NULL);
+
+    // 5. 边界测试
+    ip = namei((char *)filename);
+    assert(ip != NULL);
+    f = open(ip, 1, 1);
+    assert(f != NULL);
+    bytes = write(f, (uint64)"", 0);
+    assert(bytes == 0);
+    close(f);
+
+    ip = namei((char *)filename);
+    assert(ip != NULL);
+	itrunc(ip);
+    f = open(ip, 1, 0);
+    assert(f != NULL);
+    char emptybuf[4];
+    bytes = read(f, (uint64)emptybuf, sizeof(emptybuf) - 1);
+    emptybuf[bytes] = '\0';
+    printf("Empty read: \"%s\"\n", emptybuf);
+    assert(bytes == 0);
+	ip->size = 0;
+    close(f);
+
+    // 6. 文件删除与重建
     int unlink_ret = unlink((char *)filename);
-    printf("Unlink file: %s, result=%d\n", filename, unlink_ret);
+    debug("文件删除结果: %d\n", unlink_ret);
     assert(unlink_ret == 0);
 
-    printf("Filesystem integrity test passed (kernel mode)\n");
+    ip = create((char *)filename, T_FILE, 0, 0);
+    debug("重建文件，create返回ip=%p\n", ip);
+    assert(ip != NULL);
+    f = open(ip, 1, 0);
+    debug("重建文件后，open返回f=%p\n", f);
+    assert(f != NULL);
+    char readbuf[32];
+    bytes = read(f, (uint64)readbuf, sizeof(readbuf) - 1);
+    readbuf[bytes] = '\0';
+    debug("重建文件后读取，读取字节数=%d，内容=\"%s\"\n", bytes, readbuf);
+    printf("After recreate: Read \"%s\"\n", readbuf);
+    assert(bytes == 0); // 新文件应为空
+    close(f);
+
+    printf("Filesystem stress test passed!\n");
 }
-void make_pid_string(char *buf, int pid) {
-    strcpy(buf, "my pid is ");
-    // 转换 pid 为字符串
-    char num[16];
-    int n = pid, i = 0;
-    if(n == 0) {
-        num[i++] = '0';
-    } else {
-        int tmp = n;
-        while(tmp > 0) {
-            tmp /= 10;
-            i++;
-        }
-        num[i] = '\0';
-        tmp = n;
-        for(int j = i - 1; j >= 0; j--) {
-            num[j] = '0' + (tmp % 10);
-            tmp /= 10;
-        }
-    }
-    strcat(buf, num);
-}
-void concurrent_child_task(uint64 filename_addr) {
-    const char *filename = (const char *)filename_addr;
-    struct inode *ip = namei((char *)filename);
+
+// 多进程并发写入和读取测试
+static const char *mp_filename = "mpfile";
+static int mp_proc_count = 5;
+void mp_append_read_write_task() {
+    struct inode *ip = namei((char *)mp_filename);
     assert(ip != NULL);
 
-    struct file *f = fileopen(ip, 1, 1); // 可读可写
+    // 先读全部内容
+    struct file *f = open(ip, 1, 0);
     assert(f != NULL);
-    char read_buffer[64];
-    int bytes = read(f, (uint64)read_buffer, sizeof(read_buffer) - 1);
-    read_buffer[bytes] = '\0';
-    printf("[Child %d] Read from file: \"%s\"\n", myproc()->pid, read_buffer);
+    char readbuf[128];
+    int rbytes = read(f, (uint64)readbuf, sizeof(readbuf) - 1);
+    readbuf[rbytes] = '\0';
+    printf("[MP-APPEND] proc %d read: \"%s\" (%d bytes)\n", myproc()->pid, readbuf, rbytes);
+    close(f);
 
-    // 写入自己的 pid
-    char write_buffer[64];
-    make_pid_string(write_buffer, myproc()->pid);
-    int len = strlen(write_buffer);
-	f->off = 0;
-    write(f, (uint64)write_buffer, len);
-    fileclose(f);
+    // 后追加写入（不重置 f->off）
+	ip = namei((char *)mp_filename);
+    f = open(ip, 1, 1);
+    assert(f != NULL);
+	f->off = ip->size; // 关键：追加到文件末尾
+    char writebuf[32];
+    snprintf(writebuf, sizeof(writebuf), "proc_%d\t", myproc()->pid);
+    // 直接写入，f->off自动追加
+    int wbytes = write(f, (uint64)writebuf, strlen(writebuf));
+    printf("[MP-APPEND] proc %d wrote: \"%s\" (%d bytes)\n", myproc()->pid, writebuf, wbytes);
+    close(f);
+
     exit_proc(0);
 }
-void test_concurrent_access(void) {
-    printf("Testing concurrent file access...\n");
 
-    const char *filename = "concurrent_testfile";
-    struct inode *ip = create((char *)filename, T_FILE, 0, 0);
-    assert(ip != NULL);
+void test_multi_process_filesystem(void) {
+    printf("===== 多进程文件系统追加写入测试 =====\n");
 
-    struct file *f = fileopen(ip, 1, 1);
-    assert(f != NULL);
-
-    // 父进程写入初始内容
-    char buffer[64];
-	make_pid_string(buffer, myproc()->pid);
-	int len = strlen(buffer);
-	write(f, (uint64)buffer, len);
-    fileclose(f);
-    printf("[Parent] Wrote initial content: \"%s\"\n", buffer);
-
-    // 创建三个子进程并发访问
-    int child_pids[3];
-    for (int i = 0; i < 3; i++) {
-        child_pids[i] = create_kernel_proc1(concurrent_child_task, (uint64)filename);
-        printf("[Parent] Created child %d, pid=%d\n", i, child_pids[i]);
+    // 创建测试文件
+    struct inode *ip = namei((char *)mp_filename);
+    if (ip == NULL) {
+        ip = create((char *)mp_filename, T_FILE, 0, 0);
+        assert(ip != NULL);
+        close(open(ip, 1, 1));
     }
 
-    // 等待所有子进程结束
-    for (int i = 0; i < 3; i++) {
+    // 并发读写
+    for (int i = 0; i < mp_proc_count; i++) {
+        int pid = create_kernel_proc(mp_append_read_write_task);
+        assert(pid > 0);
+    }
+    for (int i = 0; i < mp_proc_count; i++) {
         wait_proc(NULL);
     }
 
-    // 父进程再次读取文件内容
-    ip = namei((char *)filename);
+    // 主进程读取全部内容
+    ip = namei((char *)mp_filename);
     assert(ip != NULL);
-    f = fileopen(ip, 1, 0); // 只读
+    struct file *f = open(ip, 1, 0);
     assert(f != NULL);
+    char allbuf[256];
+    int bytes = read(f, (uint64)allbuf, sizeof(allbuf) - 1);
+    allbuf[bytes] = '\0';
+    printf("Final file content:\n%s", allbuf);
+    close(f);
 
-    char final_buffer[64];
-    int bytes = read(f, (uint64)final_buffer, sizeof(final_buffer) - 1);
-    final_buffer[bytes] = '\0';
-    printf("[Parent] Final file content: \"%s\"\n", final_buffer);
+    printf("===== 多进程文件系统追加写入测试完成 =====\n");
+}
+void test_filesystem_performance(void) {
+    printf("===== 文件系统性能测试 =====\n");
+    uint64 start_time = get_time();
 
-    fileclose(f);
-    printf("Concurrent access test finished.\n");
+    // 小文件测试（16个文件，每个8KB，2块）
+	for (int i = 0; i < 8; i++) {
+		char filename[32];
+		snprintf(filename, sizeof(filename), "small_%d", i);
+		struct inode *ip = create(filename, T_FILE, 0, 0);
+		if (ip == NULL) {
+			warning("create failed for %s\n", filename);
+			continue;
+		}
+		struct file *f = open(ip, 1, 1);
+		if (f == NULL) {
+			warning("open failed for %s\n", filename);
+			continue;
+		}
+		char buf[4096];
+		memset(buf, 'B' + i, sizeof(buf));
+		for (int j = 0; j < 2; j++) {
+			int bytes = write(f, (uint64)buf, sizeof(buf));
+			if (bytes != sizeof(buf)) {
+				warning("write failed for %s, bytes=%d\n", filename, bytes);
+				break;
+			}
+		}
+		close(f);
+		int ret = unlink(filename);
+		if (ret != 0) {
+			warning("unlink failed for %s, ret=%d\n", filename, ret);
+		}
+	}
+    uint64 small_files_time = get_time() - start_time;
+
+    // 大文件测试（1个文件，2块，每块4096字节）
+    start_time = get_time();
+    struct inode *ip = create("large_file", T_FILE, 0, 0);
+    assert(ip != NULL);
+    struct file *f = open(ip, 1, 1);
+    assert(f != NULL);
+    char large_buffer[4096];
+    memset(large_buffer, 'A', sizeof(large_buffer));
+    for (int i = 0; i < 8; i++) {
+        int bytes = write(f, (uint64)large_buffer, sizeof(large_buffer));
+        assert(bytes == sizeof(large_buffer));
+    }
+	struct inode *ip_check = namei("large_file");
+	if (ip_check == NULL) {
+		warning("large_file not found after write\n");
+	} else {
+		debug("large_file inode: %p, size: %d\n", ip_check, ip_check->size);
+	}
+    close(f);
+	ip_check = namei("large_file");
+	if (ip_check == NULL) {
+		warning("large_file not found before unlink\n");
+	}
+	int ret = unlink("large_file");
+	if (ret != 0) {
+		warning("unlink failed for %s, ret=%d\n", "large_file", ret);
+	}
+    uint64 large_file_time = get_time() - start_time;
+
+    printf("小文件 (16 x 8KB): %lu cycles\n", small_files_time);
+    printf("大文件 (1 x 8KB): %lu cycles\n", large_file_time);
+
+
+    printf("===== 文件系统性能测试完成 =====\n");
 }

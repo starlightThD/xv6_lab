@@ -156,6 +156,136 @@ void printf(const char *fmt, ...) {
     vprintf(fmt, ap);
     va_end(ap);
 }
+// 内部辅助：将数字转为字符串（支持10/16/8/2进制）
+static int int_to_str(char *buf, unsigned long long x, int base, int sign) {
+    static char digits[] = "0123456789abcdef";
+    char tmp[32];
+    int i = 0, len = 0;
+    if (sign && (long long)x < 0) {
+        x = -(long long)x;
+        buf[len++] = '-';
+    }
+    do {
+        tmp[i++] = digits[x % base];
+        x /= base;
+    } while (x);
+    while (i > 0)
+        buf[len++] = tmp[--i];
+    buf[len] = '\0';
+    return len;
+}
+
+int vsnprintf(char *buf, size_t size, const char *fmt, va_list ap) {
+    size_t pos = 0;
+    int i, c;
+    char *s;
+    for (i = 0; (c = fmt[i] & 0xff) != 0 && pos + 1 < size; i++) {
+        if (c != '%') {
+            buf[pos++] = c;
+            continue;
+        }
+        int padzero = 0, width = 0, is_long = 0;
+        c = fmt[++i] & 0xff;
+        if (c == '0') {
+            padzero = 1;
+            c = fmt[++i] & 0xff;
+        }
+        while (c >= '0' && c <= '9') {
+            width = width * 10 + (c - '0');
+            c = fmt[++i] & 0xff;
+        }
+        if (c == 'l') {
+            is_long = 1;
+            c = fmt[++i] & 0xff;
+            if (c == 0) break;
+        }
+        char numbuf[32];
+        int nlen = 0;
+        switch (c) {
+        case 'd':
+            if (is_long)
+                nlen = int_to_str(numbuf, va_arg(ap, long long), 10, 1);
+            else
+                nlen = int_to_str(numbuf, va_arg(ap, int), 10, 1);
+            break;
+        case 'x':
+            if (is_long)
+                nlen = int_to_str(numbuf, va_arg(ap, long long), 16, 0);
+            else
+                nlen = int_to_str(numbuf, va_arg(ap, int), 16, 0);
+            break;
+        case 'u':
+            if (is_long)
+                nlen = int_to_str(numbuf, va_arg(ap, unsigned long long), 10, 0);
+            else
+                nlen = int_to_str(numbuf, va_arg(ap, unsigned int), 10, 0);
+            break;
+        case 'o':
+            if (is_long)
+                nlen = int_to_str(numbuf, va_arg(ap, long long), 8, 0);
+            else
+                nlen = int_to_str(numbuf, va_arg(ap, int), 8, 0);
+            break;
+        case 'b':
+            if (is_long)
+                nlen = int_to_str(numbuf, va_arg(ap, long long), 2, 0);
+            else
+                nlen = int_to_str(numbuf, va_arg(ap, int), 2, 0);
+            break;
+        case 'c':
+            numbuf[0] = va_arg(ap, int);
+            nlen = 1;
+            break;
+        case 's':
+            s = va_arg(ap, char*);
+            if (!s) s = "(null)";
+            nlen = 0;
+            while (s[nlen] && pos + nlen + 1 < size)
+                buf[pos + nlen] = s[nlen], nlen++;
+            pos += nlen;
+            continue;
+        case 'p': {
+            unsigned long ptr = (unsigned long)va_arg(ap, void*);
+            char pbuf[18] = "0x";
+            int pi = 2;
+            for (int j = 0; j < 16; j++) {
+                int shift = (15 - j) * 4;
+                pbuf[pi++] = "0123456789abcdef"[(ptr >> shift) & 0xf];
+            }
+            pbuf[pi] = '\0';
+            nlen = pi;
+            for (int j = 0; j < nlen && pos + 1 < size; j++)
+                buf[pos++] = pbuf[j];
+            continue;
+        }
+        case '%':
+            numbuf[0] = '%';
+            nlen = 1;
+            break;
+        default:
+            numbuf[0] = '%';
+            numbuf[1] = c;
+            nlen = 2;
+            break;
+        }
+        // 宽度和填充
+        int pad = width - nlen;
+        while (pad-- > 0 && pos + 1 < size)
+            buf[pos++] = padzero ? '0' : ' ';
+        for (int j = 0; j < nlen && pos + 1 < size; j++)
+            buf[pos++] = numbuf[j];
+    }
+    buf[pos] = '\0';
+    return pos;
+}
+
+int snprintf(char *buf, size_t size, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsnprintf(buf, size, fmt, ap);
+    va_end(ap);
+    return ret;
+}
 // 清屏功能
 void clear_screen(void) {
     uart_puts(CLEAR_SCREEN);
@@ -280,12 +410,26 @@ void clear_line(){
 	consputc('2');
 	consputc('K');
 }
-
-void panic(const char *msg) {
-	color_red(); // 可选：红色显示
-	printf("panic: %s\n", msg);
-	reset_color();
-	while (1) { /* 死循环，防止继续执行 */ }
+void debug(const char *fmt, ...) {
+#if DEBUG
+    va_list ap;
+    color_cyan(); // 调试信息用青色
+    printf("[DEBUG] ");
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+    reset_color();
+#endif
+}
+void panic(const char *fmt, ...) {
+    va_list ap;
+    color_red(); // 红色显示
+    printf("[PANIC] ");
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+    reset_color();
+    while (1) { /* 死循环，防止继续执行 */ }
 }
 void warning(const char *fmt, ...) {
     va_list ap;
