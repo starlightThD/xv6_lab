@@ -10,7 +10,7 @@ void initlog(int dev, struct superblock *sb)
 	log.start = sb->logstart;
 	log.dev = dev;
 	recover_from_log();
-	printf("log init done\n");
+	debug("log init done\n");
 }
 
 static void install_trans(int recovering)

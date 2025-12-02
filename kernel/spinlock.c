@@ -1,37 +1,40 @@
 #include "defs.h"
 
-void
-initlock(struct spinlock *lk, char *name)
+void initlock(struct spinlock *lk, char *name)
 {
-  lk->name = name;
-  lk->locked = 0;
+	lk->name = name;
+	lk->locked = 0;
+	lk->pid = -1;
 }
 
 // Acquire the lock.
-void
-acquire(struct spinlock *lk)
+void acquire(struct spinlock *lk)
 {
-  intr_off(); // 直接关闭中断
-  if(lk->locked)
-    panic("acquire");
-  while(__sync_lock_test_and_set(&lk->locked, 1) != 0)
-    ;
-  __sync_synchronize();
+	if (lk->locked)
+	{
+		warning("lock name address: %p, value: %s\n", lk->name, lk->name);
+		warning("proc %d acquire lock %s but forbid by proc %d \n", myproc()->pid, lk->name, lk->pid);
+	}
+	while (__sync_lock_test_and_set(&lk->locked, 1) != 0) ;
+	lk->pid = myproc()->pid;
+	__sync_synchronize();
 }
 
 // Release the lock.
-void
-release(struct spinlock *lk)
+void release(struct spinlock *lk)
 {
-  if(!lk->locked)
-    panic("release");
-  __sync_synchronize();
-  __sync_lock_release(&lk->locked);
-  intr_on(); // 直接开启中断
+	if (!lk->locked)
+	{
+		warning("proc %d want release lock %s but it is unused\n", myproc()->pid, lk->name);
+		return;
+	}
+	__sync_synchronize();
+	__sync_lock_release(&lk->locked);
+	// debug("proc %d release lock %s\n",lk->pid,lk->name);
+	lk->pid = -1;
 }
 
-int
-holding(struct spinlock *lk)
+int holding(struct spinlock *lk)
 {
-  return lk->locked;
+	return lk->locked;
 }

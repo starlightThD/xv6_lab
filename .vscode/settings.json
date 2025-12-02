@@ -1,5 +1,9 @@
 {
 	"files.associations": {
-		"cstdio": "c"
+		"cstdio": "c",
+		"defs.h": "c",
+		"user_progs.h": "c",
+		"types.h": "c",
+		"fcntl.h": "c"
 	}
 }

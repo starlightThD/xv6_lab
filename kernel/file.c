@@ -15,7 +15,7 @@ struct
 void fileinit(void)
 {
 	initlock(&ftable.lock, "ftable");
-	printf("fileinit done \n");
+	debug("ftable_lock init done \n");
 }
 
 // Allocate a file structure.
@@ -48,8 +48,7 @@ filedup(struct file *f)
 	release(&ftable.lock);
 	return f;
 }
-
-struct file *fileopen(struct inode *ip, int readable, int writable)
+static struct file *fileopen(struct inode *ip, int readable, int writable)
 {
 	struct file *f = filealloc();
 	if (f == 0)
@@ -63,7 +62,7 @@ struct file *fileopen(struct inode *ip, int readable, int writable)
 }
 
 // Close file f.  (Decrement ref count, close when reaches 0.)
-void fileclose(struct file *f)
+static void fileclose(struct file *f)
 {
 	struct file ff;
 
@@ -90,38 +89,38 @@ void fileclose(struct file *f)
 	}
 }
 
-// Get metadata about file f.
-// addr is a user virtual address, pointing to a struct stat.
-int filestat(struct file *f, uint64 addr)
-{
-	struct proc *p = myproc();
-	struct stat st;
+//// Get metadata about file f.
+//// addr is a user virtual address, pointing to a struct stat.
+//static int filestat(struct file *f, uint64 addr)
+//{
+//	struct proc *p = myproc();
+//	struct stat st;
 
-	if (f->type == FD_INODE || f->type == FD_DEVICE)
-	{
-		ilock(f->ip);
-		stati(f->ip, &st);
-		iunlock(f->ip);
-		if (copyout(p->pagetable, addr, (char *)&st, sizeof(st)) < 0)
-			return -1;
-		return 0;
-	}
-	return -1;
-}
+//	if (f->type == FD_INODE || f->type == FD_DEVICE)
+//	{
+//		ilock(f->ip);
+//		stati(f->ip, &st);
+//		iunlock(f->ip);
+//		if (copyout(p->pagetable, addr, (char *)&st, sizeof(st)) < 0)
+//			return -1;
+//		return 0;
+//	}
+//	return -1;
+//}
 // 加锁文件（对 inode 加锁）
-void filelock(struct file *f) {
+static void filelock(struct file *f) {
     if (f->type == FD_INODE || f->type == FD_DEVICE) {
         ilock(f->ip);
     }
 }
 
 // 解锁文件（对 inode 解锁）
-void fileunlock(struct file *f) {
+static void fileunlock(struct file *f) {
     if (f->type == FD_INODE || f->type == FD_DEVICE) {
         iunlock(f->ip);
     }
 }
-int fileread(struct file *f, uint64 addr, int n)
+static int fileread(struct file *f, uint64 addr, int n)
 {
     int r = 0;
 
@@ -155,7 +154,7 @@ int fileread(struct file *f, uint64 addr, int n)
     return r;
 }
 
-int filewrite(struct file *f, uint64 addr, int n)
+static int filewrite(struct file *f, uint64 addr, int n)
 {
     int r, ret = 0;
 

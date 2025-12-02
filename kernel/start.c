@@ -9,9 +9,8 @@ struct CommandEntry kernel_test_table[] = {
     {"test_scheduler", test_scheduler},
     {"test_synchronization", test_synchronization},
     {"test_kernel_kill", test_kill},
-	{"test_filesys_integrity",test_filesystem_integrity},
-	{"test_multi_process_filesystem",test_multi_process_filesystem},
-	{"test_filesystem_performance",test_filesystem_performance},
+	{"test_file_system_basic",test_file_system_basic},
+	{"test_file_system_readwrite",test_file_system_readwrite},
 };
 
 #define KERNEL_TEST_COUNT (sizeof(kernel_test_table)/sizeof(kernel_test_table[0]))
@@ -38,7 +37,6 @@ void start(){
 	if (main_pid < 0){
 		panic("START: create main process failed!\n");
 	}
-	
 	schedule();
     
     // 防止返回保险
@@ -134,27 +132,31 @@ void console(void) {
     }
     printf("控制台进程退出\n");
 }
+
+
 void kernel_main(void){
+	debug("kernel_main entry\n");
+	virtio_disk_init();   // 1. 初始化磁盘驱动
+    binit();              // 2. 初始化块缓冲区
+	enable_interrupts(VIRTIO0_IRQ);
+    fileinit();           // 3. 初始化文件表
+    iinit();              // 4. 初始化 inode 表
+    fsinit(ROOTDEV);      // 5. 初始化文件系统（会自动调用 initlog）
+	
 	// 设置当前进程的工作目录为根目录
     struct inode *rootip = iget(ROOTDEV, ROOTINO);
     if (rootip == 0) {
         panic("KERNEL_MAIN: cannot get root inode!\n");
     }
     myproc()->cwd = rootip;
-	
-	virtio_disk_init();   // 1. 初始化磁盘驱动
-    binit();              // 2. 初始化块缓冲区
-    fileinit();           // 3. 初始化文件表
-    iinit();              // 4. 初始化 inode 表
-    fsinit(ROOTDEV);      // 5. 初始化文件系统（会自动调用 initlog）
-	// 内核主函数
-	clear_screen();
+	//clear_screen();
 	int console_pid = create_kernel_proc(console);
 	if (console_pid < 0){
 		panic("KERNEL_MAIN: create console process failed!\n");
 	}else{
-		printf("KERNEL_MAIN: console process created with PID %d\n", console_pid);
+		debug("KERNEL_MAIN: console process created with PID %d\n", console_pid);
 	}
+	
 	int status;
 	int pid = wait_proc(&status);
 	if(pid != console_pid){

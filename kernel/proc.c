@@ -208,6 +208,7 @@ int create_kernel_proc1(void (*entry)(uint64),uint64 arg){
     p->trapframe->epc = (uint64)entry;
 	p->trapframe->a0 = (uint64)arg;
     p->state = RUNNABLE;
+	p->sleep_ticks = 0;
 
     struct proc *parent = myproc();
     if (parent != 0) {
@@ -274,6 +275,7 @@ int create_user_proc(const void *user_bin, int bin_size) {
 	}
     struct proc *parent = myproc();
     p->parent = parent ? parent : NULL;
+	p->sleep_ticks = 0;
     return p->pid;
 }
 int fork_proc(void) {
@@ -327,10 +329,22 @@ int fork_proc(void) {
 
 // 调度器 - 简化版
 void schedule(void) {
+  const int SLEEP_TIMEOUT = 100; // 超时时间，可根据实际调整
   while(1) {
     intr_on();
     for(int i = 0; i < PROC; i++) {
         struct proc *p = proc_table[i];
+        // 检查睡眠超时
+        if(p->state == SLEEPING) {
+            p->sleep_ticks++;
+            if(p->sleep_ticks > SLEEP_TIMEOUT) {
+                printf("[SCHED] PID %d sleep timeout, force wakeup\n", p->pid);
+                p->state = RUNNABLE;
+                p->sleep_ticks = 0;
+            }
+        } else {
+            p->sleep_ticks = 0; // 非睡眠状态重置计数
+        }
         if(p->state == RUNNABLE) {
             p->state = RUNNING;
             mycpu()->proc = p;
@@ -369,7 +383,8 @@ void sleep(void *chan, struct spinlock *lk){
     p->context.ra = ra;
     p->chan = chan;
     p->state = SLEEPING;
-    if (lk){
+    if (lk->locked){
+		debug("release in sleep\n");
         release(lk);
 	}
 	intr_on();

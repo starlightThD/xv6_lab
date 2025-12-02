@@ -4,10 +4,10 @@
 // ========================
 // 宏定义
 // ========================
-// debug
-//#ifndef DEBUG 
-//#define DEBUG 1 
-//#endif
+
+#ifndef DEBUG
+#define DEBUG 1
+#endif
 // timer.h
 #define TIMER_INTERVAL 1000000
 
@@ -161,8 +161,8 @@
 // bio.h
 #define BSIZE 1024
 #define MAXOPBLOCKS 10				// max # of blocks any FS op writes
-#define LOGBLOCKS (MAXOPBLOCKS * 3) // max data blocks in on-disk log
-#define NBUF (MAXOPBLOCKS * 3)		// size of disk block cache
+#define LOGBLOCKS (MAXOPBLOCKS) // max data blocks in on-disk log
+#define NBUF (MAXOPBLOCKS)		// size of disk block cache
 // ========================
 // typedef
 // ========================
@@ -285,6 +285,7 @@ struct proc
 	int exit_status;
 	char name[16];
 	struct proc *parent;
+	int sleep_ticks;
 	void *chan;
 	int is_user;
 	uint64 sz;
@@ -320,7 +321,7 @@ struct dinode
 struct dirent
 {
 	ushort inum;
-	char name[DIRSIZ] __attribute__((nonstring));
+	char name[DIRSIZ];
 };
 
 // spinlock.h
@@ -328,6 +329,7 @@ struct spinlock
 {
 	uint locked; // Is the lock held?
 	char *name;	 // Name of lock.
+	int pid;
 };
 // sleeplock.h
 struct sleeplock
@@ -639,16 +641,11 @@ void test_process_creation(void);
 void test_scheduler(void);
 void test_synchronization(void);
 void test_kill(void);
+void test_file_system_basic(void);
+void test_file_system_readwrite(void);
 
-void test_filesystem_integrity(void);
-void test_multi_process_filesystem(void);
-void test_filesystem_performance(void);
 // virtio_disk.h
 void virtio_disk_init(void);
-int alloc_desc(void);
-void free_desc(int i);
-void free_chain(int i);
-int alloc3_desc(int *idx);
 void virtio_disk_rw(struct buf *b, int write);
 void virtio_disk_intr(void);
 
@@ -671,6 +668,9 @@ void bwrite(struct buf *b);
 void brelse(struct buf *b);
 void bpin(struct buf *b);
 void bunpin(struct buf *b);
+void check_bcache_status(const char* location);
+void debug_bcache_chain(const char* tag);
+int is_buf_ptr(struct buf *p);
 
 // log.h
 void initlog(int dev, struct superblock *sb);
@@ -689,9 +689,6 @@ int piperead(struct pipe *pi, uint64 addr, int n);
 void fileinit(void);
 struct file *filealloc(void);
 struct file *filedup(struct file *f);
-int filestat(struct file *f, uint64 addr);
-void filelock(struct file *f);
-void fileunlock(struct file *f);
 struct file *open(struct inode *ip, int readable, int writable);
 void close(struct file *f);
 int read(struct file *f, uint64 addr, int n);
@@ -719,6 +716,7 @@ struct inode *iget(uint dev, uint inum);
 void iunlockput(struct inode *ip);
 struct inode* create(char *path, short type, short major, short minor);
 int unlink(char *path);
+uint get_sb_size();
 
 // ========================
 // static inline 函数

@@ -67,7 +67,7 @@ void trap_init(void) {
     w_sie(sie | (1L << 5) | (1L<<9)); // 设置SIE.STIE位启用时钟中断和外部中断
 	sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
 	register_interrupt(VIRTIO0_IRQ, virtio_disk_intr); //设置VIRTIO0中断
-	//enable_interrupts(VIRTIO0_IRQ);
+	disable_interrupts(VIRTIO0_IRQ);
 	debug("Registered exception handlers: store_page_fault=%p\n", handle_store_page_fault);
 	debug("trap_init complete.\n");
 }

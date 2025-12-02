@@ -1,5 +1,4 @@
 #include "defs.h"
-
 #define min(a, b) ((a) < (b) ? (a) : (b))
 struct superblock sb;
 // Read the super block.
@@ -12,16 +11,17 @@ readsb(int dev, struct superblock *sb)
 	memmove(sb, bp->data, sizeof(*sb));
 	brelse(bp);
 }
-
 // Init fs
 void fsinit(int dev)
 {
 	readsb(dev, &sb);
 	if (sb.magic != FSMAGIC)
+	{
 		panic("invalid file system");
-	initlog(dev, &sb);
-	ireclaim(dev);
-	printf("fs init done\n");
+	}
+	//initlog(dev, &sb);
+	//ireclaim(dev);
+	debug("fs init done\n");
 }
 
 // Zero a block.
@@ -81,7 +81,7 @@ bfree(int dev, uint b)
 	brelse(bp);
 }
 
-struct
+static struct
 {
 	struct spinlock lock;
 	struct inode inode[NINODE];
@@ -96,7 +96,7 @@ void iinit()
 	{
 		initsleeplock(&itable.inode[i].lock, "inode");
 	}
-	printf("iinit done \n");
+	debug("itable_lock init done \n");
 }
 
 struct inode *
@@ -126,21 +126,21 @@ ialloc(uint dev, short type)
 
 void iupdate(struct inode *ip)
 {
-    struct buf *bp;
-    struct dinode *dip;
+	struct buf *bp;
+	struct dinode *dip;
 
-    bp = bread(ip->dev, IBLOCK(ip->inum, sb));
-    dip = (struct dinode *)bp->data + ip->inum % IPB;
-    // 更新磁盘 inode
-    dip->type = ip->type;
-    dip->major = ip->major;
-    dip->minor = ip->minor;
-    dip->nlink = ip->nlink;
-    dip->size = ip->size;
-    memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
+	bp = bread(ip->dev, IBLOCK(ip->inum, sb));
+	dip = (struct dinode *)bp->data + ip->inum % IPB;
+	// 更新磁盘 inode
+	dip->type = ip->type;
+	dip->major = ip->major;
+	dip->minor = ip->minor;
+	dip->nlink = ip->nlink;
+	dip->size = ip->size;
+	memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
 
-    log_write(bp);
-    brelse(bp);
+	log_write(bp);
+	brelse(bp);
 }
 struct inode *
 iget(uint dev, uint inum)
@@ -188,8 +188,10 @@ void ilock(struct inode *ip)
 	struct buf *bp;
 	struct dinode *dip;
 
-	if (ip == 0 || ip->ref < 1)
+	if (ip == 0 || ip->ref < 1){
+		debug("ip == %d or ip->ref == %d < 1\n",ip,ip->ref);
 		panic("ilock");
+	}
 	acquiresleep(&ip->lock);
 	if (ip->valid == 0)
 	{
@@ -241,29 +243,26 @@ void iunlockput(struct inode *ip)
 	iput(ip);
 }
 
-void ireclaim(int dev)
+void
+ireclaim(int dev)
 {
-	printf("Superblock: ninodes=%d\n", sb.ninodes);
-	for (int inum = 1; inum < sb.ninodes; inum++)
-	{
-		struct inode *ip = 0;
-		struct buf *bp = bread(dev, IBLOCK(inum, sb));
-		struct dinode *dip = (struct dinode *)bp->data + inum % IPB;
-		if (dip->type != 0 && dip->nlink == 0)
-		{ // is an orphaned inode
-			printf("ireclaim: orphaned inode %d\n", inum);
-			ip = iget(dev, inum);
-		}
-		brelse(bp);
-		if (ip)
-		{
-			begin_op();
-			ilock(ip);
-			iunlock(ip);
-			iput(ip);
-			end_op();
-		}
-	}
+  for (int inum = 1; inum < sb.ninodes; inum++) {
+    struct inode *ip = 0;
+    struct buf *bp = bread(dev, IBLOCK(inum, sb));
+    struct dinode *dip = (struct dinode *)bp->data + inum % IPB;
+    if (dip->type != 0 && dip->nlink == 0) {  // is an orphaned inode
+      printf("ireclaim: orphaned inode %d\n", inum);
+      ip = iget(dev, inum);
+    }
+    brelse(bp);
+    if (ip) {
+      begin_op();
+      ilock(ip);
+      iunlock(ip);
+      iput(ip);
+      end_op();
+    }
+  }
 }
 
 static uint
@@ -314,39 +313,35 @@ bmap(struct inode *ip, uint bn)
 	return 0;
 }
 
-void itrunc(struct inode *ip)
+void
+itrunc(struct inode *ip)
 {
-	int i, j;
-	struct buf *bp;
-	uint *a;
+  int i, j;
+  struct buf *bp;
+  uint *a;
 
-	for (i = 0; i < NDIRECT; i++)
-	{
-		if (ip->addrs[i])
-		{
-			bfree(ip->dev, ip->addrs[i]);
-			ip->addrs[i] = 0;
-		}
-	}
+  for(i = 0; i < NDIRECT; i++){
+    if(ip->addrs[i]){
+      bfree(ip->dev, ip->addrs[i]);
+      ip->addrs[i] = 0;
+    }
+  }
 
-	if (ip->addrs[NDIRECT])
-	{
-		bp = bread(ip->dev, ip->addrs[NDIRECT]);
-		a = (uint *)bp->data;
-		for (j = 0; j < NINDIRECT; j++)
-		{
-			if (a[j])
-				bfree(ip->dev, a[j]);
-		}
-		brelse(bp);
-		bfree(ip->dev, ip->addrs[NDIRECT]);
-		ip->addrs[NDIRECT] = 0;
-	}
+  if(ip->addrs[NDIRECT]){
+    bp = bread(ip->dev, ip->addrs[NDIRECT]);
+    a = (uint*)bp->data;
+    for(j = 0; j < NINDIRECT; j++){
+      if(a[j])
+        bfree(ip->dev, a[j]);
+    }
+    brelse(bp);
+    bfree(ip->dev, ip->addrs[NDIRECT]);
+    ip->addrs[NDIRECT] = 0;
+  }
 
-	ip->size = 0;
-	iupdate(ip);
+  ip->size = 0;
+  iupdate(ip);
 }
-
 void stati(struct inode *ip, struct stat *st)
 {
 	st->dev = ip->dev;
@@ -590,7 +585,8 @@ create(char *path, short type, short major, short minor)
 
 	// 找到父目录 inode
 	dp = nameiparent(path, name);
-	if (dp == 0){
+	if (dp == 0)
+	{
 		end_op();
 		return 0;
 	}
@@ -602,7 +598,8 @@ create(char *path, short type, short major, short minor)
 	{
 		iunlockput(dp);
 		ilock(ip);
-		if (type == T_FILE && ip->type == T_FILE) {
+		if (type == T_FILE && ip->type == T_FILE)
+		{
 			iunlock(ip);
 			end_op();
 			return ip;
@@ -634,18 +631,19 @@ create(char *path, short type, short major, short minor)
 
 	iunlockput(dp);
 	iunlock(ip);
-	end_op(); 
+	end_op();
 	return ip;
 }
 int unlink(char *path)
 {
-	begin_op(); 
+	begin_op();
 	struct inode *dp, *ip;
 	char name[DIRSIZ];
 	uint off;
 
 	dp = nameiparent(path, name);
-	if (dp == 0){
+	if (dp == 0)
+	{
 		end_op();
 		return -1;
 	}

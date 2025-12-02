@@ -1,10 +1,10 @@
 #include "defs.h"
 
-
 extern void uart_putc(char c);
 
 static char printf_buffer[PRINTF_BUFFER_SIZE];
-static int printf_buf_pos = 0;
+static int printf_buf_pos = 0;\
+
 static void flush_printf_buffer(void) {
 	if (printf_buf_pos > 0) {
 		printf_buffer[printf_buf_pos] = '\0'; // Null-terminate the string
