@@ -15,7 +15,7 @@ struct
 void fileinit(void)
 {
 	initlock(&ftable.lock, "ftable");
-	debug("ftable_lock init done \n");
+	printf("ftable_lock init done \n");
 }
 
 // Allocate a file structure.

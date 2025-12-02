@@ -135,10 +135,9 @@ void console(void) {
 
 
 void kernel_main(void){
-	debug("kernel_main entry\n");
+	printf("kernel_main entry\n");
 	virtio_disk_init();   // 1. 初始化磁盘驱动
     binit();              // 2. 初始化块缓冲区
-	enable_interrupts(VIRTIO0_IRQ);
     fileinit();           // 3. 初始化文件表
     iinit();              // 4. 初始化 inode 表
     fsinit(ROOTDEV);      // 5. 初始化文件系统（会自动调用 initlog）

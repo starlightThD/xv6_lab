@@ -6,7 +6,7 @@
 // ========================
 
 #ifndef DEBUG
-#define DEBUG 1
+#define DEBUG 0
 #endif
 // timer.h
 #define TIMER_INTERVAL 1000000
@@ -161,8 +161,9 @@
 // bio.h
 #define BSIZE 1024
 #define MAXOPBLOCKS 10				// max # of blocks any FS op writes
-#define LOGBLOCKS (MAXOPBLOCKS) // max data blocks in on-disk log
-#define NBUF (MAXOPBLOCKS)		// size of disk block cache
+#define LOGBLOCKS (MAXOPBLOCKS * 3) // max data blocks in on-disk log
+//#define NBUF (MAXOPBLOCKS * 3)		// size of disk block cache
+#define NBUF 16
 // ========================
 // typedef
 // ========================

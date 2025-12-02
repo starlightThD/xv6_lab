@@ -73,9 +73,10 @@ void virtio_disk_init(void)
 	// tell device we're completely ready.
 	status |= VIRTIO_CONFIG_S_DRIVER_OK;
 	*R(VIRTIO_MMIO_STATUS) = status;
-
+	register_interrupt(VIRTIO0_IRQ, virtio_disk_intr); //设置VIRTIO0中断
+	disable_interrupts(VIRTIO0_IRQ);
 	// plic.c and trap.c arrange for interrupts from VIRTIO0_IRQ.
-	debug("virtio_disk init done\n");
+	printf("virtio_disk init done\n");
 }
 
 // find a free descriptor, mark it non-free, return its index.
@@ -99,8 +100,7 @@ static void free_desc(int i)
 		panic("free_desc i >= NUM");
 	if (disk.free[i])
 	{
-		debug("[FREE_DESC ERROR] i=%d already free, desc.addr=%lx desc.len=%d desc.flags=%x desc.next=%d\n",
-			  i, disk.desc[i].addr, disk.desc[i].len, disk.desc[i].flags, disk.desc[i].next);
+		debug("[FREE_DESC ERROR] i=%d already free, desc.addr=%lx desc.len=%d desc.flags=%x desc.next=%d\n",i, disk.desc[i].addr, disk.desc[i].len, disk.desc[i].flags, disk.desc[i].next);
 		panic("free_desc i has already been free");
 	}
 
@@ -152,6 +152,7 @@ virtio_disk_rw(struct buf *b, int write)
   // data, one for a 1-byte status result.
 
   // allocate the three descriptors.
+  enable_interrupts(VIRTIO0_IRQ);
   int idx[3];
   while(1){
     if(alloc3_desc(idx) == 0) {
@@ -212,7 +213,7 @@ virtio_disk_rw(struct buf *b, int write)
   while(b->disk == 1) {
     sleep(b, &disk.vdisk_lock);
   }
-
+  disable_interrupts(VIRTIO0_IRQ);
   disk.info[idx[0]].b = 0;
   free_chain(idx[0]);
 
@@ -221,7 +222,7 @@ virtio_disk_rw(struct buf *b, int write)
 void
 virtio_disk_intr()
 {
-  acquire(&disk.vdisk_lock);
+	debug("virtio_disk intr arrive\n");
   *R(VIRTIO_MMIO_INTERRUPT_ACK) = *R(VIRTIO_MMIO_INTERRUPT_STATUS) & 0x3;
 
   __sync_synchronize();
@@ -240,6 +241,4 @@ virtio_disk_intr()
 
     disk.used_idx += 1;
   }
-
-  release(&disk.vdisk_lock);
 }

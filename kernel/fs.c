@@ -19,9 +19,9 @@ void fsinit(int dev)
 	{
 		panic("invalid file system");
 	}
-	//initlog(dev, &sb);
-	//ireclaim(dev);
-	debug("fs init done\n");
+	initlog(dev, &sb);
+	ireclaim(dev);
+	printf("fs init done\n");
 }
 
 // Zero a block.
@@ -96,7 +96,7 @@ void iinit()
 	{
 		initsleeplock(&itable.inode[i].lock, "inode");
 	}
-	debug("itable_lock init done \n");
+	printf("itable_lock init done \n");
 }
 
 struct inode *
@@ -114,6 +114,7 @@ ialloc(uint dev, short type)
 		{ // a free inode
 			memset(dip, 0, sizeof(*dip));
 			dip->type = type;
+			debug("ialloc: alloc inum=%d, type=%d\n", inum, type);
 			log_write(bp); // mark it allocated on the disk
 			brelse(bp);
 			return iget(dev, inum);
@@ -185,29 +186,42 @@ idup(struct inode *ip)
 
 void ilock(struct inode *ip)
 {
-	struct buf *bp;
-	struct dinode *dip;
+  struct buf *bp;
+  struct dinode *dip;
 
-	if (ip == 0 || ip->ref < 1){
-		debug("ip == %d or ip->ref == %d < 1\n",ip,ip->ref);
-		panic("ilock");
-	}
-	acquiresleep(&ip->lock);
-	if (ip->valid == 0)
-	{
-		bp = bread(ip->dev, IBLOCK(ip->inum, sb));
-		dip = (struct dinode *)bp->data + ip->inum % IPB;
-		ip->type = dip->type;
-		ip->major = dip->major;
-		ip->minor = dip->minor;
-		ip->nlink = dip->nlink;
-		ip->size = dip->size;
-		memmove(ip->addrs, dip->addrs, sizeof(ip->addrs));
-		brelse(bp);
-		ip->valid = 1;
-		if (ip->type == 0)
-			panic("ilock: no type");
-	}
+  if (ip == 0 || ip->ref < 1){
+    debug("ilock: ip=%p ref=%d\n", ip, ip ? ip->ref : -1);
+    panic("ilock");
+  }
+  acquiresleep(&ip->lock);
+  if (ip->valid == 0)
+  {
+    bp = bread(ip->dev, IBLOCK(ip->inum, sb));
+    
+    // 防御性断言
+    if (bp->dev != ip->dev || bp->blockno != IBLOCK(ip->inum, sb)) {
+      panic("ilock: buffer mismatch! bp->dev=%d expected=%d, bp->blockno=%d expected=%d", 
+            bp->dev, ip->dev, bp->blockno, IBLOCK(ip->inum, sb));
+    }
+    if (bp->refcnt <= 0) {
+      panic("ilock: buffer has invalid refcnt=%d", bp->refcnt);
+    }
+    assert(bp != NULL);
+	assert(bp->refcnt > 0);
+    dip = (struct dinode *)bp->data + ip->inum % IPB;
+    debug("ilock: read inum=%d, dip->type=%d\n", ip->inum, dip->type);
+    ip->type = dip->type;
+    ip->major = dip->major;
+    ip->minor = dip->minor;
+    ip->nlink = dip->nlink;
+    ip->size = dip->size;
+    memmove(ip->addrs, dip->addrs, sizeof(ip->addrs));
+    brelse(bp);
+    bp = 0; // 防止 use-after-free
+    ip->valid = 1;
+    if (ip->type == 0)
+      panic("ilock: no type");
+  }
 }
 
 // Unlock the given inode.
@@ -222,6 +236,7 @@ void iput(struct inode *ip)
 	acquire(&itable.lock);
 	if (ip->ref == 1 && ip->valid && ip->nlink == 0)
 	{
+		debug("iput: clear inum=%d, type=%d\n", ip->inum, ip->type);
 		acquiresleep(&ip->lock);
 
 		release(&itable.lock);
@@ -243,25 +258,40 @@ void iunlockput(struct inode *ip)
 	iput(ip);
 }
 
-void
-ireclaim(int dev)
+void ireclaim(int dev)
 {
-  for (int inum = 1; inum < sb.ninodes; inum++) {
-    struct inode *ip = 0;
-    struct buf *bp = bread(dev, IBLOCK(inum, sb));
-    struct dinode *dip = (struct dinode *)bp->data + inum % IPB;
-    if (dip->type != 0 && dip->nlink == 0) {  // is an orphaned inode
-      printf("ireclaim: orphaned inode %d\n", inum);
-      ip = iget(dev, inum);
+  int is_clear = 0;
+  while(!is_clear){
+    is_clear = 1;
+    begin_op();
+    for (int inum = 1; inum < sb.ninodes; inum++)
+    {
+      int blockno = IBLOCK(inum, sb);
+      int offset = inum % IPB;
+      debug("ireclaim: before bread inum=%d, block=%d, offset=%d\n", inum, blockno, offset);
+      struct inode *ip = 0;
+      struct buf *bp = bread(dev, blockno);
+      struct dinode *dip = (struct dinode *)bp->data + inum % IPB;
+      if (dip->type != 0 && dip->nlink == 0)
+      { // is an orphaned inode
+        is_clear = 0;
+        printf("ireclaim: orphaned inode %d\n", inum);
+        ip = iget(dev, inum);
+      }
+      brelse(bp);
+      bp = 0; // 防止 use-after-free
+      
+      if (ip)
+      {
+        ilock(ip);
+        iunlock(ip);
+        iput(ip);
+        ip = 0; // 防止 use-after-free
+      }
+      debug("inum == %d over\n", inum);
     }
-    brelse(bp);
-    if (ip) {
-      begin_op();
-      ilock(ip);
-      iunlock(ip);
-      iput(ip);
-      end_op();
-    }
+    end_op();
+	//is_clear = 1; // 暂时跳过
   }
 }
 
@@ -313,34 +343,37 @@ bmap(struct inode *ip, uint bn)
 	return 0;
 }
 
-void
-itrunc(struct inode *ip)
+void itrunc(struct inode *ip)
 {
-  int i, j;
-  struct buf *bp;
-  uint *a;
+	int i, j;
+	struct buf *bp;
+	uint *a;
 
-  for(i = 0; i < NDIRECT; i++){
-    if(ip->addrs[i]){
-      bfree(ip->dev, ip->addrs[i]);
-      ip->addrs[i] = 0;
-    }
-  }
+	for (i = 0; i < NDIRECT; i++)
+	{
+		if (ip->addrs[i])
+		{
+			bfree(ip->dev, ip->addrs[i]);
+			ip->addrs[i] = 0;
+		}
+	}
 
-  if(ip->addrs[NDIRECT]){
-    bp = bread(ip->dev, ip->addrs[NDIRECT]);
-    a = (uint*)bp->data;
-    for(j = 0; j < NINDIRECT; j++){
-      if(a[j])
-        bfree(ip->dev, a[j]);
-    }
-    brelse(bp);
-    bfree(ip->dev, ip->addrs[NDIRECT]);
-    ip->addrs[NDIRECT] = 0;
-  }
+	if (ip->addrs[NDIRECT])
+	{
+		bp = bread(ip->dev, ip->addrs[NDIRECT]);
+		a = (uint *)bp->data;
+		for (j = 0; j < NINDIRECT; j++)
+		{
+			if (a[j])
+				bfree(ip->dev, a[j]);
+		}
+		brelse(bp);
+		bfree(ip->dev, ip->addrs[NDIRECT]);
+		ip->addrs[NDIRECT] = 0;
+	}
 
-  ip->size = 0;
-  iupdate(ip);
+	ip->size = 0;
+	iupdate(ip);
 }
 void stati(struct inode *ip, struct stat *st)
 {

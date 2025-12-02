@@ -21,6 +21,7 @@ binit(void)
     bcache.head.next->prev = b;
     bcache.head.next = b;
   }
+  printf("binit done\n");
 }
 
 
