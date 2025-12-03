@@ -1549,3 +1549,228 @@ void test_log_recovery(void) {
     printf("等待用户操作...(按 Ctrl+C 崩溃，或按其他键跳过)\n");
 	while(1) ;
 }
+
+void test_filesystem_performance(void) {
+    printf("\n===== 文件系统性能测试 =====\n");
+    
+    // 测试1: 大量小文件创建和写入性能
+    printf("\n----- 测试1: 小文件批量操作性能 -----\n");
+    uint64 start_time = get_time();
+    int small_file_count = 100;  // 减少数量以适应系统限制
+    int successful_creates = 0;
+    
+    for (int i = 0; i < small_file_count; i++) {
+        char filename[32];
+        snprintf(filename, sizeof(filename), "/small_%d.txt", i);
+        
+        // 创建小文件并写入数据
+        struct inode *ip = create(filename, T_FILE, 0, 0);
+        if (ip) {
+            struct file *f = open(ip, 1, 1);
+            if (f) {
+                char test_data[64];
+                snprintf(test_data, sizeof(test_data), "Small file %d content\n", i);
+                int written = write(f, (uint64)test_data, strlen(test_data));
+                if (written > 0) {
+                    successful_creates++;
+                }
+                close(f);
+            }
+            iput(ip);
+        }
+        
+        // 每10个文件报告一次进度
+        if ((i + 1) % 10 == 0) {
+            printf("已创建 %d/%d 个小文件\n", i + 1, small_file_count);
+        }
+    }
+    
+    uint64 small_files_time = get_time() - start_time;
+    printf("✓ 小文件创建完成: %d/%d 成功\n", successful_creates, small_file_count);
+    printf("小文件操作总时间: %lu cycles\n", small_files_time);
+    if (successful_creates > 0) {
+        printf("平均每个小文件: %lu cycles\n", small_files_time / successful_creates);
+    }
+    
+    // 测试2: 大文件写入性能（限制在2MB以内）
+    printf("\n----- 测试2: 大文件写入性能 -----\n");
+    start_time = get_time();
+    
+    char *large_filename = "/large_test.bin";
+    struct inode *large_ip = create(large_filename, T_FILE, 0, 0);
+    if (!large_ip) {
+        printf("✗ 无法创建大文件\n");
+        goto cleanup_small_files;
+    }
+    
+    struct file *large_f = open(large_ip, 1, 1);
+    if (!large_f) {
+        printf("✗ 无法打开大文件进行写入\n");
+        iput(large_ip);
+        goto cleanup_small_files;
+    }
+    
+    // 创建1KB的缓冲区，写入256次，总共256KB
+    char large_buffer[1024];
+    memset(large_buffer, 0xAB, sizeof(large_buffer));  // 填充测试数据
+    
+    int large_writes = 256;  // 512KB总大小
+    int successful_writes = 0;
+    
+    printf("开始写入大文件，目标大小: %dKB\n", large_writes);
+    
+    for (int i = 0; i < large_writes; i++) {
+        int written = write(large_f, (uint64)large_buffer, sizeof(large_buffer));
+        if (written == sizeof(large_buffer)) {
+            successful_writes++;
+        } else {
+            printf("写入块 %d 失败: 期望 %lu，实际 %d\n", 
+                   i, sizeof(large_buffer), written);
+        }
+        
+        // 每64KB报告一次进度
+        if ((i + 1) % 64 == 0) {
+            printf("已写入 %dKB/%dKB\n", (i + 1), large_writes);
+        }
+    }
+    
+    close(large_f);
+    iput(large_ip);
+    
+    uint64 large_file_time = get_time() - start_time;
+    printf("✓ 大文件写入完成: %d/%d 块成功\n", successful_writes, large_writes);
+    printf("大文件写入总时间: %lu cycles\n", large_file_time);
+    printf("实际写入数据量: %dKB\n", successful_writes);
+    if (successful_writes > 0) {
+        printf("平均写入速度: %lu cycles/KB\n", large_file_time / successful_writes);
+    }
+    
+    // 测试3: 大文件读取性能
+    printf("\n----- 测试3: 大文件读取性能 -----\n");
+    start_time = get_time();
+    
+    struct inode *read_ip = namei(large_filename);
+    if (read_ip) {
+        struct file *read_f = open(read_ip, 1, 0);
+        if (read_f) {
+            char read_buffer[1024];
+            int total_read = 0;
+            int read_count = 0;
+            
+            printf("开始读取大文件...\n");
+            
+            while (1) {
+                int bytes_read = read(read_f, (uint64)read_buffer, sizeof(read_buffer));
+                if (bytes_read <= 0) break;
+                
+                total_read += bytes_read;
+                read_count++;
+                
+                // 每64KB报告一次进度
+                if (read_count % 64 == 0) {
+                    printf("已读取 %dKB\n", total_read / 1024);
+                }
+            }
+            
+            close(read_f);
+            printf("✓ 读取完成: 总共读取 %dKB\n", total_read / 1024);
+        }
+        iput(read_ip);
+    }
+    
+    uint64 read_time = get_time() - start_time;
+    printf("大文件读取总时间: %lu cycles\n", read_time);
+    
+    // 测试4: 小文件读取性能
+    printf("\n----- 测试4: 小文件批量读取性能 -----\n");
+    start_time = get_time();
+    int successful_reads = 0;
+    
+    for (int i = 0; i < successful_creates; i++) {
+        char filename[32];
+        snprintf(filename, sizeof(filename), "/small_%d.txt", i);
+        
+        struct inode *ip = namei(filename);
+        if (ip) {
+            struct file *f = open(ip, 1, 0);
+            if (f) {
+                char buffer[128];
+                int bytes_read = read(f, (uint64)buffer, sizeof(buffer));
+                if (bytes_read > 0) {
+                    successful_reads++;
+                }
+                close(f);
+            }
+            iput(ip);
+        }
+    }
+    
+    uint64 small_read_time = get_time() - start_time;
+    printf("✓ 小文件读取完成: %d/%d 成功\n", successful_reads, successful_creates);
+    printf("小文件读取总时间: %lu cycles\n", small_read_time);
+    if (successful_reads > 0) {
+        printf("平均每个小文件读取: %lu cycles\n", small_read_time / successful_reads);
+    }
+    
+    // 测试5: 文件删除性能
+    printf("\n----- 测试5: 文件删除性能 -----\n");
+    start_time = get_time();
+    int successful_deletes = 0;
+    
+    // 删除所有小文件
+cleanup_small_files:
+    printf("清理小文件...\n");
+    for (int i = 0; i < successful_creates; i++) {
+        char filename[32];
+        snprintf(filename, sizeof(filename), "/small_%d.txt", i);
+        
+        if (unlink(filename) == 0) {
+            successful_deletes++;
+        }
+        
+        if ((i + 1) % 20 == 0) {
+            printf("已删除 %d/%d 个小文件\n", i + 1, successful_creates);
+        }
+    }
+    
+    // 删除大文件
+    if (unlink(large_filename) == 0) {
+        printf("✓ 大文件删除成功\n");
+        successful_deletes++;
+    }
+    
+    uint64 delete_time = get_time() - start_time;
+    printf("✓ 文件删除完成: %d 个文件\n", successful_deletes);
+    printf("删除操作总时间: %lu cycles\n", delete_time);
+    if (successful_deletes > 0) {
+        printf("平均每个文件删除: %lu cycles\n", delete_time / successful_deletes);
+    }
+    
+    // 性能总结
+    printf("\n===== 性能测试总结 =====\n");
+    printf("测试项目                 | 时间 (cycles)    | 平均性能\n");
+    printf("------------------------|------------------|------------------\n");
+    printf("小文件创建(%d个)        | %lu | %lu cycles/file\n", 
+           successful_creates, small_files_time, 
+           successful_creates > 0 ? small_files_time / successful_creates : 0);
+    printf("大文件写入(%dKB)        | %lu | %lu cycles/KB\n", 
+           successful_writes, large_file_time,
+           successful_writes > 0 ? large_file_time / successful_writes : 0);
+    printf("大文件读取              | %lu | -\n", read_time);
+    printf("小文件读取(%d个)        | %lu | %lu cycles/file\n", 
+           successful_reads, small_read_time,
+           successful_reads > 0 ? small_read_time / successful_reads : 0);
+    printf("文件删除(%d个)          | %lu | %lu cycles/file\n", 
+           successful_deletes, delete_time,
+           successful_deletes > 0 ? delete_time / successful_deletes : 0);
+    
+    printf("\n文件系统性能特征:\n");
+    if (small_files_time > 0 && large_file_time > 0) {
+        uint64 small_throughput = (successful_creates * 1000000) / small_files_time;
+        uint64 large_throughput = (successful_writes * 1000000) / large_file_time;
+        printf("- 小文件吞吐量: ~%lu files/million cycles\n", small_throughput);
+        printf("- 大文件吞吐量: ~%lu KB/million cycles\n", large_throughput);
+    }
+    
+    printf("===== 文件系统性能测试完成 =====\n");
+}

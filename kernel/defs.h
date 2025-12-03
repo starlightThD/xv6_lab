@@ -94,6 +94,7 @@
 #define FSMAGIC 0x10203040
 #define NDIRECT 12
 #define NINDIRECT (BSIZE / sizeof(uint))
+
 #define MAXFILE (NDIRECT + NINDIRECT)
 #define IPB (BSIZE / sizeof(struct dinode))
 #define BPB (BSIZE * 8)
@@ -647,6 +648,7 @@ void test_file_system_basic(void);
 void test_file_system_readwrite(void);
 void test_simple_concurrent_write(void);
 void test_log_recovery(void);
+void test_filesystem_performance(void);
 
 // virtio_disk.h
 void virtio_disk_init(void);

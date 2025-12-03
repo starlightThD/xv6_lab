@@ -11,6 +11,62 @@ readsb(int dev, struct superblock *sb)
 	memmove(sb, bp->data, sizeof(*sb));
 	brelse(bp);
 }
+void test_filesystem_limits(void) {
+    printf("\n===== 文件系统限制检测 =====\n");
+    
+    // 检查superblock信息
+    printf("检查文件系统参数...\n");
+    
+    // 测试单个文件的最大大小
+    printf("测试单个文件最大大小...\n");
+    
+    char *test_file = "/size_test.bin";
+    struct inode *ip = create(test_file, T_FILE, 0, 0);
+    if (!ip) {
+        printf("✗ 无法创建测试文件\n");
+        return;
+    }
+    
+    struct file *f = open(ip, 1, 1);
+    if (!f) {
+        printf("✗ 无法打开测试文件\n");
+        iput(ip);
+        return;
+    }
+    
+    char buffer[1024];
+    memset(buffer, 0xFF, sizeof(buffer));
+    
+    int written_blocks = 0;
+    int total_written = 0;
+    
+    // 逐块写入，直到失败
+    for (int i = 0; i < 1024; i++) {  // 最多尝试1024块
+        int result = write(f, (uint64)buffer, sizeof(buffer));
+        if (result != sizeof(buffer)) {
+            printf("写入在第 %d 块失败，返回值: %d\n", i, result);
+            printf("成功写入: %d 块 = %d KB\n", written_blocks, total_written / 1024);
+            break;
+        }
+        written_blocks++;
+        total_written += result;
+        
+        // 每64KB报告一次
+        if (i > 0 && i % 64 == 0) {
+            printf("已写入 %d 块 (%d KB)...\n", written_blocks, total_written / 1024);
+        }
+    }
+    
+    close(f);
+    iput(ip);
+    
+    printf("文件系统单文件限制: ~%d KB\n", total_written / 1024);
+    
+    // 清理测试文件
+    unlink(test_file);
+    
+    printf("===== 文件系统限制检测完成 =====\n");
+}
 // Init fs
 void fsinit(int dev)
 {
@@ -43,7 +99,7 @@ void fsinit(int dev)
     
     iunlock(root);
     iput(root);
-    
+    test_filesystem_limits();
     printf("fs init done\n");
 }
 
