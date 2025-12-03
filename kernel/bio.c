@@ -142,3 +142,44 @@ bunpin(struct buf *b) {
   b->refcnt--;
   release(&bcache.lock);
 }
+
+void sync_all_buffers(void) {
+    printf("开始安全同步所有缓冲区...\n");
+    
+    // 创建一个要同步的缓冲区列表
+    struct buf *sync_list[NBUF];
+    int sync_count = 0;
+    
+    // 第一步：收集需要同步的缓冲区
+    acquire(&bcache.lock);
+    for (struct buf *b = bcache.head.next; b != &bcache.head; b = b->next) {
+        if (b->valid && !b->disk && b->refcnt >= 0) {
+            sync_list[sync_count++] = b;
+            b->refcnt++;  // 增加引用计数防止被释放
+        }
+    }
+    release(&bcache.lock);
+    
+    // 第二步：逐个同步缓冲区
+    for (int i = 0; i < sync_count; i++) {
+        struct buf *b = sync_list[i];
+        
+        acquiresleep(&b->lock);
+        
+        // 再次检查缓冲区状态
+        if (b->valid && !b->disk) {
+            printf("同步缓冲区 %d/%d: dev=%d, block=%d\n", 
+                   i+1, sync_count, b->dev, b->blockno);
+            bwrite(b);
+        }
+        
+        releasesleep(&b->lock);
+        
+        // 释放引用计数
+        acquire(&bcache.lock);
+        b->refcnt--;
+        release(&bcache.lock);
+    }
+    
+    printf("缓冲区同步完成: %d/%d\n", sync_count, sync_count);
+}

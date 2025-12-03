@@ -608,6 +608,8 @@ int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len);
 int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max);
 int check_user_addr(uint64 addr, uint64 size, int write);
 
+void crash(const char *reason);
+
 // proc.h
 extern void swtch(struct context *old, struct context *new);
 struct proc *myproc(void);
@@ -644,6 +646,7 @@ void test_kill(void);
 void test_file_system_basic(void);
 void test_file_system_readwrite(void);
 void test_simple_concurrent_write(void);
+void test_log_recovery(void);
 
 // virtio_disk.h
 void virtio_disk_init(void);
@@ -672,6 +675,7 @@ void bunpin(struct buf *b);
 void check_bcache_status(const char* location);
 void debug_bcache_chain(const char* tag);
 int is_buf_ptr(struct buf *p);
+void sync_all_buffers(void);
 
 // log.h
 void initlog(int dev, struct superblock *sb);
@@ -679,6 +683,8 @@ void begin_op(void);
 void end_op(void);
 void recover_from_log(void);
 void log_write(struct buf *b);
+void force_commit_log(void);
+void get_log_status(int *outstanding, int *committing);
 
 // pipe.h
 int pipealloc(struct file **f0, struct file **f1);

@@ -38,7 +38,6 @@ int uart_getc(void) {
         return -1; 
     return ReadReg(RHR); 
 }
-
 void uart_intr(void) {
     static char linebuf[LINE_BUF_SIZE];
     static int line_len = 0;
@@ -52,6 +51,9 @@ void uart_intr(void) {
 			}
             continue;
         }
+		if(c == 0x03){
+			crash("Ctrl+C");
+		}
         if (c == '\r' || c == '\n') {
             uart_putc('\n');
             // 将编辑好的整行写入全局缓冲区

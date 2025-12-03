@@ -1439,3 +1439,113 @@ void test_simple_concurrent_write(void)
 
     printf("===== 简单并发文件写入测试完成 =====\n");
 }
+
+
+void test_log_recovery(void) {
+    printf("\n===== 日志恢复功能测试 =====\n");
+    
+    char *test_file = "/recovery_test.txt";
+    char *test_data = "This data should survive a crash!\n";
+    
+    // 首先检查是否是重启后的恢复验证
+    struct inode *existing_ip = namei(test_file);
+    if (existing_ip) {
+        printf("检测到恢复测试文件存在，这是重启后的恢复验证\n");
+        
+        // 验证恢复后数据完整性
+        printf("步骤: 验证恢复后的数据完整性\n");
+        
+        struct file *recovery_f = open(existing_ip, 1, 0);
+        if (!recovery_f) {
+            printf("✗ 恢复后无法打开文件\n");
+            iput(existing_ip);
+            return;
+        }
+        
+        char recovery_buffer[128] = {0};
+        int recovery_bytes = read(recovery_f, (uint64)recovery_buffer, sizeof(recovery_buffer)-1);
+        close(recovery_f);
+        iput(existing_ip);
+        
+        if (recovery_bytes > 0 && strcmp(recovery_buffer, test_data) == 0) {
+            printf("✓ 恢复后数据完整: %s", recovery_buffer);
+            printf("✓ 日志恢复功能验证成功！\n");
+            printf("✓ 系统成功从模拟崩溃中恢复了文件数据\n");
+        } else {
+            printf("✗ 恢复后数据损坏或丢失\n");
+            printf("期望: %s", test_data);
+            printf("实际: %s\n", recovery_buffer);
+        }
+        
+        // 清理测试文件
+        unlink(test_file);
+        printf("✓ 测试文件已清理\n");
+        
+        printf("===== 日志恢复功能测试完成 =====\n");
+        return;  // 重要：直接返回，不进行崩溃测试
+    }
+    
+    // 如果文件不存在，说明这是第一次运行测试
+    printf("这是首次运行恢复测试，开始创建测试文件\n");
+    
+    // 第一步：创建文件并写入数据
+    printf("步骤1: 创建文件并写入测试数据\n");
+    
+    struct inode *ip = create(test_file, T_FILE, 0, 0);
+    if (!ip) {
+        printf("✗ 创建测试文件失败\n");
+        return;
+    }
+    
+    struct file *f = open(ip, 1, 1);
+    if (!f) {
+        printf("✗ 打开文件失败\n");
+        iput(ip);
+        return;
+    }
+    
+    // 写入数据（内部会自动调用 begin_op/end_op）
+    int written = write(f, (uint64)test_data, strlen(test_data));
+    if (written != strlen(test_data)) {
+        printf("✗ 写入数据失败\n");
+        close(f);
+        iput(ip);
+        return;
+    }
+    
+    close(f);
+    iput(ip);
+    printf("✓ 数据已写入并提交到日志\n");
+    
+    // 第二步：验证数据是否正确写入
+    printf("步骤2: 验证数据写入\n");
+    
+    struct inode *read_ip = namei(test_file);
+    if (!read_ip) {
+        printf("✗ 无法找到测试文件\n");
+        return;
+    }
+    
+    struct file *rf = open(read_ip, 1, 0);
+    if (!rf) {
+        printf("✗ 无法打开文件读取\n");
+        iput(read_ip);
+        return;
+    }
+    
+    char read_buffer[128] = {0};
+    int read_bytes = read(rf, (uint64)read_buffer, sizeof(read_buffer)-1);
+    close(rf);
+    iput(read_ip);
+    
+    if (read_bytes > 0 && strcmp(read_buffer, test_data) == 0) {
+        printf("✓ 数据写入验证成功: %s", read_buffer);
+    } else {
+        printf("✗ 数据验证失败\n");
+        return;
+    }
+    
+    // 等待用户操作
+    printf("等待用户操作...(按 Ctrl+C 崩溃，或按其他键跳过)\n");
+	while(1) ;
+}

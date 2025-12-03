@@ -532,3 +532,17 @@ void usertrapret(void) {
     // 跳到 trampoline 上的 userret
     asm volatile("jr t0" :: "r"(a0), "r"(a1), "r"(tgt) : "memory");
 }
+void crash(const char *reason) {
+    // 立即禁用中断
+    intr_off();
+    
+    printf("\n========== KERNEL CRASH ==========\n");
+    printf("CRASH REASON: %s\n", reason ? reason : "Unknown");
+    
+    // 直接重启不做清理
+    asm volatile (
+        "li a7, 8\n"      // SBI system reset  
+        "ecall\n"
+    );
+	while(1);
+}

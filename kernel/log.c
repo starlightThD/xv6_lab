@@ -9,7 +9,7 @@ void initlog(int dev, struct superblock *sb)
 	initlock(&log.lock, "log");
 	log.start = sb->logstart;
 	log.dev = dev;
-	//recover_from_log();
+	recover_from_log();
 	printf("log init done\n");
 }
 
@@ -19,46 +19,23 @@ static void install_trans(int recovering)
 
     for (tail = 0; tail < log.lh.n; tail++)
     {
-        uint blockno = log.lh.block[tail];
+        struct buf *lbuf = bread(log.dev, log.start + tail + 1); // log block
+        struct buf *dbuf = bread(log.dev, log.lh.block[tail]);   // dest block
         
-        if (recovering)
-        {
-            printf("recovering tail %d dst %d\n", tail, blockno);
-        }
-        // 检查这是否是 inode 块
-        struct superblock sb;
-        struct buf *bp_sb = bread(log.dev, 1);
-        memmove(&sb, bp_sb->data, sizeof(sb));
-        brelse(bp_sb);
-        
-        uint inode_start = sb.inodestart;
-        uint inode_end = inode_start + sb.ninodes / IPB;
-        
-        if (blockno >= inode_start && blockno < inode_end) {
-
-            struct buf *lbuf = bread(log.dev, log.start + tail + 1); // log block
-            struct buf *dbuf = bread(log.dev, blockno);               // current disk block
-            
-            // 正常复制
-            memmove(dbuf->data, lbuf->data, BSIZE);
-            bwrite(dbuf);
-            
-            if (recovering == 0)
-                bunpin(dbuf);
-            brelse(lbuf);
-            brelse(dbuf);
-        } else {
-            // 非 inode 块，正常处理
-            struct buf *lbuf = bread(log.dev, log.start + tail + 1);
-            struct buf *dbuf = bread(log.dev, blockno);
-            memmove(dbuf->data, lbuf->data, BSIZE);
-            bwrite(dbuf);
-            if (recovering == 0)
-                bunpin(dbuf);
-            brelse(lbuf);
-            brelse(dbuf);
+        if (recovering) {
+            printf("recovering block %d from log position %d\n", 
+                   log.lh.block[tail], tail);
         }
         
+        // 将日志中的数据复制到目标位置
+        memmove(dbuf->data, lbuf->data, BSIZE);
+        bwrite(dbuf);  // 立即写入磁盘
+        
+        if (recovering == 0)
+            bunpin(dbuf);
+            
+        brelse(lbuf);
+        brelse(dbuf);
     }
 }
 static void
@@ -154,6 +131,9 @@ static void write_log(void)
         uint blockno = log.lh.block[tail];
         struct buf *to = bread(log.dev, log.start + tail + 1);
         struct buf *from = bread(log.dev, blockno);
+		if (!to || !from) {
+            panic("write_log: bread failed");
+        }
         memset(to->data, 0, BSIZE);
         memmove(to->data, from->data, BSIZE);
         bwrite(to); 
@@ -199,5 +179,51 @@ void log_write(struct buf *b)
         log.lh.n++;
     }
     
+    release(&log.lock);
+}
+
+void force_commit_log(void) {
+    acquire(&log.lock);
+    
+    printf("强制提交日志系统...\n");
+    printf("当前状态: outstanding=%d, committing=%d\n", 
+           log.outstanding, log.committing);
+    
+    // 如果有未完成的事务，强制完成它们
+    while (log.outstanding > 0) {
+        printf("等待未完成事务: %d\n", log.outstanding);
+        
+        // 如果当前没有在提交中，启动提交
+        if (!log.committing) {
+            log.committing = 1;
+            release(&log.lock);
+            
+            // 执行提交过程
+            commit();
+            
+            acquire(&log.lock);
+            log.committing = 0;
+            
+            // 唤醒可能等待的进程
+            wakeup(&log);
+        } else {
+            // 如果正在提交中，等待完成
+            printf("等待当前提交完成...\n");
+            release(&log.lock);
+            // 简单延时等待
+            for (volatile int i = 0; i < 1000000; i++);
+            acquire(&log.lock);
+        }
+    }
+    
+    printf("所有日志事务已完成\n");
+    release(&log.lock);
+}
+
+// 获取日志系统状态的函数
+void get_log_status(int *outstanding, int *committing) {
+    acquire(&log.lock);
+    if (outstanding) *outstanding = log.outstanding;
+    if (committing) *committing = log.committing;
     release(&log.lock);
 }

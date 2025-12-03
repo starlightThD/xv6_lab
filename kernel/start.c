@@ -12,6 +12,7 @@ struct CommandEntry kernel_test_table[] = {
 	{"test_file_system_basic",test_file_system_basic},
 	{"test_file_system_readwrite",test_file_system_readwrite},
 	{"test_simple_concurrent_write",test_simple_concurrent_write},
+	{"test_log_recovery",test_log_recovery}
 };
 
 #define KERNEL_TEST_COUNT (sizeof(kernel_test_table)/sizeof(kernel_test_table[0]))

@@ -10,13 +10,29 @@ struct proc *current_proc = 0;
 struct cpu *current_cpu=0;
 
 void shutdown() {
-	free_proc_table();
-    printf("关机\n");
+    printf("正在关机...\n");
+    // 1. 禁用中断防止新的操作
+    intr_off();
+    // 2. 强制提交所有未完成的日志事务
+    int outstanding, committing;
+    get_log_status(&outstanding, &committing);
+    if (outstanding > 0 || committing) {
+        intr_on();
+        force_commit_log();
+        intr_off();
+    }
+
+    // 3. 同步所有缓冲区到磁盘
+    sync_all_buffers(); 
+    free_proc_table();
+    printf("系统正常关机\n");
+    
+    // 6. SBI 关机调用
     asm volatile (
         "li a7, 8\n"      // SBI shutdown
         "ecall\n"
     );
-    while (1) { }
+    while (1);
 }
 
 struct proc* myproc(void) {
