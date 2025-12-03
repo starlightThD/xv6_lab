@@ -216,7 +216,7 @@ void ilock(struct inode *ip)
   struct dinode *dip;
 
   if (ip == 0 || ip->ref < 1){
-    printf("ilock: ip=%p ref=%d\n", ip, ip ? ip->ref : -1);
+    debug("ilock: ip=%p ref=%d\n", ip, ip ? ip->ref : -1);
     panic("ilock");
   }
   acquiresleep(&ip->lock);
@@ -224,12 +224,6 @@ void ilock(struct inode *ip)
   {
     bp = bread(ip->dev, IBLOCK(ip->inum, sb));
     dip = (struct dinode *)bp->data + ip->inum % IPB;
-        
-        // 添加调试信息
-        printf("ilock debug: inum=%d, dev=%d, block=%d, offset=%d\n", 
-               ip->inum, ip->dev, IBLOCK(ip->inum, sb), ip->inum % IPB);
-        printf("ilock debug: dip->type=%d, dip->size=%d, dip->nlink=%d\n", 
-               dip->type, dip->size, dip->nlink);
     ip->type = dip->type;
     ip->major = dip->major;
     ip->minor = dip->minor;
@@ -240,7 +234,7 @@ void ilock(struct inode *ip)
     bp = 0; // 防止 use-after-free
     ip->valid = 1;
     if (ip->type == 0){
-		printf("ilock panic: inum=%d has type=0 on disk!\n", ip->inum);
+		debug("ilock panic: inum=%d has type=0 on disk!\n", ip->inum);
 		panic("ilock: no type");
 	}
   }

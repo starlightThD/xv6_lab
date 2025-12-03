@@ -338,7 +338,7 @@ void schedule(void) {
         if(p->state == SLEEPING) {
             p->sleep_ticks++;
             if(p->sleep_ticks > SLEEP_TIMEOUT) {
-                printf("[SCHED] PID %d sleep timeout, force wakeup\n", p->pid);
+                debug("[SCHED] PID %d sleep timeout, force wakeup\n", p->pid);
                 p->state = RUNNABLE;
                 p->sleep_ticks = 0;
             }

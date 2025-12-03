@@ -44,7 +44,7 @@ bget(uint dev, uint blockno)
   acquire(&bcache.lock);
   for (b = bcache.head.next; b != &bcache.head; b = b->next) {
     if (b->dev == dev && b->blockno == blockno) {
-	  printf("bget1: b=%p\n", b);
+	  debug("bget1: b=%p\n", b);
       b->refcnt++;
       release(&bcache.lock);
       acquiresleep(&b->lock);
@@ -54,7 +54,7 @@ bget(uint dev, uint blockno)
   }
 
   for (b = bcache.head.prev; b != &bcache.head; b = b->prev) {
-	printf("bget2: b=%p\n", b);
+	debug("bget2: b=%p\n", b);
     if (b->refcnt == 0) {
       b->dev = dev;
       b->blockno = blockno;
@@ -108,7 +108,7 @@ void brelse(struct buf *b)
     
     // 检查是否已经在链表头部
     if (b->prev == &bcache.head) {
-        printf("brelse: buffer already at head, skip move\n");
+        debug("brelse: buffer already at head, skip move\n");
     } else {
         // 从当前位置摘除
         b->next->prev = b->prev;

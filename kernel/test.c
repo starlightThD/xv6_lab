@@ -1323,97 +1323,119 @@ void child_write()
 
 void test_simple_concurrent_write(void)
 {
-	printf("\n===== 简单并发文件写入测试 =====\n");
+    printf("\n===== 简单并发文件写入测试 =====\n");
 
-	struct inode *ip = create(filename, T_FILE, 0, 0);
-	if (!ip)
-	{
-		printf("✗ 父进程创建文件失败\n");
-		return;
-	}
+    struct inode *ip = create(filename, T_FILE, 0, 0);
+    if (!ip)
+    {
+        printf("✗ 父进程创建文件失败\n");
+        return;
+    }
 
-	// 父进程写入自己的PID
-	struct file *f = open(ip, 1, 1);
-	if (!f)
-	{
-		printf("✗ 父进程打开文件失败\n");
-		iput(ip);
-		return;
-	}
-	char buf[64];
-	int len = snprintf(buf, sizeof(buf), "parent:%d\n", myproc()->pid);
-	f->off = ip->size; // 追加
-	write(f, (uint64)buf, len);
-	close(f);
-	iput(ip);
-	printf("✓ 父进程已写入PID: %d\n", myproc()->pid);
+    // 父进程写入自己的PID
+    struct file *f = open(ip, 1, 1);
+    if (!f)
+    {
+        printf("✗ 父进程打开文件失败\n");
+        iput(ip);
+        return;
+    }
+    char buf[64];
+    int len = snprintf(buf, sizeof(buf), "parent:%d\n", myproc()->pid);
+    f->off = ip->size; // 追加
+    write(f, (uint64)buf, len);
+    close(f);
+    iput(ip);
+    printf("✓ 父进程已写入PID: %d\n", myproc()->pid);
 
-	// 创建两个子进程并发写入
-	for (int i = 0; i < 2; i++)
-	{
-		int child_pid = create_kernel_proc(child_write);
-		if (child_pid > 0)
-		{
-			printf("✓ 创建子进程: PID=%d\n", child_pid);
-		}
-		else
-		{
-			printf("✗ 创建子进程 %d 失败\n", i);
-		}
-	}
+    // 创建10个子进程并发写入
+    int child_count = 10;
+    int created_children = 0;
+    
+    for (int i = 0; i < child_count; i++)
+    {
+        int child_pid = create_kernel_proc(child_write);
+        if (child_pid > 0)
+        {
+            created_children++;
+            printf("✓ 创建子进程 %d: PID=%d\n", i+1, child_pid);
+        }
+        else
+        {
+            printf("✗ 创建子进程 %d 失败\n", i+1);
+        }
+    }
+    
+    printf("成功创建 %d/%d 个子进程\n", created_children, child_count);
 
-	// 等待两个子进程完成
-	printf("等待子进程完成...\n");
-	int status1, status2;
-	int pid1 = wait_proc(&status1);
-	int pid2 = wait_proc(&status2);
-	printf("✓ 子进程 %d 和 %d 已完成\n", pid1, pid2);
+    // 等待所有子进程完成
+    printf("等待所有子进程完成...\n");
+    int completed_count = 0;
+    
+    for (int i = 0; i < created_children; i++)
+    {
+        int status;
+        int pid = wait_proc(&status);
+        if (pid > 0)
+        {
+            completed_count++;
+            printf("✓ 子进程 %d 已完成 (%d/%d)\n", pid, completed_count, created_children);
+        }
+        else
+        {
+            printf("✗ 等待子进程失败\n");
+        }
+    }
+    
+    printf("✓ 所有 %d 个子进程已完成\n", completed_count);
 
-	// 父进程读取文件内容验证
-	printf("\n----- 验证并发写入结果 -----\n");
-	struct inode *read_ip = namei(filename);
-	if (!read_ip)
-	{
-		printf("✗ 父进程无法找到文件读取\n");
-		return;
-	}
+    // 父进程读取文件内容验证
+    printf("\n----- 验证并发写入结果 -----\n");
+    struct inode *read_ip = namei(filename);
+    if (!read_ip)
+    {
+        printf("✗ 父进程无法找到文件读取\n");
+        return;
+    }
 
-	struct file *rf = open(read_ip, 1, 0);
-	if (!rf)
-	{
-		printf("✗ 父进程打开文件读取失败\n");
-		iput(read_ip);
-		return;
-	}
+    struct file *rf = open(read_ip, 1, 0);
+    if (!rf)
+    {
+        printf("✗ 父进程打开文件读取失败\n");
+        iput(read_ip);
+        return;
+    }
 
-	char readbuf[256] = {0};
-	int bytes = read(rf, (uint64)readbuf, sizeof(readbuf) - 1);
-	if (bytes > 0)
-	{
-		printf("✓ 文件总共读取 %d 字节\n", bytes);
-		printf("✓ 并发写入的完整内容:\n");
-		printf("==================\n");
-		printf("%s", readbuf);
-		printf("==================\n");
-	}
-	else
-	{
-		printf("✗ 文件读取失败\n");
-	}
+    // 增大读取缓冲区以容纳更多内容
+    char readbuf[1024] = {0};
+    int bytes = read(rf, (uint64)readbuf, sizeof(readbuf) - 1);
+    if (bytes > 0)
+    {
+        printf("✓ 文件总共读取 %d 字节\n", bytes);
+        printf("✓ 并发写入的完整内容:\n");
+        printf("==================\n");
+        printf("%s", readbuf);
+        printf("==================\n");
+        
+    }
+    else
+    {
+        printf("✗ 文件读取失败\n");
+    }
 
-	close(rf);
-	iput(read_ip);
+    close(rf);
+    iput(read_ip);
 
-	// 删除测试文件
-	int unlink_result = unlink(filename);
-	if (unlink_result == 0)
-	{
-		printf("✓ 测试文件已清理\n");
-	}
-	else
-	{
-		printf("! 测试文件清理失败\n");
-	}
+    // 删除测试文件
+    int unlink_result = unlink(filename);
+    if (unlink_result == 0)
+    {
+        printf("✓ 测试文件已清理\n");
+    }
+    else
+    {
+        printf("! 测试文件清理失败\n");
+    }
 
-	printf("===== 简单并发文件写入测试完成 =====\n");
+    printf("===== 简单并发文件写入测试完成 =====\n");
 }

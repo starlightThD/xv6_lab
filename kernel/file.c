@@ -54,7 +54,7 @@ static struct file *fileopen(struct inode *ip, int readable, int writable)
 	if (f == 0)
 		return 0;
 	f->type = FD_INODE;
-	f->ip = ip;
+	f->ip = idup(ip);
 	f->readable = readable;
 	f->writable = writable;
 	f->off = 0;
