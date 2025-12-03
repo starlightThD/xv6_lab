@@ -1,6 +1,6 @@
 #include "types.h"
 #include "memlayout.h"
-#include "./usr/build/user_progs.h"
+#include "../user/build/user_progs.h"
 // ========================
 // 宏定义
 // ========================

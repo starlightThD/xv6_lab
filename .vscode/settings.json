@@ -4,6 +4,7 @@
 		"defs.h": "c",
 		"user_progs.h": "c",
 		"types.h": "c",
-		"fcntl.h": "c"
+		"fcntl.h": "c",
+		"user_lib.h": "c"
 	}
 }
