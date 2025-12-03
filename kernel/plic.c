@@ -5,15 +5,9 @@ void plic_init(void) {
         uint64 addr = PLIC + i * 4;
         write32(addr, 0);
     }
-    
-    // 设置需要的中断源优先级
     write32(PLIC + UART0_IRQ * 4, 1);
     write32(PLIC + VIRTIO0_IRQ * 4, 1);
-    
-    // 启用指定中断（原plic_inithart功能）
     write32(PLIC_ENABLE, (1 << UART0_IRQ) | (1 << VIRTIO0_IRQ));
-    
-    // 设置中断优先级阈值为0（接受所有中断）
     write32(PLIC_THRESHOLD, 0);
 }
 

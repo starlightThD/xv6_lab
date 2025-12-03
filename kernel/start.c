@@ -11,6 +11,7 @@ struct CommandEntry kernel_test_table[] = {
     {"test_kernel_kill", test_kill},
 	{"test_file_system_basic",test_file_system_basic},
 	{"test_file_system_readwrite",test_file_system_readwrite},
+	{"test_simple_concurrent_write",test_simple_concurrent_write},
 };
 
 #define KERNEL_TEST_COUNT (sizeof(kernel_test_table)/sizeof(kernel_test_table[0]))

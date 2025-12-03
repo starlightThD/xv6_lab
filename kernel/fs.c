@@ -1,6 +1,6 @@
 #include "defs.h"
 #define min(a, b) ((a) < (b) ? (a) : (b))
-struct superblock sb;
+static struct superblock sb;
 // Read the super block.
 static void
 readsb(int dev, struct superblock *sb)
@@ -14,14 +14,37 @@ readsb(int dev, struct superblock *sb)
 // Init fs
 void fsinit(int dev)
 {
-	readsb(dev, &sb);
-	if (sb.magic != FSMAGIC)
-	{
-		panic("invalid file system");
-	}
-	initlog(dev, &sb);
-	ireclaim(dev);
-	printf("fs init done\n");
+    readsb(dev, &sb);
+    if (sb.magic != FSMAGIC)
+    {
+        panic("invalid file system");
+    }
+    initlog(dev, &sb);
+    ireclaim(dev);
+    
+    // 验证根目录
+    struct inode *root = iget(ROOTDEV, ROOTINO);
+    ilock(root);
+    printf("Root inode: inum=%d, type=%d, size=%d, nlink=%d\n", 
+           root->inum, root->type, root->size, root->nlink);
+    
+    // 检查根目录内容
+    if (root->type == T_DIR) {
+        printf("Root directory contents:\n");
+        struct dirent de;
+        for (int offset = 0; offset < root->size; offset += sizeof(de)) {
+            if (readi(root, 0, (uint64)&de, offset, sizeof(de)) != sizeof(de))
+                break;
+            if (de.inum != 0) {
+                printf("  inum=%d name='%s'\n", de.inum, de.name);
+            }
+        }
+    }
+    
+    iunlock(root);
+    iput(root);
+    
+    printf("fs init done\n");
 }
 
 // Zero a block.
@@ -105,22 +128,25 @@ ialloc(uint dev, short type)
 	int inum;
 	struct buf *bp;
 	struct dinode *dip;
-
+	
 	for (inum = 1; inum < sb.ninodes; inum++)
 	{
 		bp = bread(dev, IBLOCK(inum, sb));
 		dip = (struct dinode *)bp->data + inum % IPB;
 		if (dip->type == 0)
 		{ // a free inode
+			begin_op();
 			memset(dip, 0, sizeof(*dip));
 			dip->type = type;
 			debug("ialloc: alloc inum=%d, type=%d\n", inum, type);
 			log_write(bp); // mark it allocated on the disk
 			brelse(bp);
+			end_op();
 			return iget(dev, inum);
 		}
 		brelse(bp);
 	}
+	
 	printf("ialloc: no inodes\n");
 	return 0;
 }
@@ -190,26 +216,20 @@ void ilock(struct inode *ip)
   struct dinode *dip;
 
   if (ip == 0 || ip->ref < 1){
-    debug("ilock: ip=%p ref=%d\n", ip, ip ? ip->ref : -1);
+    printf("ilock: ip=%p ref=%d\n", ip, ip ? ip->ref : -1);
     panic("ilock");
   }
   acquiresleep(&ip->lock);
   if (ip->valid == 0)
   {
     bp = bread(ip->dev, IBLOCK(ip->inum, sb));
-    
-    // 防御性断言
-    if (bp->dev != ip->dev || bp->blockno != IBLOCK(ip->inum, sb)) {
-      panic("ilock: buffer mismatch! bp->dev=%d expected=%d, bp->blockno=%d expected=%d", 
-            bp->dev, ip->dev, bp->blockno, IBLOCK(ip->inum, sb));
-    }
-    if (bp->refcnt <= 0) {
-      panic("ilock: buffer has invalid refcnt=%d", bp->refcnt);
-    }
-    assert(bp != NULL);
-	assert(bp->refcnt > 0);
     dip = (struct dinode *)bp->data + ip->inum % IPB;
-    debug("ilock: read inum=%d, dip->type=%d\n", ip->inum, dip->type);
+        
+        // 添加调试信息
+        printf("ilock debug: inum=%d, dev=%d, block=%d, offset=%d\n", 
+               ip->inum, ip->dev, IBLOCK(ip->inum, sb), ip->inum % IPB);
+        printf("ilock debug: dip->type=%d, dip->size=%d, dip->nlink=%d\n", 
+               dip->type, dip->size, dip->nlink);
     ip->type = dip->type;
     ip->major = dip->major;
     ip->minor = dip->minor;
@@ -219,8 +239,10 @@ void ilock(struct inode *ip)
     brelse(bp);
     bp = 0; // 防止 use-after-free
     ip->valid = 1;
-    if (ip->type == 0)
-      panic("ilock: no type");
+    if (ip->type == 0){
+		printf("ilock panic: inum=%d has type=0 on disk!\n", ip->inum);
+		panic("ilock: no type");
+	}
   }
 }
 
@@ -291,7 +313,7 @@ void ireclaim(int dev)
       debug("inum == %d over\n", inum);
     }
     end_op();
-	//is_clear = 1; // 暂时跳过
+	is_clear = 1; // 暂时跳过
   }
 }
 

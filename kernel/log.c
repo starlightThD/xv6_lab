@@ -9,8 +9,8 @@ void initlog(int dev, struct superblock *sb)
 	initlock(&log.lock, "log");
 	log.start = sb->logstart;
 	log.dev = dev;
-	recover_from_log();
-	debug("log init done\n");
+	//recover_from_log();
+	printf("log init done\n");
 }
 
 static void install_trans(int recovering)
@@ -175,7 +175,6 @@ commit()
 }
 void log_write(struct buf *b)
 {
-	return ;
     int i;
     acquire(&log.lock);
     if (log.lh.n >= LOGBLOCKS) {

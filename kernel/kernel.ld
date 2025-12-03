@@ -34,6 +34,10 @@ SECTIONS
     . = ALIGN(16);
     _bss_end = .;          /* 在BSS段结束处定义_bss_end符号 */
   }
+  
+  .bcache : ALIGN(16) {
+    *(.bcache)
+  }
 
   PROVIDE(end = .);
 }

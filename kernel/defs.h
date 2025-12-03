@@ -162,8 +162,7 @@
 #define BSIZE 1024
 #define MAXOPBLOCKS 10				// max # of blocks any FS op writes
 #define LOGBLOCKS (MAXOPBLOCKS * 3) // max data blocks in on-disk log
-//#define NBUF (MAXOPBLOCKS * 3)		// size of disk block cache
-#define NBUF 16
+#define NBUF (MAXOPBLOCKS * 3)		// size of disk block cache
 // ========================
 // typedef
 // ========================
@@ -644,6 +643,7 @@ void test_synchronization(void);
 void test_kill(void);
 void test_file_system_basic(void);
 void test_file_system_readwrite(void);
+void test_simple_concurrent_write(void);
 
 // virtio_disk.h
 void virtio_disk_init(void);
