@@ -421,3 +421,65 @@ int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz) {
     }
     return 0;
 }
+// 将用户虚拟地址 va 转换为物理地址，失败返回0
+void* user_va2pa(pagetable_t pagetable, uint64 va) {
+    pte_t *pte = walk_lookup(pagetable, va);
+    if (!pte) return 0;
+    if (!(*pte & PTE_V)) return 0;
+    if (!(*pte & PTE_U)) return 0; // 必须是用户可访问
+    uint64 pa = (PTE2PA(*pte)) | (va & 0xFFF); // 物理页基址 + 页内偏移
+    return (void*)pa;
+}
+int copyin(char *dst, uint64 srcva, int maxlen) {
+    struct proc *p = myproc();
+    for (int i = 0; i < maxlen; i++) {
+        char *pa = user_va2pa(p->pagetable, srcva + i);
+        if (!pa) return -1;
+        dst[i] = *pa;
+        if (dst[i] == 0) return 0;
+    }
+    return 0;
+}
+int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len) {
+    for (uint64 i = 0; i < len; i++) {
+        char *pa = user_va2pa(pagetable, dstva + i);
+        if (!pa) return -1;
+        *pa = src[i];
+    }
+    return 0;
+}
+
+int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max) {
+    int i;
+    for (i = 0; i < max; i++) {
+        char c;
+        if (copyin(&c, srcva + i, 1) < 0)  // 每次拷贝 1 字节
+            return -1;
+        dst[i] = c;
+        if (c == '\0')
+            return 0;
+    }
+    dst[max-1] = '\0';
+    return -1; // 超过最大长度还没遇到 \0
+}
+int check_user_addr(uint64 addr, uint64 size, int write) {
+    // 基本检查
+    if (!IS_USER_ADDR(addr) || !IS_USER_ADDR(addr + size - 1))
+        return -1;
+        
+    // 检查特定区域
+    if (IS_USER_STACK(addr)) {
+        if (!IS_USER_STACK(addr + size - 1))
+            return -1;  // 跨越栈边界
+    } else if (IS_USER_HEAP(addr)) {
+        if (!IS_USER_HEAP(addr + size - 1))
+            return -1;  // 跨越堆边界
+    } else if (addr < USER_HEAP_START) {
+        if (addr + size > USER_HEAP_START)
+            return -1;  // 跨越代码/数据段边界
+    } else {
+        return -1;  // 在未定义区域
+    }
+    
+    return 0;  // 地址合法
+}

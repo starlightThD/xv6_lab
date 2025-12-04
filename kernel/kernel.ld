@@ -36,7 +36,19 @@ SECTIONS
   }
   
   .bcache : ALIGN(16) {
+    _bcache_start = .;
     *(.bcache)
+    . = ALIGN(16);
+    . += 0x200000;  /* 为 bcache 预留 2MB */
+    _bcache_end = .;
+  }
+
+  .itable : ALIGN(16) {
+    _itable_start = .;
+    *(.itable)
+    . = ALIGN(16);
+    . += 0x100000;  /* 为 itable 预留 1MB */
+    _itable_end = .;
   }
 
   PROVIDE(end = .);

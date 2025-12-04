@@ -69,10 +69,13 @@ write_head(void)
 
 void recover_from_log(void)
 {
-	read_head();
-	install_trans(1); // if committed, copy from log to disk
-	log.lh.n = 0;
-	write_head(); // clear the log
+    read_head();
+    if (log.lh.n > 0) {
+        warning("日志恢复：检测到上一次系统异常或崩溃，已自动恢复文件系统一致性。\n");
+    }
+    install_trans(1); // if committed, copy from log to disk
+    log.lh.n = 0;
+    write_head(); // clear the log
 }
 void begin_op(void)
 {

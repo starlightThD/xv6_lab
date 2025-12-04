@@ -1,6 +1,8 @@
 #include "defs.h"
 #define LINE_BUF_SIZE 128
 struct uart_input_buf_t uart_input_buf;
+
+static void uart_intr(void);
 // UART初始化函数
 void uart_init(void) {
 
@@ -33,12 +35,7 @@ void uart_puts(char *s) {
     }
 }
 
-int uart_getc(void) {
-    if ((ReadReg(LSR) & LSR_RX_READY) == 0)
-        return -1; 
-    return ReadReg(RHR); 
-}
-void uart_intr(void) {
+static void uart_intr(void) {
     static char linebuf[LINE_BUF_SIZE];
     static int line_len = 0;
 
@@ -52,7 +49,12 @@ void uart_intr(void) {
             continue;
         }
 		if(c == 0x03){
-			crash("Ctrl+C");
+			warning("Ctrl+C to Crash\n");
+			asm volatile (
+				"li a7, 8\n"
+				"ecall\n"
+			);
+			while(1);
 		}
         if (c == '\r' || c == '\n') {
             uart_putc('\n');

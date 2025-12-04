@@ -341,14 +341,6 @@ void restore_cursor(void) {
     consputc('u');
 }
 
-// 移动到行首
-void cursor_to_column(int col) {
-    if (col <= 0) col = 1;
-    consputc('\033');
-    consputc('[');
-    printint(col, 10, 0,0,0);
-    consputc('G');
-}
 // 光标定位到指定行列
 void goto_rc(int row, int col) {
     consputc('\033');
@@ -362,47 +354,24 @@ void goto_rc(int row, int col) {
 void reset_color(void) {
 	uart_puts(ESC "[0m");
 }
+
 // 设置前景色
-void set_fg_color(int color) {
-	if (color < 30 || color > 37) return; // 支持30-37
+void set_fg_color(color_t color) {
+	int code = 30 + color;
+	if (code < 30 || code > 37) return; // 支持30-37
 	consputc('\033');
 	consputc('[');
-	printint(color, 10, 0,0,0);
+	printint(code, 10, 0,0,0);
 	consputc('m');
 }
 // 设置背景色
-void set_bg_color(int color) {
-	if (color < 40 || color > 47) return; // 支持40-47
+void set_bg_color(color_t color) {
+	int code = 30 + color;
+	if (code < 40 || code > 47) return; // 支持40-47
 	consputc('\033');
 	consputc('[');
-	printint(color, 10, 0,0,0);
+	printint(code, 10, 0,0,0);
 	consputc('m');
-}
-// 简易文字颜色
-void color_red(void) {
-	set_fg_color(31); // 红色
-}
-void color_green(void) {
-	set_fg_color(32); // 绿色
-}
-void color_yellow(void) {
-	set_fg_color(33); // 黄色
-}
-void color_blue(void) {
-	set_fg_color(34); // 蓝色
-}
-void color_purple(void) {
-	set_fg_color(35); // 紫色
-}
-void color_cyan(void) {
-	set_fg_color(36); // 青色
-}
-void color_reverse(void){
-	set_fg_color(37); // 反色
-}
-void set_color(int fg, int bg) {
-	set_bg_color(bg);
-	set_fg_color(fg);
 }
 void clear_line(){
 	consputc('\033');
@@ -413,7 +382,7 @@ void clear_line(){
 void debug(const char *fmt, ...) {
 #if DEBUG
     va_list ap;
-    color_cyan(); // 调试信息用青色
+    set_fg_color(CYAN); // 调试信息用青色
     printf("[DEBUG] ");
     va_start(ap, fmt);
     vprintf(fmt, ap);
@@ -423,7 +392,7 @@ void debug(const char *fmt, ...) {
 }
 void panic(const char *fmt, ...) {
     va_list ap;
-    color_red(); // 红色显示
+    set_fg_color(RED); // 红色显示
     printf("[PANIC] ");
     va_start(ap, fmt);
     vprintf(fmt, ap);
@@ -433,135 +402,10 @@ void panic(const char *fmt, ...) {
 }
 void warning(const char *fmt, ...) {
     va_list ap;
-    color_purple(); // 设置紫色
+    set_fg_color(PURPLE); // 设置紫色
     printf("[WARNING] ");
     va_start(ap, fmt);
     vprintf(fmt, ap);
     va_end(ap);
     reset_color(); // 恢复默认颜色
-}
-void test_printf_precision(void) {
-	clear_screen();
-    printf("=== 详细的printf测试 ===\n");
-    
-    // 测试十六进制格式
-    printf("十六进制测试:\n");
-    printf("  255 = 0x%x (expected: ff)\n", 255);
-    printf("  4096 = 0x%x (expected: 1000)\n", 4096);
-    printf("  0x1234abcd = 0x%x\n", 0x1234abcd);
-    
-    // 测试十进制格式  
-    printf("十进制测试:\n");
-    printf("  正数: %d\n", 42);
-    printf("  负数: %d\n", -42);
-    printf("  零: %d\n", 0);
-    printf("  大数: %d\n", 123456789);
-    
-    // 测试无符号格式
-    printf("无符号测试:\n");
-    printf("  大无符号数：%u\n", 4294967295U);
-    printf("  零：%u\n", 0U);
-	printf("  小无符号数：%u\n", 12345U);
-
-	// 测试边界
-	printf("边界测试:\n");
-	printf("  INT_MAX: %d\n", 2147483647);
-	printf("  INT_MIN: %d\n", -2147483648);
-	printf("  UINT_MAX: %u\n", 4294967295U);
-	printf(" -1 as unsigned: %u\n", (unsigned int)-1);
-    
-    // 测试字符串边界情况
-    printf("字符串测试:\n");
-    printf("  空字符串: '%s'\n", "");
-    printf("  单字符: '%s'\n", "X");
-    printf("  长字符串: '%s'\n", "This is a longer test string");
-	printf("  非常长字符串： '%s'\n", "Formal version: Entities should not be multiplied beyond necessity.\nPlain English: If two or more explanations fit the facts equally well, choose the simplest one.\nScientific phrasing: When multiple hypotheses explain the same observation, the simplest hypothesis that requires the fewest assumptions is most likely to be correct.");
-	
-	// 测试混合格式
-	printf("混合格式测试:\n");
-	printf("  Hex: 0x%x, Dec: %d, Unsigned: %u\n", 255, -255, 255U);
-	
-	// 测试百分号输出
-	printf("百分号输出测试:\n");
-	printf("  100%% 完成!\n");
-	
-	// 测试NULL字符串
-	char *null_str = 0;
-	printf("NULL字符串测试:\n");
-	printf("  NULL as string: '%s'\n", null_str);
-	
-	// 测试指针格式
-	int var = 42;
-	printf("指针测试:\n");
-	printf("  Address of var: %p\n", &var);
-	
-	// 测试负数的无符号输出
-	printf("负数无符号输出测试:\n");
-	printf("  -1 as unsigned: %u\n", (unsigned int)-1);
-	
-	// 测试不同进制的数字
-	printf("不同进制测试:\n");
-	printf("  Binary of 5: %b\n", 5);
-	printf("  Octal of 8 : %o\n", 8); 
-	printf("=== printf测试结束 ===\n");
-}
-void test_curse_move(){
-	clear_screen(); // 清屏
-	printf("=== 光标移动测试 ===\n");
-	for (int i = 3; i <= 7; i++) {
-		for (int j = 1; j <= 10; j++) {
-			goto_rc(i, j);
-			printf("*");
-		}
-	}
-	goto_rc(9, 1);
-	save_cursor();
-	// 光标移动测试
-	cursor_up(5);
-	cursor_right(2);
-	printf("+++++");
-	cursor_down(2);
-	cursor_left(5);
-	printf("-----");
-	restore_cursor();
-	printf("=== 光标移动测试结束 ===\n");
-}
-
-void test_basic_colors(void) {
-    clear_screen();
-    printf("=== 基本颜色测试 ===\n\n");
-    
-    // 测试基本前景色
-    printf("前景色测试:\n");
-    color_red();    printf("红色文字 ");
-    color_green();  printf("绿色文字 ");
-    color_yellow(); printf("黄色文字 ");
-    color_blue();   printf("蓝色文字 ");
-    color_purple(); printf("紫色文字 ");
-    color_cyan();   printf("青色文字 ");
-    color_reverse();  printf("反色文字");
-    reset_color();
-    printf("\n\n");
-    
-    // 测试背景色
-    printf("背景色测试:\n");
-    set_bg_color(41); printf(" 红色背景 "); reset_color();
-    set_bg_color(42); printf(" 绿色背景 "); reset_color();
-    set_bg_color(43); printf(" 黄色背景 "); reset_color();
-    set_bg_color(44); printf(" 蓝色背景 "); reset_color();
-	set_bg_color(47); printf(" 反色背景 "); reset_color();
-    printf("\n\n");
-    
-    // 测试组合效果
-    printf("组合效果测试:\n");
-    set_color(31, 44); printf(" 红字蓝底 "); reset_color();
-    set_color(33, 45); printf(" 黄字紫底 "); reset_color();
-    set_color(32, 47); printf(" 绿字反底 "); reset_color();
-    printf("\n\n");
-	reset_color();
-	printf("重置为默认颜色，本行文字会被清除\n"); 
-	cursor_up(1); // 光标上移一行
-	clear_line();
-
-	printf("=== 颜色测试结束 ===\n");
 }

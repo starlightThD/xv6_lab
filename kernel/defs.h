@@ -118,6 +118,8 @@
 #define O_WRONLY 0x0001 // 只写
 #define O_RDWR 0x0002	// 读写
 #define O_CREATE 0x0200 // 创建文件
+#define O_TRUNC   0x400
+
 // pipe.h
 #define PIPESIZE 512
 
@@ -172,6 +174,17 @@ typedef __builtin_va_list va_list;
 #define va_start(ap, last) __builtin_va_start(ap, last)
 #define va_arg(ap, type) __builtin_va_arg(ap, type)
 #define va_end(ap) __builtin_va_end(ap)
+
+typedef enum {
+    BLACK = 0,
+    RED,
+    GREEN,
+    YELLOW,
+    BLUE,
+    PURPLE,
+    CYAN,
+    REVERSE
+} color_t;
 
 // ========================
 // struct定义
@@ -278,21 +291,23 @@ enum procstate
 
 struct proc
 {
-	enum procstate state;
-	int pid;
-	uint64 kstack;
-	struct context context;
-	int killed;
-	int exit_status;
-	char name[16];
-	struct proc *parent;
-	int sleep_ticks;
-	void *chan;
-	int is_user;
-	uint64 sz;
-	pagetable_t pagetable;
-	struct trapframe *trapframe;
-	struct inode *cwd; // 当前工作目录
+    enum procstate state;
+    int pid;
+    uint64 kstack;
+    struct context context;
+    int killed;
+    int exit_status;
+    char name[16];
+    struct proc *parent;
+    int sleep_ticks;
+    void *chan;
+    int is_user;
+    uint64 sz;
+    pagetable_t pagetable;
+    struct trapframe *trapframe;
+    struct inode *cwd; // 当前工作目录
+    struct file *ofile[NOFILE]; // 打开的文件描述符表
+    int next_fd; // 下一个可用的文件描述符
 };
 // fs.h
 // 超级块结构
@@ -499,11 +514,8 @@ void timeintr(void);
 // uart.h
 extern struct uart_input_buf_t uart_input_buf;
 void uart_init(void);
-void uart_intr(void);
 void uart_putc(char c);
 void uart_puts(char *s);
-int uart_getc(void);
-char uart_getchar(void);
 int readline(char *buf, int max);
 
 // string.h
@@ -514,7 +526,7 @@ char *safestrcpy(char *s, const char *t, int n);
 int atoi(const char *s);
 int strncmp(const char *s, const char *t, int n);
 char *strncpy(char *dst, const char *src, int n);
-char* strcat(char *dst, const char *src);
+char *strcat(char *dst, const char *src);
 
 // sbi.h
 void sbi_set_time(uint64 time);
@@ -526,9 +538,6 @@ void plic_enable(int irq);
 void plic_disable(int irq);
 int plic_claim(void);
 void plic_complete(int irq);
-
-// start.h
-// struct CommandEntry 已定义
 
 // mem.h
 void *memset(void *dst, int c, unsigned long n);
@@ -554,6 +563,10 @@ int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz);
 void test_pagetable(void);
 pte_t *walk_lookup(pagetable_t pt, uint64 va);
 void print_pagetable(pagetable_t pagetable, int level, uint64 va_base);
+int copyin(char *dst, uint64 srcva, int maxlen);
+int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len);
+int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max);
+int check_user_addr(uint64 addr, uint64 size, int write);
 
 // printf.h
 void printf(const char *fmt, ...);
@@ -567,23 +580,12 @@ void cursor_left(int lines);
 void save_cursor(void);
 void restore_cursor(void);
 void reset_color(void);
-void set_fg_color(int color);
-void set_bg_color(int color);
-void set_color(int fg, int bg);
-void color_red(void);
-void color_green(void);
-void color_yellow(void);
-void color_blue(void);
-void color_purple(void);
-void color_cyan(void);
-void color_reverse(void);
+void set_fg_color(color_t color);
+void set_bg_color(color_t color);
 void clear_line(void);
 void debug(const char *fmt, ...);
 void panic(const char *fmt, ...);
 void warning(const char *fmt, ...);
-void test_printf_precision(void);
-void test_curse_move();
-void test_basic_colors(void);
 
 // trap.h
 typedef void (*interrupt_handler_t)(void);
@@ -604,12 +606,8 @@ void handle_store_page_fault(struct trapframe *tf, struct trap_info *info);
 int handle_page_fault(uint64 va, int type);
 void usertrap(void);
 void usertrapret(void);
-int copyin(char *dst, uint64 srcva, int maxlen);
-int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len);
-int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max);
-int check_user_addr(uint64 addr, uint64 size, int write);
 
-void crash(const char *reason);
+
 
 // proc.h
 extern void swtch(struct context *old, struct context *new);
@@ -634,6 +632,8 @@ void sleep(void *chan, struct spinlock *lk);
 void wakeup(void *chan);
 void print_proc_table(void);
 struct proc *get_proc(int pid);
+
+void shutdown();
 
 // test.h
 void test_timer_interrupt(void);
@@ -674,8 +674,8 @@ void bwrite(struct buf *b);
 void brelse(struct buf *b);
 void bpin(struct buf *b);
 void bunpin(struct buf *b);
-void check_bcache_status(const char* location);
-void debug_bcache_chain(const char* tag);
+void check_bcache_status(const char *location);
+void debug_bcache_chain(const char *tag);
 int is_buf_ptr(struct buf *p);
 void sync_all_buffers(void);
 
@@ -703,13 +703,19 @@ void close(struct file *f);
 int read(struct file *f, uint64 addr, int n);
 int write(struct file *f, uint64 addr, int n);
 
+// 文件描述符相关函数
+int fdalloc(struct file *f);
+struct file *fdget(int fd);
+void fdclose(int fd);
+void proc_fd_init(struct proc *p);
+
 // fs.h
 void fsinit(int dev);
 struct inode *ialloc(uint dev, short type);
 void iinit();
 struct inode *idup(struct inode *ip);
 void ilock(struct inode *ip);
-void iunlock(struct inode *ip); // 你需要在文件中实现或声明
+void iunlock(struct inode *ip);
 void iput(struct inode *ip);
 void iupdate(struct inode *ip);
 void itrunc(struct inode *ip);
@@ -723,7 +729,7 @@ struct inode *nameiparent(char *path, char *name);
 void ireclaim(int dev);
 struct inode *iget(uint dev, uint inum);
 void iunlockput(struct inode *ip);
-struct inode* create(char *path, short type, short major, short minor);
+struct inode *create(char *path, short type, short major, short minor);
 int unlink(char *path);
 uint get_sb_size();
 
@@ -834,14 +840,15 @@ static inline uint32 read32(uint64 addr)
 	}
 }
 
-#define assert(expr) \
-    do { \
-        if (!(expr)) { \
-            printf("assert failed: file %s, line %d\n", __FILE__, __LINE__); \
-            panic("assert"); \
-        } \
-    } while (0)
-
+#define assert(expr)                                                         \
+	do                                                                       \
+	{                                                                        \
+		if (!(expr))                                                         \
+		{                                                                    \
+			printf("assert failed: file %s, line %d\n", __FILE__, __LINE__); \
+			panic("assert");                                                 \
+		}                                                                    \
+	} while (0)
 
 static inline uint64 sv39_sign_extend(uint64 va)
 {

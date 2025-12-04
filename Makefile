@@ -55,7 +55,7 @@ qemu-gdb: userprog kernel
 	@echo "=== 启动 QEMU 调试模式 ==="
 	@echo "使用调试器: $(GDB)"
 	@echo "在另一个终端运行: make debug"
-	@echo "或手动运行: $(GDB) kernel/kernel"
+	@echo "或手动运行: $(GDB) kernel/build/kernel"
 	@echo "然后在 GDB 中执行:"
 	@echo "  target remote localhost:1234"
 	@echo "  set architecture riscv:rv64"
@@ -67,7 +67,7 @@ debug: kernel
 	@echo "=== 连接到QEMU调试会话 ==="
 	@echo "使用调试器: $(GDB)"
 	@echo "确保已经运行了 'make qemu-gdb'"
-	$(GDB) $K/kernel \
+	$(GDB) $K/build/kernel \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture riscv:rv64" \
 		-ex "set confirm off" \
@@ -89,7 +89,7 @@ gdb-init: kernel
 	@echo "hb uart_putc" >> .gdbinit
 	@echo "layout split" >> .gdbinit
 	@echo "已创建 .gdbinit 文件"
-	@echo "现在可以运行: $(GDB) kernel/kernel"
+	@echo "现在可以运行: $(GDB) kernel/build/kernel"
 
 # 清理调试文件
 clean-debug:
