@@ -399,7 +399,7 @@ void sleep(void *chan, struct spinlock *lk){
     p->context.ra = ra;
     p->chan = chan;
     p->state = SLEEPING;
-    if (lk->locked){
+    if (lk && lk->locked){
 		debug("release in sleep\n");
         release(lk);
 	}
