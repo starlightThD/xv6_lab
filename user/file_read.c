@@ -36,9 +36,7 @@ int main() {
         sys_printstr(message);
         
         sys_printstr("\n[内容] 文件完整内容如下：\n");
-        sys_printstr("==========================================\n");
         sys_printstr(read_buffer);
-        sys_printstr("==========================================\n");
         
     } else if (read_ret == 0) {
         sys_printstr("[结果] ⚠️  文件为空\n");

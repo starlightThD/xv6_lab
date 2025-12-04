@@ -21,10 +21,8 @@ int main() {
     // 写入测试数据
     const char *test_content = 
         "=== 持久化测试文件 ===\n"
-        "这个文件由第一个测试程序创建\n"
-        "包含多行内容用于验证持久化\n"
-        "创建时间：系统启动后\n"
-        "文件大小：约150字节\n"
+        "文件由第一个测试程序创建\n"
+		"文件由第一个测试程序创建\n"
         "=== 内容结束 ===\n";
     
     int content_len = usr_strlen(test_content);
@@ -52,11 +50,11 @@ int main() {
     sys_printstr("[验证] 重新打开文件验证写入成功\n");
     fd = sys_open("/persistent_file.txt", 0x000, 0);  // O_RDONLY
     if (fd >= 0) {
-        char verify_buf[64];
+        char verify_buf[128];
         int read_ret = sys_read(fd, verify_buf, sizeof(verify_buf) - 1);
         if (read_ret > 0) {
             verify_buf[read_ret] = '\0';
-            sys_printstr("[验证] ✅ 文件内容预览（前63字符）:\n");
+            sys_printstr("[验证] ✅ 文件内容预览（前127字符）:\n");
             sys_printstr(verify_buf);
             sys_printstr("...\n");
         }

@@ -38,25 +38,44 @@ void uart_puts(char *s) {
 static void uart_intr(void) {
     static char linebuf[LINE_BUF_SIZE];
     static int line_len = 0;
+    static int in_escape = 0;  // 标记是否在转义序列中
 
     while (ReadReg(LSR) & LSR_RX_READY) {
         char c = ReadReg(RHR);
-		if (c == 0x0c) { // 是'L'与 0x1f按位与的结果
-            clear_screen();
-			if (myproc()->pid == 1){ // 检查当前进程是否为控制台进程
-				printf("Console >>> ");
-			}
+        
+        // 处理转义序列 - 简单忽略
+        if (in_escape) {
+            // 如果是转义序列的结束字符（通常是字母），则退出转义模式
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '~') {
+                in_escape = 0;
+            }
+            continue; // 忽略转义序列中的所有字符
+        }
+        
+        if (c == 0x1b) { // ESC 开始转义序列
+            in_escape = 1;
             continue;
         }
-		if(c == 0x03){
-			warning("Ctrl+C to Crash\n");
-			asm volatile (
-				"li a7, 8\n"
-				"ecall\n"
-			);
-			while(1);
-		}
-        if (c == '\r' || c == '\n') {
+        
+        // 处理可识别的控制字符
+        if (c == 0x0c) { // Ctrl+L 清屏
+            clear_screen();
+            if (myproc()->pid == 1) { 
+                printf("Console >>> ");
+            }
+            continue;
+        }
+        
+        if (c == 0x03) { // Ctrl+C 
+            warning("Ctrl+C to Crash\n");
+            asm volatile (
+                "li a7, 8\n"
+                "ecall\n"
+            );
+            while(1);
+        }
+        
+        if (c == '\r' || c == '\n') { // 回车/换行
             uart_putc('\n');
             // 将编辑好的整行写入全局缓冲区
             for (int i = 0; i < line_len; i++) {
@@ -73,17 +92,25 @@ static void uart_intr(void) {
                 uart_input_buf.w = next;
             }
             line_len = 0;
-        } else if (c == 0x7f || c == 0x08) { // 退格
+        } else if (c == 0x7f || c == 0x08) { // 退格键
             if (line_len > 0) {
                 uart_putc('\b');
                 uart_putc(' ');
                 uart_putc('\b');
                 line_len--;
             }
-        } else if (line_len < LINE_BUF_SIZE - 1) {
+        } else if (c == '\t') { // Tab 键
+            // 可以选择处理制表符或转换为空格
+            if (line_len < LINE_BUF_SIZE - 1) {
+                uart_putc(' ');  // 显示为空格
+                linebuf[line_len++] = ' ';  // 存储为空格
+            }
+        } else if (c >= 0x20 && c <= 0x7E && line_len < LINE_BUF_SIZE - 1) {
+            // 只接收可打印的 ASCII 字符 (空格到 ~)
             uart_putc(c);
             linebuf[line_len++] = c;
         }
+        // 忽略所有其他字符（包括方向键产生的转义序列）
     }
 }
 // 阻塞式读取一个字符
