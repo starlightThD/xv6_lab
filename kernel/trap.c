@@ -351,64 +351,134 @@ void handle_syscall(struct trapframe *tf, struct trap_info *info)
 		tf->a0 = 0;
 		debug("[syscall] step enabled but do nothing\n");
 		break;
-	case SYS_write: {
-		int fd = tf->a0;          // 文件描述符
-		char buf[128];            // 临时缓冲区
-		
-		// 目前只支持标准输出(fd=1)和标准错误(fd=2)
-		if (fd != 1 && fd != 2) {
+	case SYS_open:
+	{
+		char path[128];
+		int flags = tf->a1; // 打开标志 (O_RDONLY, O_WRONLY, O_RDWR, O_CREATE等)
+		int mode = tf->a2;	// 文件模式 (暂时不使用)
+
+		// 从用户空间复制文件路径
+		if (copyinstr(path, myproc()->pagetable, tf->a0, sizeof(path)) < 0)
+		{
+			debug("[syscall] invalid path in open\n");
 			tf->a0 = -1;
 			break;
 		}
-		
-		// 检查用户提供的缓冲区地址是否合法
-		if (check_user_addr(tf->a1, tf->a2, 0) < 0) {
-			debug("[syscall] invalid write buffer address\n");
-			tf->a0 = -1;
-			break;
-		}
-		
-		// 从用户空间安全地复制字符串
-		if (copyinstr(buf, myproc()->pagetable, tf->a1, sizeof(buf)) < 0) {
-			debug("[syscall] invalid write buffer\n");
-			tf->a0 = -1;
-			break;
-		}
-		
-		// 输出到控制台
-		printf("%s", buf);
-		tf->a0 = strlen(buf);  // 返回写入的字节数
+
+		debug("[syscall] open: path=%s, flags=%d\n", path, flags);
+
+		// 调用内核的文件打开函数
+		int fd = ker_open(path, flags, mode);
+		tf->a0 = fd;
 		break;
 	}
 
-	case SYS_read: {
-		int fd = tf->a0;          // 文件描述符
-		uint64 buf = tf->a1;      // 用户缓冲区地址
-		int n = tf->a2;           // 要读取的字节数
-		
-		// 目前只支持标准输入(fd=0)
-		if (fd != 0) {
-			tf->a0 = -1;
-			break;
-		}
-		
+	case SYS_close:
+	{
+		int fd = tf->a0;
+		debug("[syscall] close: fd=%d\n", fd);
+
+		int result = ker_close(fd);
+		tf->a0 = result;
+		break;
+	}
+
+	case SYS_read:
+	{
+		int fd = tf->a0;	 // 文件描述符
+		uint64 buf = tf->a1; // 用户缓冲区地址
+		int n = tf->a2;		 // 要读取的字节数
+
 		// 检查用户提供的缓冲区地址是否合法
-		if (check_user_addr(buf, n, 1) < 0) {  // 1表示写入访问
+		if (check_user_addr(buf, n, 1) < 0)
+		{ // 1表示写入访问
 			debug("[syscall] invalid read buffer address\n");
 			tf->a0 = -1;
 			break;
 		}
-		
-		// TODO: 实现从控制台读取
-		tf->a0 = -1;
+
+		// 为标准输入保留原有逻辑
+		if (fd == 0)
+		{
+			// TODO: 实现从控制台读取
+			tf->a0 = -1;
+			break;
+		}
+
+		debug("[syscall] read: fd=%d, buf=0x%lx, n=%d\n", fd, buf, n);
+
+		// 调用内核的文件读取函数
+		int result = ker_read(fd, buf, n);
+		tf->a0 = result;
 		break;
 	}
-        
-        case SYS_open:
-        case SYS_close: 
-            // 暂时不支持真实的文件操作
-            tf->a0 = -1;
-            break;
+
+	case SYS_write:
+	{
+		int fd = tf->a0;	 // 文件描述符
+		uint64 buf = tf->a1; // 用户缓冲区地址
+		int n = tf->a2;		 // 要写入的字节数
+
+		// 为标准输出保留原有逻辑
+		if (fd == 1 || fd == 2)
+		{
+			char kbuf[128]; // 临时缓冲区
+
+			// 检查用户提供的缓冲区地址是否合法
+			if (check_user_addr(buf, n, 0) < 0)
+			{
+				debug("[syscall] invalid write buffer address\n");
+				tf->a0 = -1;
+				break;
+			}
+
+			// 从用户空间安全地复制字符串
+			if (copyinstr(kbuf, myproc()->pagetable, buf, sizeof(kbuf)) < 0)
+			{
+				debug("[syscall] invalid write buffer\n");
+				tf->a0 = -1;
+				break;
+			}
+
+			// 输出到控制台
+			printf("%s", kbuf);
+			tf->a0 = strlen(kbuf); // 返回写入的字节数
+			break;
+		}
+
+		// 检查用户提供的缓冲区地址是否合法
+		if (check_user_addr(buf, n, 0) < 0)
+		{
+			debug("[syscall] invalid write buffer address\n");
+			tf->a0 = -1;
+			break;
+		}
+
+		debug("[syscall] write: fd=%d, buf=0x%lx, n=%d\n", fd, buf, n);
+
+		// 调用内核的文件写入函数
+		int result = ker_write(fd, buf, n);
+		tf->a0 = result;
+		break;
+	}
+	case SYS_unlink:
+{
+    char path[128];
+    
+    // 从用户空间复制文件路径
+    if (copyinstr(path, myproc()->pagetable, tf->a0, sizeof(path)) < 0) {
+        debug("[syscall] invalid path in unlink\n");
+        tf->a0 = -1;
+        break;
+    }
+    
+    debug("[syscall] unlink: path=%s\n", path);
+    
+    // 调用内核的文件删除函数
+    int result = ker_unlink(path);
+    tf->a0 = result;
+    break;
+}
 	case SYS_sbrk:
 		tf->a0 = -1;
 		break;

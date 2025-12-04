@@ -1,13 +1,6 @@
 // syscall.h
 #include "defs.h"
 
-static inline void sys_exit(int status);
-static inline int  sys_fork(void);
-static inline int  sys_step(void);
-static inline void sys_printint(long x);
-static inline void sys_printstr(const char *s);
-
-
 static __attribute__((always_inline)) inline long do_syscall(long n, long arg0,long arg1) {
     register long a0 asm("a0") = arg0;
     register long a1 asm("a1") = arg1;
@@ -79,23 +72,27 @@ sys_printstr(const char *s) {
 }
 
 static __attribute__((always_inline)) inline int 
-sys_open(const char *pathname, int flags) {
-    return do_syscall(SYS_open, (long)pathname, flags);
+sys_open(const char *pathname, int flags, int mode) {
+    return do_syscall_5(SYS_open, (long)pathname, flags, mode, 0, 0);
 }
 
 static __attribute__((always_inline)) inline int 
-sys_close(int fd, int unused) {
-    return do_syscall(SYS_close, fd, unused);
+sys_close(int fd) {
+    return do_syscall(SYS_close, fd, 0);
 }
 
 static __attribute__((always_inline)) inline int 
-sys_read(int fd, void *buf) {
-    return do_syscall(SYS_read, fd, (long)buf);
+sys_read(int fd, void *buf, int count) {
+    return do_syscall_5(SYS_read, fd, (long)buf, count, 0, 0);
 }
 
 static __attribute__((always_inline)) inline int 
-sys_write(int fd, const void *buf) {
-    return do_syscall(SYS_write, fd, (long)buf);
+sys_write(int fd, const void *buf, int count) {
+    return do_syscall_5(SYS_write, fd, (long)buf, count, 0, 0);
+}
+static __attribute__((always_inline)) inline int 
+sys_unlink(const char *pathname) {
+    return do_syscall(SYS_unlink, (long)pathname, 0);
 }
 static __attribute__((always_inline)) inline void* 
 sys_sbrk(int increment) {

@@ -236,3 +236,195 @@ int write(struct file *f, uint64 addr, int n) {
     end_op();
     return ret;
 }
+// 为当前进程分配一个文件描述符
+static int fdalloc(struct file *f)
+{
+    struct proc *p = myproc();
+    
+    for (int fd = 3; fd < NOFILE; fd++) {
+        if (p->ofile[fd] == 0) {
+            p->ofile[fd] = f;
+            return fd;
+        }
+    }
+    return -1;
+}
+
+// 根据文件描述符获取文件结构
+static struct file *fdget(int fd)
+{
+    struct proc *p = myproc();
+    
+    if (fd < 0 || fd >= NOFILE || p->ofile[fd] == 0) {
+        return 0;
+    }
+    return p->ofile[fd];
+}
+
+// 系统调用：打开文件
+int ker_open(char *path, int omode, int mode)
+{
+    struct inode *ip;
+    struct file *f;
+    int fd;
+
+    debug("[ker_open] path=%s, mode=%d\n", path, omode);
+
+    if (omode & O_CREATE) {
+        // 创建新文件
+        ip = create(path, T_FILE, 0, 0);
+        if (ip == 0) {
+            return -1;
+        }
+    } else {
+        // 打开已存在的文件
+        ip = namei(path);
+        if (ip == 0) {
+            return -1;
+        }
+        ilock(ip);
+        if (ip->type == T_DIR && omode != O_RDONLY) {
+            iunlockput(ip);
+            return -1;
+        }
+    }
+
+    // 创建文件结构
+    int readable = !(omode & O_WRONLY);
+    int writable = (omode & O_WRONLY) || (omode & O_RDWR);
+    
+    f = open(ip, readable, writable);
+    if (f == 0) {
+        if (ip->ref == 1) {
+            iunlockput(ip);
+        } else {
+            iunlock(ip);
+            iput(ip);
+        }
+        return -1;
+    }
+
+    // 分配文件描述符
+    fd = fdalloc(f);
+    if (fd < 0) {
+        close(f);
+        return -1;
+    }
+
+    if (!(omode & O_CREATE)) {
+        iunlock(ip);
+    }
+
+    debug("[ker_open] success, fd=%d, inum=%d\n", fd, ip->inum);
+    return fd;
+}
+
+// 系统调用：关闭文件
+int ker_close(int fd)
+{
+    struct file *f;
+    struct proc *p = myproc();
+
+    f = fdget(fd);
+    if (f == 0) {
+        return -1;
+    }
+
+    p->ofile[fd] = 0;
+    close(f);
+    
+    debug("[ker_close] fd=%d closed\n", fd);
+    return 0;
+}
+
+// 系统调用：读取文件
+int ker_read(int fd, uint64 addr, int n)
+{
+    struct file *f;
+    char kbuf[256];
+    int bytes_read = 0;
+    int total_read = 0;
+
+    f = fdget(fd);
+    if (f == 0) {
+        return -1;
+    }
+
+    while (total_read < n) {
+        int to_read = n - total_read;
+        if (to_read > sizeof(kbuf)) {
+            to_read = sizeof(kbuf);
+        }
+
+        bytes_read = read(f, (uint64)kbuf, to_read);
+        if (bytes_read <= 0) {
+            break;
+        }
+
+        // 将数据复制到用户空间
+        if (copyout(myproc()->pagetable, addr + total_read, kbuf, bytes_read) < 0) {
+            return -1;
+        }
+
+        total_read += bytes_read;
+        
+        // 如果读取的字节数少于请求的，说明到达文件末尾
+        if (bytes_read < to_read) {
+            break;
+        }
+    }
+
+    debug("[ker_read] fd=%d, read %d bytes\n", fd, total_read);
+    return total_read;
+}
+
+// 系统调用：写入文件
+int ker_write(int fd, uint64 addr, int n)
+{
+    struct file *f;
+    char kbuf[256];
+    int bytes_written = 0;
+    int total_written = 0;
+
+    f = fdget(fd);
+    if (f == 0) {
+        return -1;
+    }
+
+    while (total_written < n) {
+        int to_write = n - total_written;
+        if (to_write > sizeof(kbuf)) {
+            to_write = sizeof(kbuf);
+        }
+
+        // 从用户空间复制数据
+        if (copyin(kbuf, addr + total_written, to_write) < 0) {
+            return -1;
+        }
+
+        bytes_written = write(f, (uint64)kbuf, to_write);
+        if (bytes_written <= 0) {
+            break;
+        }
+
+        total_written += bytes_written;
+        
+        // 如果写入的字节数少于请求的，说明出现错误
+        if (bytes_written < to_write) {
+            break;
+        }
+    }
+
+    debug("[ker_write] fd=%d, wrote %d bytes\n", fd, total_written);
+    return total_written;
+}
+int ker_unlink(char *path)
+{
+    debug("[ker_unlink] path=%s\n", path);
+    
+    // 调用现有的 unlink 函数
+    int result = unlink(path);
+    
+    debug("[ker_unlink] result=%d\n", result);
+    return result;
+}

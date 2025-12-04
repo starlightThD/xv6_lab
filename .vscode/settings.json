@@ -5,6 +5,7 @@
 		"user_progs.h": "c",
 		"types.h": "c",
 		"fcntl.h": "c",
-		"user_lib.h": "c"
+		"user_lib.h": "c",
+		"syscall.h": "c"
 	}
 }

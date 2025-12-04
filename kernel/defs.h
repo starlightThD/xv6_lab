@@ -72,6 +72,7 @@
 #define SYS_close 17
 #define SYS_read 18
 #define SYS_write 19
+#define SYS_unlink 20
 #define SYS_sbrk 25
 #define SYS_get_time 42
 #define SYS_exit 93
@@ -563,6 +564,7 @@ int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz);
 void test_pagetable(void);
 pte_t *walk_lookup(pagetable_t pt, uint64 va);
 void print_pagetable(pagetable_t pagetable, int level, uint64 va_base);
+void* user_va2pa(pagetable_t pagetable, uint64 va);
 int copyin(char *dst, uint64 srcva, int maxlen);
 int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len);
 int copyinstr(char *dst, pagetable_t pagetable, uint64 srcva, int max);
@@ -702,12 +704,11 @@ struct file *open(struct inode *ip, int readable, int writable);
 void close(struct file *f);
 int read(struct file *f, uint64 addr, int n);
 int write(struct file *f, uint64 addr, int n);
-
-// 文件描述符相关函数
-int fdalloc(struct file *f);
-struct file *fdget(int fd);
-void fdclose(int fd);
-void proc_fd_init(struct proc *p);
+int ker_open(char *path, int omode, int mode);
+int ker_close(int fd);
+int ker_read(int fd, uint64 addr, int n);
+int ker_write(int fd, uint64 addr, int n);
+int ker_unlink(char *path);
 
 // fs.h
 void fsinit(int dev);

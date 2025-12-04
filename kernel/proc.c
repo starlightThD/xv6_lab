@@ -173,6 +173,10 @@ struct proc* alloc_proc(int is_user) {
             p->context.ra = (uint64)forkret;
             p->context.sp = p->kstack + PGSIZE - 16;  // 16字节对齐
 			p->killed = 0; //重置死亡状态
+
+			for (int i = 0; i < NOFILE; i++) {
+				p->ofile[i] = 0;
+			}
             return p;
         }
     }
@@ -192,7 +196,12 @@ void free_proc(struct proc *p){
     if(p->kstack)
         free_page((void*)p->kstack);
     p->kstack = 0;
-    
+    for (int fd = 0; fd < NOFILE; fd++) {
+        if (p->ofile[fd]) {
+            close(p->ofile[fd]);
+            p->ofile[fd] = 0;
+        }
+    }
     p->pid = 0;
     p->state = UNUSED;
     p->parent = 0;
