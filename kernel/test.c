@@ -539,83 +539,265 @@ void test_process_creation(void)
 
 	printf("===== 测试结束: 进程创建与管理测试 =====\n");
 }
-void cpu_intensive_task(void)
-{
-	int pid = myproc()->pid;
-	printf("[进程 %d] 开始CPU密集计算\n", pid);
-
-	uint64 sum = 0;
-
-	// 增加循环次数到1亿次
-	const uint64 TOTAL_ITERATIONS = 100000000;
-	const uint64 REPORT_INTERVAL = TOTAL_ITERATIONS / 100; // 每完成1%报告一次
-
-	// 执行计算任务
-	for (uint64 i = 0; i < TOTAL_ITERATIONS; i++)
-	{
-		// 增加计算复杂度
-		sum += (i * i) % 1000000007; // 添加乘法和取模运算
-
-		// 更频繁的进度报告（每1%报告一次）
-		if (i % REPORT_INTERVAL == 0)
-		{
-			uint64 percent = (i * 100) / TOTAL_ITERATIONS;
-			printf("[进程 %d] 完成度: %lu%%，当前sum=%lu\n",
-				   pid, percent, sum);
-
-			// 主动让出CPU，增加切换机会
-			if (i > 0)
-			{
-				yield();
-			}
-		}
-	}
-
-	printf("[进程 %d] 计算完成，最终sum=%lu\n", pid, sum);
-	exit_proc(0);
+// CPU 密集型任务（会被降级）
+void cpu_intensive_prio_task(void) {
+    int pid = myproc()->pid;
+    printf("[CPU进程 %d] 开始CPU密集计算 (初始优先级: %d)\n", 
+           pid, myproc()->priority);
+    
+    uint64 sum = 0;
+    const uint64 TOTAL_ITERATIONS = 40000000; // 3000万次循环
+    const uint64 REPORT_INTERVAL = TOTAL_ITERATIONS / 10; // 每10%报告一次
+    
+    for (uint64 i = 0; i < TOTAL_ITERATIONS; i++) {
+        // CPU密集型计算
+        sum += (i * i * i) % 1000000007;
+        
+        if (i > 0 && i % REPORT_INTERVAL == 0) {
+            uint64 percent = (i * 100) / TOTAL_ITERATIONS;
+            printf("[CPU进程 %d] 完成度: %lu%% (当前优先级: %d)\n",
+                   pid, percent, myproc()->priority);
+        }
+    }
+    
+    printf("[CPU进程 %d] 计算完成 (最终优先级: %d, sum=%lu)\n", 
+           pid, myproc()->priority, sum);
+    exit_proc(0);
 }
 
-// 改进后的调度器测试函数
-void test_scheduler(void)
-{
-	printf("\n===== 测试开始: 调度器公平性测试 =====\n");
+// IO 密集型任务（使用 namei/open/write/close 接口）
+void io_intensive_prio_task(void) {
+    int pid = myproc()->pid;
+    char filename[32];
+    snprintf(filename, sizeof(filename), "/test_io_%d.txt", pid);
+    
+    printf("[IO进程 %d] 开始IO密集操作 (初始优先级: %d)\n", 
+           pid, myproc()->priority);
+    
+    int operation_count = 50; // 执行50次IO操作
+    
+    for (int i = 0; i < operation_count; i++) {
+        // 1. 查找或创建文件
+        struct inode *ip = namei(filename);
+        if (!ip) {
+            // 文件不存在，创建它
+            ip = create(filename, T_FILE, 0, 0);
+            if (!ip) {
+                printf("[IO进程 %d] 创建文件失败\n", pid);
+                exit_proc(-1);
+            }
+        }
+        
+        // 2. 打开文件（读写模式）
+        struct file *f = open(ip, 1, 1); // 读写模式
+        if (!f) {
+            printf("[IO进程 %d] 打开文件失败\n", pid);
+            iput(ip);
+            exit_proc(-1);
+        }
+        
+        // 3. 准备写入数据
+        char buffer[128];
+        int len = snprintf(buffer, sizeof(buffer), 
+                          "[IO进程 %d] 操作 %d, 优先级 %d, 时间戳 %lu\n",
+                          pid, i, myproc()->priority, get_time());
+        
+        // 4. 追加写入（设置偏移到文件末尾）
+        f->off = ip->size;
+        int written = write(f, (uint64)buffer, len);
+        
+        if (written != len) {
+            printf("[IO进程 %d] 写入操作 %d 失败 (写入 %d/%d 字节)\n", 
+                   pid, i, written, len);
+        }
+        
+        // 5. 关闭文件
+        close(f);
+        iput(ip);
+        
+        // 6. 每5次操作报告进度
+        if ((i + 1) % 5 == 0) {
+            printf("[IO进程 %d] 完成 %d/%d 次IO操作 (当前优先级: %d)\n",
+                   pid, i + 1, operation_count, myproc()->priority);
+        }
+        
+        // 7. IO进程在每次操作后主动让出CPU
+        yield();
+    }
+    
+    // 清理测试文件
+    struct inode *ip = namei(filename);
+    if (ip) {
+        begin_op();
+        ilock(ip);
+        ip->nlink = 0;
+        iupdate(ip);
+        iunlock(ip);
+        iput(ip);
+        end_op();
+    }
+    
+    printf("[IO进程 %d] IO操作完成 (最终优先级: %d)\n", 
+           pid, myproc()->priority);
+    exit_proc(0);
+}
 
-	// 创建多个计算密集型进程
-	int pids[3];
-	for (int i = 0; i < 3; i++)
-	{
-		pids[i] = create_kernel_proc(cpu_intensive_task);
-		if (pids[i] < 0)
-		{
-			printf("【错误】创建进程 %d 失败\n", i);
-			return;
-		}
-		printf("创建进程成功，PID: %d\n", pids[i]);
-	}
+// 简化的调度器测试函数 - 只测试 CPU 密集型
+void test_scheduler_cpu_only(void) {
+    printf("\n===== 测试开始: CPU密集型调度测试 =====\n");
+    
+    // 显示初始队列状态
+    print_proc_table();
+    
+    printf("\n----- 第一阶段：创建CPU密集型进程 -----\n");
+    
+    // 创建4个CPU密集型进程
+    int cpu_pids[4];
+    for (int i = 0; i < 4; i++) {
+        cpu_pids[i] = create_kernel_proc(cpu_intensive_prio_task);
+        if (cpu_pids[i] > 0) {
+            // 设置为高优先级开始
+            set_priority(cpu_pids[i], HIGH_PRIO);
+            printf("创建CPU密集进程: PID %d (优先级 HIGH)\n", cpu_pids[i]);
+        } else {
+            printf("【错误】创建CPU密集进程失败\n");
+        }
+    }
+    
+    printf("\n----- 第二阶段：观察进程执行和优先级变化 -----\n");
+    print_proc_table();
+    
+    uint64 start_time = get_time();
+    int completed = 0;
+    int total_processes = 4;
+    
+    // 等待所有进程完成
+    while (completed < total_processes) {
+        int status;
+        int pid = wait_proc(&status);
+        if (pid > 0) {
+            completed++;
+            
+            printf("\n[完成 %d/%d] CPU密集进程 PID %d 已退出 (状态: %d)\n",
+                   completed, total_processes, pid, status);
+            
+            // 每完成一个进程就打印当前状态
+            print_proc_table();
+        }
+    }
+    
+    uint64 end_time = get_time();
+    uint64 total_cycles = end_time - start_time;
+    
+    printf("\n----- 第三阶段：测试结果分析 -----\n");
+    printf("总执行时间: %lu cycles\n", total_cycles);
+    printf("平均每个进程执行时间: %lu cycles\n", total_cycles / total_processes);
+    
+    printf("\n----- 调度器行为分析 -----\n");
+    printf("预期行为:\n");
+    printf("1. 所有进程从 HIGH 优先级开始\n");
+    printf("2. CPU密集进程应该被逐渐降级到 LOW 优先级\n");
+    printf("3. 当高优先级队列为空时，应该从低优先级队列提升进程\n");
+    printf("4. 所有进程应该大致公平地获得CPU时间\n");
+    
+    print_proc_table();
+    
+    printf("===== CPU密集型调度测试完成 =====\n");
+}
 
-	// 等待所有进程完成并记录时间
-	uint64 start_time = get_time();
-	int completed = 0;
-
-	while (completed < 3)
-	{
-		int status;
-		int pid = wait_proc(&status);
-		if (pid > 0)
-		{
-			completed++;
-			printf("进程 %d 已完成，退出状态: %d (%d/3)\n",
-				   pid, status, completed);
-		}
-	}
-
-	uint64 end_time = get_time();
-	uint64 total_cycles = end_time - start_time;
-
-	printf("\n----- 测试结果 -----\n");
-	printf("总执行时间: %lu cycles\n", total_cycles);
-	printf("平均每个进程执行时间: %lu cycles\n", total_cycles / 3);
-	printf("===== 调度器测试完成 =====\n");
+// 完整的调度器测试函数 - 只有 1 个 IO 进程
+void test_scheduler(void) {
+    printf("\n===== 测试开始: 多级反馈队列调度器测试 =====\n");
+    
+    // 显示初始队列状态
+    print_proc_table();
+    
+    printf("\n----- 第一阶段：创建不同类型的进程 -----\n");
+    
+    // 创建2个CPU密集型进程（会被降级）
+    int cpu_pids[2];
+    for (int i = 0; i < 2; i++) {
+        cpu_pids[i] = create_kernel_proc(cpu_intensive_prio_task);
+        if (cpu_pids[i] > 0) {
+            set_priority(cpu_pids[i], HIGH_PRIO);
+            printf("创建CPU密集进程: PID %d (优先级 HIGH)\n", cpu_pids[i]);
+        } else {
+            printf("【错误】创建CPU密集进程失败\n");
+        }
+    }
+    
+    // 只创建1个IO密集型进程（应该保持高优先级）
+    int io_pid = -1;
+    io_pid = create_kernel_proc(io_intensive_prio_task);
+    if (io_pid > 0) {
+        set_priority(io_pid, HIGH_PRIO);
+        printf("创建IO密集进程: PID %d (优先级 HIGH)\n", io_pid);
+    } else {
+        printf("【错误】创建IO密集进程失败\n");
+    }
+    
+    printf("\n----- 第二阶段：观察进程执行和优先级变化 -----\n");
+    print_proc_table();
+    
+    uint64 start_time = get_time();
+    int completed = 0;
+    int total_processes = 3; // 2 CPU + 1 IO
+    
+    uint64 cpu_complete_time[2] = {0};
+    uint64 io_complete_time = 0;
+    int cpu_complete_count = 0;
+    int io_completed = 0;
+    
+    // 等待所有进程完成
+    while (completed < total_processes) {
+        int status;
+        int pid = wait_proc(&status);
+        if (pid > 0) {
+            completed++;
+            uint64 complete_time = get_time() - start_time;
+            
+            // 确定进程类型
+            const char* process_type = "未知";
+            if (cpu_pids[0] == pid || cpu_pids[1] == pid) {
+                process_type = "CPU密集";
+                if (cpu_complete_count < 2) {
+                    cpu_complete_time[cpu_complete_count++] = complete_time;
+                }
+            } else if (io_pid == pid) {
+                process_type = "IO密集";
+                io_complete_time = complete_time;
+                io_completed = 1;
+            }
+            
+            printf("\n[完成 %d/%d] %s进程 PID %d 已退出 (状态: %d, 用时: %lu cycles)\n",
+                   completed, total_processes, process_type, pid, status, complete_time);
+            
+            print_proc_table();
+        }
+    }
+    
+    uint64 end_time = get_time();
+    uint64 total_cycles = end_time - start_time;
+    
+    printf("\n----- 第三阶段：测试结果分析 -----\n");
+    printf("总执行时间: %lu cycles\n", total_cycles);
+    printf("平均每个进程执行时间: %lu cycles\n", total_cycles / total_processes);
+    
+    // 计算平均完成时间
+    uint64 avg_cpu_time = 0;
+    for (int i = 0; i < cpu_complete_count; i++) {
+        avg_cpu_time += cpu_complete_time[i];
+    }
+    if (cpu_complete_count > 0) avg_cpu_time /= cpu_complete_count;
+    
+    printf("\nCPU密集进程平均完成时间: %lu cycles\n", avg_cpu_time);
+    if (io_completed) {
+        printf("IO密集进程完成时间: %lu cycles\n", io_complete_time);
+    }
+    
+    print_proc_table();
+    
+    printf("===== 多级反馈队列调度器测试完成 =====\n");
 }
 static int proc_buffer = 0;
 static int proc_produced = 0;

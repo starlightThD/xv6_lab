@@ -64,6 +64,12 @@
 
 // proc.h
 #define PROC 32 // 设定32个进程，目前最多达到512个
+#define HIGH_PRIO 0
+#define MID_PRIO 1
+#define LOW_PRIO 2
+#define HIGH_PRIO_SLICE 1
+#define MID_PRIO_SLICE  2
+#define LOW_PRIO_SLICE  5
 
 // syscall.h
 #define SYS_printint 1
@@ -308,7 +314,15 @@ struct proc
     struct trapframe *trapframe;
     struct inode *cwd; // 当前工作目录
     struct file *ofile[NOFILE]; // 打开的文件描述符表
-    int next_fd; // 下一个可用的文件描述符
+	int priority; // 进程优先级
+	struct proc *next_in_queue;
+	int time_slice;
+	int base_time_slice;
+};
+struct proc_queue{
+	struct proc *head;
+	struct proc *tail;
+	int count;
 };
 // fs.h
 // 超级块结构
@@ -622,6 +636,7 @@ void free_proc_table(void);
 int create_kernel_proc(void (*entry)(void));
 int create_kernel_proc1(void (*entry)(uint64), uint64 arg);
 int create_user_proc(const void *user_bin, int bin_size);
+int set_priority(int pid, int new_priority);
 int fork_proc(void);
 void exit_proc(int status);
 int wait_proc(int *status);

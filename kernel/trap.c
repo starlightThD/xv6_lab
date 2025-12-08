@@ -99,11 +99,7 @@ void kerneltrap(void)
 		{
 			// 时钟中断
 			timeintr();
-			sbi_set_time(sbi_get_time() + TIMER_INTERVAL);
-			if (myproc() && myproc()->state == RUNNING)
-			{
-				yield(); // 当前进程让出 CPU
-			}
+			sbi_set_time(sbi_get_time() + TIMER_INTERVAL);	
 		}
 		else if ((scause & 0xff) == 9)
 		{

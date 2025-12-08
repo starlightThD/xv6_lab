@@ -2,6 +2,7 @@
 
 struct proc *proc_table[PROC]; // 指针数组
 static int proc_table_pages = 0; //记录分配的物理页以进行释放
+static struct proc_queue prio_queues[3];
 static void *proc_table_mem[PROC]; // 每个进程一页
 extern pagetable_t kernel_pagetable;
 extern char trampoline[],uservec[], userret[];
@@ -101,7 +102,151 @@ void forkret(void) {
     }
 }
 
+static void init_prio_queue(void){
+	for (int i = 0; i < 3; i++) {
+        prio_queues[i].head = 0;
+        prio_queues[i].tail = 0;
+        prio_queues[i].count = 0;
+    }
+}
+static int is_proc_in_queue(struct proc *target, int prio) {
+    if (prio < HIGH_PRIO || prio > LOW_PRIO) return 0;
+    
+    struct proc *p = prio_queues[prio].head;
+    while (p) {
+        if (p == target) {
+            return 1;
+        }
+        p = p->next_in_queue;
+    }
+    return 0;
+}
+void remove_from_queue(struct proc *target);
+// 修改入队函数，检查重复入队
+void enqueue_proc(struct proc *p) {
+    if (!p || p->priority < HIGH_PRIO || p->priority > LOW_PRIO) {
+        return;
+    }
+    
+    int prio = p->priority;
+    
+    // 检查是否已经在队列中
+    if (is_proc_in_queue(p, prio)) {
+        return;
+    }
+    
+    // 检查进程是否在其他优先级队列中
+    for (int i = HIGH_PRIO; i <= LOW_PRIO; i++) {
+        if (i != prio && is_proc_in_queue(p, i)) {
+            remove_from_queue(p);
+            break;
+        }
+    }
+    
+    p->next_in_queue = 0;
+    
+    if (prio_queues[prio].tail == 0) {
+        // 队列为空
+        prio_queues[prio].head = p;
+        prio_queues[prio].tail = p;
+    } else {
+        // 队列非空，加到尾部
+        prio_queues[prio].tail->next_in_queue = p;
+        prio_queues[prio].tail = p;
+    }
+    prio_queues[prio].count++;
+}
 
+// 从优先级队列中取出进程
+struct proc* dequeue_proc(int prio) {
+    if (prio < HIGH_PRIO || prio > LOW_PRIO || prio_queues[prio].head == 0) {
+        return 0;
+    }
+    
+    struct proc *p = prio_queues[prio].head;
+    prio_queues[prio].head = p->next_in_queue;
+    
+    if (prio_queues[prio].head == 0) {
+        prio_queues[prio].tail = 0;
+    }
+    
+    p->next_in_queue = 0;
+    prio_queues[prio].count--;
+    return p;
+}
+
+// 从队列中移除指定进程
+void remove_from_queue(struct proc *target) {
+    for (int prio = HIGH_PRIO; prio <= LOW_PRIO; prio++) {
+        if (prio_queues[prio].head == 0) continue;
+        
+        if (prio_queues[prio].head == target) {
+            // 要移除的是队首
+            prio_queues[prio].head = target->next_in_queue;
+            if (prio_queues[prio].tail == target) {
+                prio_queues[prio].tail = 0;
+            }
+            prio_queues[prio].count--;
+            target->next_in_queue = 0;
+            return;
+        }
+        
+        // 查找要移除的进程
+        struct proc *prev = prio_queues[prio].head;
+        while (prev && prev->next_in_queue != target) {
+            prev = prev->next_in_queue;
+        }
+        
+        if (prev) {
+            prev->next_in_queue = target->next_in_queue;
+            if (prio_queues[prio].tail == target) {
+                prio_queues[prio].tail = prev;
+            }
+            prio_queues[prio].count--;
+            target->next_in_queue = 0;
+            return;
+        }
+    }
+}
+int set_priority(int pid, int new_priority) {
+    if (new_priority < HIGH_PRIO || new_priority > LOW_PRIO) {
+        return -1;
+    }
+    
+    struct proc *p = get_proc(pid);
+    if (!p) {
+        return -1;
+    }
+    
+    int old_priority = p->priority;
+    
+    // 更新优先级和对应的时间片
+    p->priority = new_priority;
+    switch(new_priority) {
+        case HIGH_PRIO:
+            p->base_time_slice = HIGH_PRIO_SLICE;
+            break;
+        case MID_PRIO:
+            p->base_time_slice = MID_PRIO_SLICE;
+            break;
+        case LOW_PRIO:
+            p->base_time_slice = LOW_PRIO_SLICE;
+            break;
+    }
+    
+    // 如果进程正在运行，立即更新时间片
+    if (p->state == RUNNING) {
+        p->time_slice = p->base_time_slice;
+    }
+    
+    // 如果进程在就绪队列中，需要先移除再重新加入
+    if (p->state == RUNNABLE && old_priority != new_priority) {
+        remove_from_queue(p);
+        enqueue_proc(p);
+    }
+    
+    return old_priority;
+}
 void init_proc(void){
     for (int i = 0; i < PROC; i++) {
         void *page = alloc_page();
@@ -121,7 +266,9 @@ void init_proc(void){
         memset(&proc_table[i]->context, 0, sizeof(struct context));
     }
     proc_table_pages = PROC; // 每个进程一页
+	init_prio_queue();
 }
+
 void free_proc_table(void) {
     for (int i = 0; i < proc_table_pages; i++) {
         free_page(proc_table_mem[i]);
@@ -135,6 +282,20 @@ struct proc* alloc_proc(int is_user) {
 			p->cwd = 0;
             p->state = USED;
 			p->is_user = is_user;
+			p->priority = MID_PRIO;
+            // 设置时间片
+            switch(p->priority) {
+                case HIGH_PRIO:
+                    p->base_time_slice = HIGH_PRIO_SLICE;
+                    break;
+                case MID_PRIO:
+                    p->base_time_slice = MID_PRIO_SLICE;
+                    break;
+                case LOW_PRIO:
+                    p->base_time_slice = LOW_PRIO_SLICE;
+                    break;
+            }
+            p->time_slice = p->base_time_slice;
             // 分配 trapframe
             p->trapframe = (struct trapframe*)alloc_page();
             if(p->trapframe == 0){
@@ -215,6 +376,7 @@ int create_kernel_proc(void (*entry)(void)) {
     p->trapframe->epc = (uint64)entry;
     p->state = RUNNABLE;
 
+	enqueue_proc(p);
     struct proc *parent = myproc();
     if (parent != 0) {
         p->parent = parent;
@@ -235,6 +397,7 @@ int create_kernel_proc1(void (*entry)(uint64),uint64 arg){
     p->state = RUNNABLE;
 	p->sleep_ticks = 0;
 
+	enqueue_proc(p);
     struct proc *parent = myproc();
     if (parent != 0) {
         p->parent = parent;
@@ -301,6 +464,7 @@ int create_user_proc(const void *user_bin, int bin_size) {
     struct proc *parent = myproc();
     p->parent = parent ? parent : NULL;
 	p->sleep_ticks = 0;
+	enqueue_proc(p);
     return p->pid;
 }
 int fork_proc(void) {
@@ -350,40 +514,93 @@ int fork_proc(void) {
 	child->cwd = parent->cwd;
     return child->pid;
 }
-
-
-// 调度器 - 简化版
+// 优先级调度器
 void schedule(void) {
-  const int SLEEP_TIMEOUT = 100; // 超时时间，可根据实际调整
-  while(1) {
-    intr_on();
-    for(int i = 0; i < PROC; i++) {
-        struct proc *p = proc_table[i];
-        // 检查睡眠超时
-        if(p->state == SLEEPING) {
-            p->sleep_ticks++;
-            if(p->sleep_ticks > SLEEP_TIMEOUT) {
-                debug("[SCHED] PID %d sleep timeout, force wakeup\n", p->pid);
-                p->state = RUNNABLE;
+    const int SLEEP_TIMEOUT = 100;
+    static int schedule_count = 0; // 调度计数器
+    
+    while(1) {
+        intr_on();
+        
+        schedule_count++;
+        
+        // 每N次调度执行一次提升，避免过于频繁
+        if (schedule_count % 10 == 0) {
+            // 从低优先级队列提升一个进程到高优先级
+            if (prio_queues[LOW_PRIO].count > 0) {
+                struct proc *p = dequeue_proc(LOW_PRIO);
+                if (p && p->state == RUNNABLE) {
+                    p->priority = HIGH_PRIO;
+                    p->base_time_slice = HIGH_PRIO_SLICE;
+                    p->time_slice = p->base_time_slice;
+                    enqueue_proc(p);
+                    debug("[PROMOTE] PID %d promoted from LOW to HIGH\n", p->pid);
+                }
+            }
+            // 从中优先级队列提升一个进程到高优先级
+            else if (prio_queues[MID_PRIO].count > 0) {
+                struct proc *p = dequeue_proc(MID_PRIO);
+                if (p && p->state == RUNNABLE) {
+                    p->priority = HIGH_PRIO;
+                    p->base_time_slice = HIGH_PRIO_SLICE;
+                    p->time_slice = p->base_time_slice;
+                    enqueue_proc(p);
+                    debug("[PROMOTE] PID %d promoted from MID to HIGH\n", p->pid);
+                }
+            }
+        }
+        
+        // 处理睡眠超时
+        for(int i = 0; i < PROC; i++) {
+            struct proc *p = proc_table[i];
+            if(p->state == SLEEPING) {
+                p->sleep_ticks++;
+                if(p->sleep_ticks > SLEEP_TIMEOUT) {
+                    debug("[SCHED] PID %d sleep timeout, force wakeup\n", p->pid);
+                    p->state = RUNNABLE;
+                    p->sleep_ticks = 0;
+                    enqueue_proc(p);
+                }
+            } else {
                 p->sleep_ticks = 0;
             }
-        } else {
-            p->sleep_ticks = 0; // 非睡眠状态重置计数
         }
-        if(p->state == RUNNABLE) {
+        
+        // 按优先级顺序查找可运行进程
+        struct proc *p = 0;
+        for (int prio = HIGH_PRIO; prio <= LOW_PRIO; prio++) {
+            p = dequeue_proc(prio);
+            if (p) {
+                break;
+            }
+        }
+        
+        if (p) {
             p->state = RUNNING;
             mycpu()->proc = p;
             current_proc = p;
+            p->time_slice = p->base_time_slice;
+            
+            debug("[SCHED] Running PID %d (prio %d, slice %d)\n", 
+                  p->pid, p->priority, p->time_slice);
+            
             swtch(&mycpu()->context, &p->context);
+            
+            // 进程切换回来后
             mycpu()->proc = 0;
             current_proc = 0;
+            
+            // 如果进程还在运行状态，说明是时间片耗尽，重新加入队列
+            if (p->state == RUNNING) {
+                p->state = RUNNABLE;
+                enqueue_proc(p);
+            }
         }
     }
-  }
 }
-// 进程主动让出CPU
+// 修改 yield 函数
 void yield(void) {
-	intr_off();
+    intr_off();
     struct proc *p = myproc();
     if (p == 0) {
         return;
@@ -392,9 +609,12 @@ void yield(void) {
     p->state = RUNNABLE;
     current_proc = 0;
     c->proc = 0;
-	intr_on();
+    // 重新加入优先级队列
+    enqueue_proc(p);
+    intr_on();
     swtch(&p->context, &c->context);
-	if (p->killed) {
+    
+    if (p->killed) {
         printf("[yield] Process PID %d killed during yield\n", p->pid);
         exit_proc(SYS_kill);
         return;
@@ -422,15 +642,17 @@ void sleep(void *chan, struct spinlock *lk){
     }
 }
 
+// 修改 wakeup 函数
 void wakeup(void *chan) {
-	intr_off();
+    intr_off();
     for(int i = 0; i < PROC; i++) {
         struct proc *p = proc_table[i];
         if(p->state == SLEEPING && p->chan == chan) {
             p->state = RUNNABLE;
+            enqueue_proc(p);  // 加入优先级队列
         }
     }
-	intr_on();
+    intr_on();
 }
 void kill_proc(int pid){
 	for(int i=0;i<PROC;i++){
@@ -526,8 +748,8 @@ int wait_proc(int *status) {
 
 void print_proc_table(void) {
     int count = 0;
-    printf("PID  TYPE STATUS     PPID   FUNC_ADDR      STACK_ADDR    \n");
-    printf("----------------------------------------------------------\n");
+    printf("PID  TYPE STATUS     PRIO SLICE PPID   FUNC_ADDR      STACK_ADDR    QUEUE\n");
+    printf("--------------------------------------------------------------------------\n");
     for(int i = 0; i < PROC; i++) {
         struct proc *p = proc_table[i];
         if(p->state != UNUSED) {
@@ -546,12 +768,31 @@ void print_proc_table(void) {
             int ppid = p->parent ? p->parent->pid : -1;
             unsigned long func_addr = p->trapframe ? p->trapframe->epc : 0;
             unsigned long stack_addr = p->kstack;
-            printf("%2d  %3s %8s %4d 0x%012lx 0x%012lx\n",
-                p->pid, type, status, ppid, func_addr, stack_addr);
+            
+            // 显示在哪个优先级队列中
+            const char *queue_info = "";
+            if (p->state == RUNNABLE) {
+                switch(p->priority) {
+                    case HIGH_PRIO: queue_info = "HIGH"; break;
+                    case MID_PRIO:  queue_info = "MID"; break;
+                    case LOW_PRIO:  queue_info = "LOW"; break;
+                    default: queue_info = "?"; break;
+                }
+            }
+            
+            printf("%2d  %3s %8s %4d %5d %4d 0x%012lx 0x%012lx %s\n",
+                p->pid, type, status, p->priority, p->time_slice, ppid, 
+                func_addr, stack_addr, queue_info);
         }
     }
-    printf("----------------------------------------------------------\n");
+    printf("--------------------------------------------------------------------------\n");
     printf("%d active processes\n", count);
+    
+    // 显示队列状态
+    printf("Queue status: HIGH=%d, MID=%d, LOW=%d\n", 
+           prio_queues[HIGH_PRIO].count, 
+           prio_queues[MID_PRIO].count, 
+           prio_queues[LOW_PRIO].count);
 }
 
 struct proc* get_proc(int pid){
